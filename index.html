@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Stygg Mus Bingo</title>
+    <meta
+      name="description"
+      content="Mobilvänlig bingoapp för Stygg Mus-helgen med unika brickor, ljud, animationer och priser."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true"></div>
+    <main class="app">
+      <header class="hero">
+        <p class="tag">Sommartraditionen</p>
+        <h1>Stygg Mus Bingo</h1>
+        <p class="subtitle">
+          Markera rutor under helgen. Få bingo, få pris, och bli helgens legendar.
+        </p>
+      </header>
+
+      <section class="controls" aria-label="Kontroller">
+        <button id="new-board-btn" class="primary-btn" type="button">Ny bricka</button>
+        <button id="theme-toggle-btn" class="secondary-btn" type="button">Anpassa tema</button>
+      </section>
+
+      <section class="stats" aria-live="polite">
+        <div class="stat">
+          <span class="stat-label">Markerade</span>
+          <span id="marked-count" class="stat-value">0/25</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Bingorader</span>
+          <span id="bingo-count" class="stat-value">0</span>
+        </div>
+      </section>
+
+      <section class="board-wrap" aria-label="Bingobricka">
+        <div id="board" class="board" role="grid" aria-label="Bingobricka 5 gånger 5"></div>
+      </section>
+
+      <section id="theme-panel" class="theme-panel hidden" aria-label="Tema-inställningar">
+        <h2>Anpassa utseende</h2>
+        <div class="theme-grid">
+          <label>
+            Primärfärg
+            <input id="accent-color" type="color" value="#ff8f00" />
+          </label>
+          <label>
+            Bakgrund
+            <input id="bg-color" type="color" value="#102a43" />
+          </label>
+          <label>
+            Kortfärg
+            <input id="card-color" type="color" value="#16324f" />
+          </label>
+          <label>
+            Textfärg
+            <input id="text-color" type="color" value="#f7fbff" />
+          </label>
+          <label class="font-select">
+            Typsnitt
+            <select id="font-family">
+              <option value="'Trebuchet MS', 'Avenir Next', sans-serif">Festival Sans</option>
+              <option value="'Verdana', 'Tahoma', sans-serif">Klassisk Sans</option>
+              <option value="'Georgia', 'Times New Roman', serif">Sommar Serif</option>
+              <option value="'Courier New', monospace">Retro Mono</option>
+            </select>
+          </label>
+        </div>
+      </section>
+    </main>
+
+    <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-live="assertive">
+      <div class="overlay-card">
+        <h2 id="overlay-title">BINGO!</h2>
+        <p id="overlay-text"></p>
+        <button id="close-overlay-btn" type="button">Fortsätt spela</button>
+      </div>
+    </div>
+
+    <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
+    <script src="./script.js"></script>
+  </body>
+</html>
