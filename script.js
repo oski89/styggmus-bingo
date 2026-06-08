@@ -4,12 +4,23 @@
   const AUTH_KEY = "styggmus-bingo-auth-v1";
   const PLAYER_KEY = "styggmus-bingo-player-v1";
   const BOARD_STORAGE_PREFIX = "styggmus-bingo-board-v2";
-  const THEME_KEY = "styggmus-bingo-theme-v1";
   const PASSWORD = "AFC";
   const BOARD_SIZE = 5;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
   const FREE_INDEX = Math.floor(CELL_COUNT / 2);
   const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
+  const KONAMI_SEQUENCE = [
+    "ArrowUp",
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+    "ArrowLeft",
+    "ArrowRight",
+    "b",
+    "a",
+  ];
 
   const promptGroups = [
     {
@@ -98,18 +109,20 @@
   ];
 
   const bingoPrizes = [
-    "Dela ut 10 klunkar till valfria deltagare.",
-    "Bjud närmsta polare på en grogg.",
-    "Ät nästa måltid med endast sked.",
-    "Bestäm kvällens första skål-låt.",
-    "Du får ge någon ett smeknamn för resten av kvällen.",
-    "Du får välja vem som diskar nästa omgång glas.",
-    "Dela ut en spontan high-five-runda till alla.",
-    "Välj en person som måste tala som sportkommentator i 2 minuter.",
+    "Du får utse kvällens officiella pommesinspektör. Personen måste leverera en seriös recension av nästa laddning.",
+    "Välj en person som måste hålla ett högtidligt tal till Stygg Mus innan nästa skål.",
+    "Du får dela ut en obligatorisk resorb-ceremoni till valfri deltagare.",
+    "Välj någon som måste argumentera mot AI i 60 sekunder, oavsett egen åsikt.",
+    "Du får bestämma nästa låt, men den måste presenteras som om du vore festivalgeneral.",
+    "Välj en person som måste säga 'det där är faktiskt laktosfritt' vid nästa dryckesbeställning.",
+    "Du får införa en tillfällig regel som gäller tills nästa ruta kryssas.",
+    "Välj någon som måste ge en alldeles för seriös taktisk genomgång av nästa lek.",
+    "Du får begära en hedersskål för Täby, pommes eller Stygg Bitch-sparandet.",
+    "Välj en person som måste leverera kvällens sämsta pappaskämt innan spelet fortsätter.",
   ];
 
   const grandPrize =
-    "UTOPISK VINST: Du blir Stygg Mus-kejsare. Du slipper all disk resten av helgen, får först tjing på bästa sovplats och alla måste skåla för dig vid nästa måltid.";
+    "UTOPISK VINST: Du blir Stygg Mus-kejsare 2026. Du får först tjing på bästa sovplats, slipper nästa tråkiga syssla och alla måste skåla för din historiskt välkryssade bricka.";
 
   const appEl = document.getElementById("app");
   const accessScreenEl = document.getElementById("access-screen");
@@ -118,34 +131,30 @@
   const passwordFeedbackEl = document.getElementById("password-feedback");
   const playerSelectEl = document.getElementById("player-select");
   const playerButtons = document.querySelectorAll("[data-player-id]");
+  const resetAllBtn = document.getElementById("reset-all-btn");
+  const gameTitleEl = document.getElementById("game-title");
   const boardEl = document.getElementById("board");
   const currentPlayerEl = document.getElementById("current-player");
   const markedCountEl = document.getElementById("marked-count");
   const bingoCountEl = document.getElementById("bingo-count");
   const newBoardBtn = document.getElementById("new-board-btn");
+  const resetBoardBtn = document.getElementById("reset-board-btn");
   const changePlayerBtn = document.getElementById("change-player-btn");
-  const themeToggleBtn = document.getElementById("theme-toggle-btn");
-  const themePanel = document.getElementById("theme-panel");
   const overlayEl = document.getElementById("overlay");
   const overlayTitleEl = document.getElementById("overlay-title");
   const overlayTextEl = document.getElementById("overlay-text");
   const closeOverlayBtn = document.getElementById("close-overlay-btn");
   const confettiCanvas = document.getElementById("confetti");
 
-  const themeInputs = {
-    accent: document.getElementById("accent-color"),
-    bg: document.getElementById("bg-color"),
-    card: document.getElementById("card-color"),
-    text: document.getElementById("text-color"),
-    font: document.getElementById("font-family"),
-  };
-
   let state = null;
   let activePlayerId = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
+  let titleClickCount = 0;
+  let titleClickTimer = null;
+  let konamiIndex = 0;
+  let typedBuffer = "";
 
-  applyTheme(loadTheme());
   registerEventListeners();
   renderAccessFlow();
 
@@ -160,24 +169,13 @@
 
     boardEl.addEventListener("click", onBoardClick);
     newBoardBtn.addEventListener("click", onNewBoard);
+    resetBoardBtn.addEventListener("click", onResetBoard);
     changePlayerBtn.addEventListener("click", showPlayerGate);
-    themeToggleBtn.addEventListener("click", onThemeToggle);
+    resetAllBtn.addEventListener("click", onResetAll);
+    gameTitleEl.addEventListener("click", onGameTitleClick);
     closeOverlayBtn.addEventListener("click", hideOverlay);
 
-    Object.values(themeInputs).forEach((input) => {
-      input.addEventListener("input", () => {
-        const nextTheme = {
-          accent: themeInputs.accent.value,
-          bg: themeInputs.bg.value,
-          card: themeInputs.card.value,
-          text: themeInputs.text.value,
-          font: themeInputs.font.value,
-        };
-        applyTheme(nextTheme);
-        saveTheme(nextTheme);
-      });
-    });
-
+    window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", resizeConfettiCanvas);
   }
 
@@ -240,6 +238,26 @@
     currentPlayerEl.textContent = getPlayer(playerId).label;
     renderBoard();
     updateStatsAndWinState({ triggerEffects: false });
+  }
+
+  function onResetAll() {
+    const confirmed = window.confirm(
+      "Nollställa alla sparade brickor, markeringar och spelarval?"
+    );
+    if (!confirmed) return;
+
+    clearSavedBoards();
+    safeRemove(PLAYER_KEY);
+    safeRemove("styggmus-bingo-theme-v1");
+    safeRemoveSession(AUTH_KEY);
+    state = null;
+    activePlayerId = null;
+    passwordInput.value = "";
+    markedCountEl.textContent = `0/${CELL_COUNT}`;
+    bingoCountEl.textContent = "0";
+    currentPlayerEl.textContent = "-";
+    boardEl.innerHTML = "";
+    showPasswordGate();
   }
 
   function isAuthenticated() {
@@ -381,8 +399,20 @@
     updateStatsAndWinState({ triggerEffects: false });
   }
 
-  function onThemeToggle() {
-    themePanel.classList.toggle("hidden");
+  function onResetBoard() {
+    if (!state) return;
+
+    const confirmed = window.confirm(
+      "Nollställa markeringarna på den här brickan? Rutorna ligger kvar."
+    );
+    if (!confirmed) return;
+
+    state.checked = [FREE_INDEX];
+    state.bingoLinesAwarded = [];
+    state.grandWin = false;
+    saveState();
+    renderBoard();
+    updateStatsAndWinState({ triggerEffects: false });
   }
 
   function getAvailablePrompts(playerId) {
@@ -408,6 +438,79 @@
 
   function getBoardStorageKey(playerId) {
     return `${BOARD_STORAGE_PREFIX}:${playerId}`;
+  }
+
+  function onGameTitleClick() {
+    titleClickCount += 1;
+    window.clearTimeout(titleClickTimer);
+
+    if (titleClickCount >= 5) {
+      titleClickCount = 0;
+      triggerEasterEgg(
+        "STYGG MODE",
+        "Titeln har talat. Alla måste skåla med fel hand tills nästa ruta kryssas.",
+        "stygg-mode"
+      );
+      return;
+    }
+
+    titleClickTimer = window.setTimeout(() => {
+      titleClickCount = 0;
+    }, 1400);
+  }
+
+  function onKeyDown(event) {
+    if (isTextInputTarget(event.target)) return;
+
+    handleKonamiKey(event.key);
+    handleTypedEasterEgg(event.key);
+  }
+
+  function handleKonamiKey(rawKey) {
+    const key = rawKey.length === 1 ? rawKey.toLowerCase() : rawKey;
+    const expectedKey = KONAMI_SEQUENCE[konamiIndex];
+
+    if (key === expectedKey) {
+      konamiIndex += 1;
+      if (konamiIndex === KONAMI_SEQUENCE.length) {
+        konamiIndex = 0;
+        triggerEasterEgg(
+          "KONAMI-KUBB!",
+          "Hemlig taktik upplåst: välj någon som måste coacha nästa aktivitet som en VM-final.",
+          "konami-mode"
+        );
+      }
+      return;
+    }
+
+    konamiIndex = key === KONAMI_SEQUENCE[0] ? 1 : 0;
+  }
+
+  function handleTypedEasterEgg(rawKey) {
+    if (rawKey.length !== 1 || !/^[a-zåäö]$/i.test(rawKey)) return;
+
+    typedBuffer = `${typedBuffer}${rawKey.toUpperCase()}`.slice(-8);
+    if (typedBuffer.includes("DDKO")) {
+      typedBuffer = "";
+      triggerEasterEgg(
+        "DDKO REQUESTAD",
+        "Requesten är mottagen. Nästa låt måste presenteras med orimligt mycket självförtroende.",
+        "ddko-mode"
+      );
+    }
+  }
+
+  function triggerEasterEgg(title, text, className) {
+    document.body.classList.add(className);
+    window.setTimeout(() => document.body.classList.remove(className), 5200);
+    playWinSound(false);
+    runConfetti(2200);
+    showOverlay(title, text);
+  }
+
+  function isTextInputTarget(target) {
+    if (!(target instanceof HTMLElement)) return false;
+    return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable;
   }
 
   function updateStatsAndWinState({ triggerEffects }) {
@@ -647,6 +750,24 @@
     }
   }
 
+  function safeRemove(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      return;
+    }
+  }
+
+  function clearSavedBoards() {
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith(`${BOARD_STORAGE_PREFIX}:`)) localStorage.removeItem(key);
+      });
+    } catch (error) {
+      return;
+    }
+  }
+
   function safeGetSession(key) {
     try {
       return sessionStorage.getItem(key);
@@ -663,47 +784,11 @@
     }
   }
 
-  function loadTheme() {
-    const fallback = {
-      accent: "#ff8f00",
-      bg: "#102a43",
-      card: "#16324f",
-      text: "#f7fbff",
-      font: "'Trebuchet MS', 'Avenir Next', sans-serif",
-    };
-    const raw = safeGet(THEME_KEY);
-    if (!raw) {
-      syncThemeInputs(fallback);
-      return fallback;
-    }
+  function safeRemoveSession(key) {
     try {
-      const parsed = JSON.parse(raw);
-      const merged = { ...fallback, ...parsed };
-      syncThemeInputs(merged);
-      return merged;
+      sessionStorage.removeItem(key);
     } catch (error) {
-      syncThemeInputs(fallback);
-      return fallback;
+      return;
     }
-  }
-
-  function saveTheme(theme) {
-    safeSet(THEME_KEY, JSON.stringify(theme));
-  }
-
-  function syncThemeInputs(theme) {
-    themeInputs.accent.value = theme.accent;
-    themeInputs.bg.value = theme.bg;
-    themeInputs.card.value = theme.card;
-    themeInputs.text.value = theme.text;
-    themeInputs.font.value = theme.font;
-  }
-
-  function applyTheme(theme) {
-    document.documentElement.style.setProperty("--accent", theme.accent);
-    document.documentElement.style.setProperty("--bg", theme.bg);
-    document.documentElement.style.setProperty("--card", theme.card);
-    document.documentElement.style.setProperty("--text", theme.text);
-    document.documentElement.style.setProperty("--font-main", theme.font);
   }
 })();

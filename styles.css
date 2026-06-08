@@ -69,6 +69,10 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
 }
 
+.access-panel h1 {
+  margin-top: 0;
+}
+
 .password-form {
   display: grid;
   gap: 0.65rem;
@@ -132,6 +136,30 @@ body {
 
 .player-buttons button:active {
   transform: scale(0.99);
+}
+
+.reset-all-btn {
+  margin-top: 0.8rem;
+  padding: 0.45rem 0.65rem;
+  background: transparent;
+  color: rgba(255, 209, 208, 0.74);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.reset-all-btn:active {
+  transform: scale(0.98);
+}
+
+.version-line {
+  margin: 0;
+  color: rgba(247, 251, 255, 0.42);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.access-panel .version-line {
+  margin-top: 1rem;
 }
 
 .hero {
@@ -275,45 +303,6 @@ button {
   box-shadow: 0 0 0 2px var(--accent) inset, 0 0 12px rgba(255, 143, 0, 0.55);
 }
 
-.theme-panel {
-  background: rgba(8, 20, 34, 0.58);
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 0.9rem;
-}
-
-.theme-panel h2 {
-  margin: 0 0 0.7rem;
-  font-size: 1.1rem;
-}
-
-.theme-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.theme-grid label {
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.theme-grid input[type="color"],
-.theme-grid select {
-  width: 100%;
-  min-height: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 0.6rem;
-  background: rgba(0, 0, 0, 0.25);
-  color: var(--text);
-}
-
-.font-select {
-  grid-column: 1 / -1;
-}
-
 .overlay {
   position: fixed;
   inset: 0;
@@ -364,6 +353,18 @@ button {
   animation: champion-glow 900ms ease-in-out 6 alternate;
 }
 
+.stygg-mode .board-wrap {
+  animation: stygg-wobble 700ms ease-in-out 3;
+}
+
+.konami-mode .cell {
+  animation: konami-flash 500ms ease-in-out 4;
+}
+
+.ddko-mode .hero h1 {
+  animation: ddko-pulse 620ms ease-in-out 4;
+}
+
 @keyframes pop-in {
   from {
     transform: scale(0.85);
@@ -381,6 +382,40 @@ button {
   }
   to {
     filter: saturate(1.35) brightness(1.15);
+  }
+}
+
+@keyframes stygg-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(0.8deg);
+  }
+  75% {
+    transform: rotate(-0.8deg);
+  }
+}
+
+@keyframes konami-flash {
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+  50% {
+    border-color: var(--accent);
+    box-shadow: 0 0 14px rgba(255, 143, 0, 0.44);
+  }
+}
+
+@keyframes ddko-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
   }
 }
 

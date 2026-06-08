@@ -8,12 +8,15 @@ Mobilvänlig 5x5-bingoapp för Stygg Mus-helgen.
 - Lösenordsskydd med spelarval innan brickan visas.
 - Rollspecifika brickor som filtrerar bort rätt personfält.
 - Förmarkerad mittenruta: "Stygg Mus 2026 är invigt".
+- Diskret nollställning av sparade brickor och spelarval.
+- Nollställning av aktuell brickas markeringar utan att byta rutor.
+- Tre gömda easter eggs.
+- Diskret årsrad för Stygg Mus 2026.
 - Interaktiv check/uncheck av rutor.
 - Brickan och markeringar sparas lokalt mellan sid-refresh.
 - Bingo-detektering med vinstljud + confetti-animation.
-- Pris-popup vid bingo.
+- Stygg Mus-specifik pris-/straff-popup vid bingo.
 - Grand-win vid 25/25 rutor med särskilt pris.
-- Anpassningsbart tema (färger + typsnitt).
 
 ## Kör lokalt
 
