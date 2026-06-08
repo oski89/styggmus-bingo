@@ -12,7 +12,40 @@
   </head>
   <body>
     <div class="page-bg" aria-hidden="true"></div>
-    <main class="app">
+    <section id="access-screen" class="access-screen" aria-live="polite">
+      <div class="access-panel">
+        <p class="tag">AFC</p>
+        <h1>Stygg Mus Bingo</h1>
+
+        <form id="password-form" class="password-form">
+          <label for="password-input">Lösenord</label>
+          <div class="password-row">
+            <input
+              id="password-input"
+              type="password"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+            <button class="primary-btn" type="submit">Öppna</button>
+          </div>
+          <p id="password-feedback" class="feedback" role="alert"></p>
+        </form>
+
+        <div id="player-select" class="player-select hidden">
+          <h2>Vem är du?</h2>
+          <div class="player-buttons" aria-label="Välj spelare">
+            <button type="button" data-player-id="stygg-mus-president">Stygg mus president</button>
+            <button type="button" data-player-id="mouse-trap-pukie">Mouse trap pukie</button>
+            <button type="button" data-player-id="pommesansvarig">Pommesansvarig</button>
+            <button type="button" data-player-id="afc-master">AFC master</button>
+            <button type="button" data-player-id="prospect">Prospect</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main id="app" class="app hidden">
       <header class="hero">
         <p class="tag">Sommartraditionen</p>
         <h1>Stygg Mus Bingo</h1>
@@ -23,10 +56,15 @@
 
       <section class="controls" aria-label="Kontroller">
         <button id="new-board-btn" class="primary-btn" type="button">Ny bricka</button>
+        <button id="change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
         <button id="theme-toggle-btn" class="secondary-btn" type="button">Anpassa tema</button>
       </section>
 
       <section class="stats" aria-live="polite">
+        <div class="stat">
+          <span class="stat-label">Spelare</span>
+          <span id="current-player" class="stat-value">-</span>
+        </div>
         <div class="stat">
           <span class="stat-label">Markerade</span>
           <span id="marked-count" class="stat-value">0/25</span>

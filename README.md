@@ -5,6 +5,9 @@ Mobilvänlig 5x5-bingoapp för Stygg Mus-helgen.
 ## Funktioner
 
 - Unik bingobricka per användare.
+- Lösenordsskydd med spelarval innan brickan visas.
+- Rollspecifika brickor som filtrerar bort rätt personfält.
+- Förmarkerad mittenruta: "Stygg Mus 2026 är invigt".
 - Interaktiv check/uncheck av rutor.
 - Brickan och markeringar sparas lokalt mellan sid-refresh.
 - Bingo-detektering med vinstljud + confetti-animation.

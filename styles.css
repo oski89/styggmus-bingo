@@ -48,6 +48,92 @@ body {
   gap: 1rem;
 }
 
+.access-screen {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: calc(1.25rem + env(safe-area-inset-top)) 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+}
+
+.access-panel {
+  width: 100%;
+  background: rgba(8, 20, 34, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1rem;
+  padding: clamp(1rem, 5vw, 1.5rem);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+}
+
+.password-form {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.2rem;
+  text-align: left;
+}
+
+.password-form label {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.password-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+}
+
+.password-row input {
+  min-width: 0;
+  min-height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  padding: 0 0.85rem;
+  background: rgba(0, 0, 0, 0.24);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.feedback {
+  min-height: 1.25rem;
+  margin: 0;
+  color: #ffd1d0;
+  font-size: 0.9rem;
+}
+
+.player-select {
+  margin-top: 1.2rem;
+}
+
+.player-select h2 {
+  margin: 0 0 0.9rem;
+  font-size: 1.15rem;
+}
+
+.player-buttons {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.player-buttons button {
+  min-height: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
+.player-buttons button:active {
+  transform: scale(0.99);
+}
+
 .hero {
   text-align: center;
   padding-top: 0.5rem;
@@ -81,6 +167,10 @@ h1 {
   gap: 0.6rem;
 }
 
+.controls button {
+  flex: 1;
+}
+
 button {
   border: 0;
   border-radius: 0.9rem;
@@ -103,7 +193,7 @@ button {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 0.75rem;
 }
 
@@ -171,6 +261,14 @@ button {
   margin-top: 0.2rem;
   font-size: 1.1rem;
   font-weight: 800;
+}
+
+.cell.free-cell {
+  cursor: default;
+}
+
+.cell.free-cell:disabled {
+  opacity: 1;
 }
 
 .cell[data-winning="true"] {
@@ -287,6 +385,10 @@ button {
 }
 
 @media (max-width: 430px) {
+  .password-row {
+    grid-template-columns: 1fr;
+  }
+
   .cell {
     min-height: 78px;
     padding: 0.45rem;

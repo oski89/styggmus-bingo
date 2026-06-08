@@ -1,52 +1,100 @@
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "styggmus-bingo-v1";
+  const AUTH_KEY = "styggmus-bingo-auth-v1";
+  const PLAYER_KEY = "styggmus-bingo-player-v1";
+  const BOARD_STORAGE_PREFIX = "styggmus-bingo-board-v2";
   const THEME_KEY = "styggmus-bingo-theme-v1";
+  const PASSWORD = "AFC";
   const BOARD_SIZE = 5;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
+  const FREE_INDEX = Math.floor(CELL_COUNT / 2);
+  const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
 
-  const prompts = [
-    "Någon säger \"en sista öl\"",
-    "Någon glömmer handduk",
-    "Spontant nattbad",
-    "Grillmästaren skryter",
-    "En quizfråga leder till bråk",
-    "Någon tappar något i vattnet",
-    "Påbörjad men ej avslutad armhävningstävling",
-    "Någon säger \"vi tar en promenad\"",
-    "Diskussion om gamla minnen spårar ur",
-    "Någon kör barfota hela kvällen",
-    "Någon blandar en tveksam grogg",
-    "En låt spelas om minst tre gånger",
-    "Någon säger \"det här blir lugnt\"",
-    "Vinnarskalle i kubb eller kortspel",
-    "Någon tappar bort sin mobil tillfälligt",
-    "Någon börjar prata dialekt",
-    "Någon somnar i soffan först",
-    "Någon föreslår ett dopp till",
-    "Någon spiller öl på sig själv",
-    "Någon blir grillad i quiz",
-    "Någon ropar \"SKÅL\" från ingenstans",
-    "Någon lagar något med endast smörkniv",
-    "Dagens ord blir \"styggt\"",
-    "Någon glömmer vilken dag det är",
-    "Någon försöker prata engelska med måsen",
-    "Någon säger \"det här går i historieböckerna\"",
-    "En ny intern regel uppfinns",
-    "Någon säger \"bara fem minuter\"",
-    "Någon spelar luftgitarr",
-    "Någon förklarar en dålig ordvits",
-    "Någon vägrar erkänna förlust",
-    "Någon startar en skål med fel glas",
-    "Någon glömmer vart hen la kapsylöppnaren",
-    "Någon går all in i ett random sidobet",
-    "Någon uppfinner en egen lek",
-    "Någon säger \"vi behöver mer kol\"",
-    "Någon överanvänder ordet \"legendariskt\"",
-    "Någon gör en dramatisk entré",
-    "Någon föreslår aftermovie",
-    "Någon snackar strategi inför nästa år",
+  const promptGroups = [
+    {
+      id: "lagget",
+      prompts: [
+        "Lagget drar sin patenterade trumpetsnytning",
+        "Lagget klagar på pollen",
+        "Lagget hittar ett minimalt sår",
+        "Lagget måste lämna rummet p.g.a. fislukt",
+        "Lagget fryser",
+        "Lagget frågar om det är laktosfritt",
+      ],
+    },
+    {
+      id: "ks",
+      prompts: [
+        "KS drar en Hasse & Tage-referens",
+        "KS skrattar och skakar på huvudet för sig själv",
+        "KS kommenterar att vi har alldeles för mycket mat",
+        "KS vill sjunga en snapsvisa",
+        "KS tar upp Stygg Bitch-sparandet på Avanza",
+        "KS höjer rösten för att någon är trögfattad",
+      ],
+    },
+    {
+      id: "marcus",
+      prompts: [
+        "Marcus blir obekväm av Pers närmanden",
+        "Marcus levererar pommes",
+        "Marcus prisar Täby",
+        "Marcus klankar ner på sossarna",
+        "Marcus drar en anekdot om Ludde eller Henke",
+        "Marcus blandar en ambitiös cocktail",
+      ],
+    },
+    {
+      id: "oski",
+      prompts: [
+        "Oski knäpper en boga",
+        "Oski pratar spanska",
+        "Oski nyttjar sin överrörlighet",
+        "Oski drar fram resorben",
+        "Oski blir övertaggad",
+        "Oski drar ett pappaskämt",
+      ],
+    },
+    {
+      id: "per",
+      prompts: [
+        "Per släpper väder med särade skinkor",
+        "Per hänger ut drulen",
+        "Per har objektivt fel i en argumentation men fortsätter ändå driva sin tes",
+        "Per spontanköper något på fyllan",
+        "Per uttrycker sin skepsis mot AI",
+        "Per requestar DDKO",
+      ],
+    },
+  ];
+
+  const players = [
+    {
+      id: "stygg-mus-president",
+      label: "Stygg mus president",
+      excludedGroup: "lagget",
+    },
+    {
+      id: "mouse-trap-pukie",
+      label: "Mouse trap pukie",
+      excludedGroup: "ks",
+    },
+    {
+      id: "pommesansvarig",
+      label: "Pommesansvarig",
+      excludedGroup: "marcus",
+    },
+    {
+      id: "afc-master",
+      label: "AFC master",
+      excludedGroup: "oski",
+    },
+    {
+      id: "prospect",
+      label: "Prospect",
+      excludedGroup: "per",
+    },
   ];
 
   const bingoPrizes = [
@@ -63,10 +111,19 @@
   const grandPrize =
     "UTOPISK VINST: Du blir Stygg Mus-kejsare. Du slipper all disk resten av helgen, får först tjing på bästa sovplats och alla måste skåla för dig vid nästa måltid.";
 
+  const appEl = document.getElementById("app");
+  const accessScreenEl = document.getElementById("access-screen");
+  const passwordForm = document.getElementById("password-form");
+  const passwordInput = document.getElementById("password-input");
+  const passwordFeedbackEl = document.getElementById("password-feedback");
+  const playerSelectEl = document.getElementById("player-select");
+  const playerButtons = document.querySelectorAll("[data-player-id]");
   const boardEl = document.getElementById("board");
+  const currentPlayerEl = document.getElementById("current-player");
   const markedCountEl = document.getElementById("marked-count");
   const bingoCountEl = document.getElementById("bingo-count");
   const newBoardBtn = document.getElementById("new-board-btn");
+  const changePlayerBtn = document.getElementById("change-player-btn");
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
   const themePanel = document.getElementById("theme-panel");
   const overlayEl = document.getElementById("overlay");
@@ -83,22 +140,31 @@
     font: document.getElementById("font-family"),
   };
 
-  let state = loadOrCreateState();
+  let state = null;
+  let activePlayerId = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
 
   applyTheme(loadTheme());
-  renderBoard();
-  updateStatsAndWinState({ triggerEffects: false });
   registerEventListeners();
+  renderAccessFlow();
 
   function registerEventListeners() {
+    passwordForm.addEventListener("submit", onPasswordSubmit);
+
+    playerButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        onChoosePlayer(button.dataset.playerId);
+      });
+    });
+
     boardEl.addEventListener("click", onBoardClick);
     newBoardBtn.addEventListener("click", onNewBoard);
+    changePlayerBtn.addEventListener("click", showPlayerGate);
     themeToggleBtn.addEventListener("click", onThemeToggle);
     closeOverlayBtn.addEventListener("click", hideOverlay);
 
-    Object.entries(themeInputs).forEach(([key, input]) => {
+    Object.values(themeInputs).forEach((input) => {
       input.addEventListener("input", () => {
         const nextTheme = {
           accent: themeInputs.accent.value,
@@ -115,67 +181,177 @@
     window.addEventListener("resize", resizeConfettiCanvas);
   }
 
-  function loadOrCreateState() {
-    const raw = safeGet(STORAGE_KEY);
-    if (!raw) return createFreshState();
+  function renderAccessFlow() {
+    if (!isAuthenticated()) {
+      showPasswordGate();
+      return;
+    }
+
+    const savedPlayerId = safeGet(PLAYER_KEY);
+    if (!isValidPlayerId(savedPlayerId)) {
+      showPlayerGate();
+      return;
+    }
+
+    startGame(savedPlayerId);
+  }
+
+  function showPasswordGate() {
+    appEl.classList.add("hidden");
+    accessScreenEl.classList.remove("hidden");
+    passwordForm.classList.remove("hidden");
+    playerSelectEl.classList.add("hidden");
+    passwordFeedbackEl.textContent = "";
+    window.setTimeout(() => passwordInput.focus(), 0);
+  }
+
+  function showPlayerGate() {
+    appEl.classList.add("hidden");
+    accessScreenEl.classList.remove("hidden");
+    passwordForm.classList.add("hidden");
+    playerSelectEl.classList.remove("hidden");
+    passwordFeedbackEl.textContent = "";
+  }
+
+  function onPasswordSubmit(event) {
+    event.preventDefault();
+
+    if (passwordInput.value.trim().toUpperCase() !== PASSWORD) {
+      passwordFeedbackEl.textContent = "Fel lösenord. Testa igen.";
+      passwordInput.select();
+      return;
+    }
+
+    safeSetSession(AUTH_KEY, "true");
+    showPlayerGate();
+  }
+
+  function onChoosePlayer(playerId) {
+    if (!isValidPlayerId(playerId)) return;
+    safeSet(PLAYER_KEY, playerId);
+    startGame(playerId);
+  }
+
+  function startGame(playerId) {
+    activePlayerId = playerId;
+    state = loadOrCreateState(playerId);
+    accessScreenEl.classList.add("hidden");
+    appEl.classList.remove("hidden");
+    currentPlayerEl.textContent = getPlayer(playerId).label;
+    renderBoard();
+    updateStatsAndWinState({ triggerEffects: false });
+  }
+
+  function isAuthenticated() {
+    return safeGetSession(AUTH_KEY) === "true";
+  }
+
+  function loadOrCreateState(playerId) {
+    const raw = safeGet(getBoardStorageKey(playerId));
+    if (!raw) return createFreshState(playerId);
 
     try {
       const parsed = JSON.parse(raw);
-      if (!isValidState(parsed)) return createFreshState();
-      return parsed;
+      if (!isValidState(parsed, playerId)) return createFreshState(playerId);
+      return normalizeState(parsed, playerId);
     } catch (error) {
-      return createFreshState();
+      return createFreshState(playerId);
     }
   }
 
-  function createFreshState() {
+  function createFreshState(playerId) {
     const seed = generateSeed();
-    const boardItems = shuffleWithSeed(prompts, seed).slice(0, CELL_COUNT);
+    const boardItems = shuffleWithSeed(getAvailablePrompts(playerId), `${seed}-${playerId}`).slice(
+      0,
+      CELL_COUNT - 1
+    );
+    const board = [];
+
+    for (let index = 0; index < CELL_COUNT; index++) {
+      board.push(index === FREE_INDEX ? FREE_CELL_LABEL : boardItems.shift());
+    }
+
     return {
       id: seed,
+      playerId,
       createdAt: new Date().toISOString(),
-      board: boardItems,
-      checked: [],
+      board,
+      checked: [FREE_INDEX],
       bingoLinesAwarded: [],
       grandWin: false,
     };
   }
 
-  function isValidState(candidate) {
-    return (
-      candidate &&
-      Array.isArray(candidate.board) &&
-      candidate.board.length === CELL_COUNT &&
-      Array.isArray(candidate.checked) &&
-      Array.isArray(candidate.bingoLinesAwarded)
+  function isValidState(candidate, playerId) {
+    if (
+      !candidate ||
+      candidate.playerId !== playerId ||
+      !Array.isArray(candidate.board) ||
+      candidate.board.length !== CELL_COUNT ||
+      candidate.board[FREE_INDEX] !== FREE_CELL_LABEL ||
+      !Array.isArray(candidate.checked) ||
+      !Array.isArray(candidate.bingoLinesAwarded)
+    ) {
+      return false;
+    }
+
+    const forbiddenPrompts = new Set(getExcludedPrompts(playerId));
+    return candidate.board.every((label) => typeof label === "string" && !forbiddenPrompts.has(label));
+  }
+
+  function normalizeState(candidate, playerId) {
+    const checked = new Set(
+      candidate.checked.filter((index) => Number.isInteger(index) && index >= 0 && index < CELL_COUNT)
     );
+    checked.add(FREE_INDEX);
+
+    return {
+      ...candidate,
+      playerId,
+      checked: [...checked].sort((a, b) => a - b),
+    };
   }
 
   function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!state) return;
+    safeSet(getBoardStorageKey(state.playerId), JSON.stringify(state));
   }
 
   function renderBoard() {
+    if (!state) return;
     boardEl.innerHTML = "";
 
     state.board.forEach((label, index) => {
       const button = document.createElement("button");
+      const isChecked = state.checked.includes(index);
+
       button.type = "button";
       button.className = "cell";
       button.dataset.index = String(index);
       button.role = "gridcell";
-      button.ariaLabel = label;
+      button.ariaLabel = index === FREE_INDEX ? `${label}, förmarkerad` : label;
+      button.ariaPressed = isChecked ? "true" : "false";
       button.textContent = label;
-      if (state.checked.includes(index)) button.classList.add("checked");
+
+      if (isChecked) button.classList.add("checked");
+      if (index === FREE_INDEX) {
+        button.classList.add("free-cell");
+        button.disabled = true;
+      }
+
       boardEl.appendChild(button);
     });
   }
 
   function onBoardClick(event) {
+    if (!state) return;
+
     const target = event.target;
     if (!(target instanceof HTMLElement) || !target.classList.contains("cell")) return;
 
     const index = Number(target.dataset.index);
+    if (index === FREE_INDEX) return;
+
     const checkedSet = new Set(state.checked);
 
     if (checkedSet.has(index)) {
@@ -184,6 +360,7 @@
       checkedSet.add(index);
     }
 
+    checkedSet.add(FREE_INDEX);
     state.checked = [...checkedSet].sort((a, b) => a - b);
     saveState();
     renderBoard();
@@ -191,12 +368,14 @@
   }
 
   function onNewBoard() {
+    if (!activePlayerId) return;
+
     const confirmed = window.confirm(
       "Skapa en helt ny bricka? Din nuvarande markering nollställs."
     );
     if (!confirmed) return;
 
-    state = createFreshState();
+    state = createFreshState(activePlayerId);
     saveState();
     renderBoard();
     updateStatsAndWinState({ triggerEffects: false });
@@ -206,7 +385,34 @@
     themePanel.classList.toggle("hidden");
   }
 
+  function getAvailablePrompts(playerId) {
+    const player = getPlayer(playerId);
+    return promptGroups
+      .filter((group) => group.id !== player.excludedGroup)
+      .flatMap((group) => group.prompts);
+  }
+
+  function getExcludedPrompts(playerId) {
+    const player = getPlayer(playerId);
+    const group = promptGroups.find((item) => item.id === player.excludedGroup);
+    return group ? group.prompts : [];
+  }
+
+  function getPlayer(playerId) {
+    return players.find((player) => player.id === playerId);
+  }
+
+  function isValidPlayerId(playerId) {
+    return players.some((player) => player.id === playerId);
+  }
+
+  function getBoardStorageKey(playerId) {
+    return `${BOARD_STORAGE_PREFIX}:${playerId}`;
+  }
+
   function updateStatsAndWinState({ triggerEffects }) {
+    if (!state) return;
+
     const marked = state.checked.length;
     const lines = getWinningLines(state.checked);
     const lineKeys = lines.map((line) => line.join("-"));
@@ -433,6 +639,30 @@
     }
   }
 
+  function safeSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      return;
+    }
+  }
+
+  function safeGetSession(key) {
+    try {
+      return sessionStorage.getItem(key);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function safeSetSession(key, value) {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch (error) {
+      return;
+    }
+  }
+
   function loadTheme() {
     const fallback = {
       accent: "#ff8f00",
@@ -458,7 +688,7 @@
   }
 
   function saveTheme(theme) {
-    localStorage.setItem(THEME_KEY, JSON.stringify(theme));
+    safeSet(THEME_KEY, JSON.stringify(theme));
   }
 
   function syncThemeInputs(theme) {
