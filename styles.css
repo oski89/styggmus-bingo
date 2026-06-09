@@ -323,10 +323,44 @@ input {
   font-weight: 650;
 }
 
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+
 .controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.65rem;
+}
+
+/* Poängtavla-knapp tar hela bredden på sin rad */
+.scoreboard-toggle-btn {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(245, 184, 75, 0.28);
+  background:
+    linear-gradient(180deg, rgba(245, 184, 75, 0.12), rgba(245, 184, 75, 0.05)),
+    rgba(12, 17, 27, 0.8);
+  color: var(--accent-strong);
+  font-size: 0.94rem;
+  font-weight: 850;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 207, 115, 0.1);
+}
+
+.scoreboard-toggle-btn svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  opacity: 0.88;
+}
+
+.scoreboard-toggle-btn:hover,
+.scoreboard-toggle-btn:focus-visible {
+  border-color: rgba(245, 184, 75, 0.56);
+  background:
+    linear-gradient(180deg, rgba(245, 184, 75, 0.2), rgba(245, 184, 75, 0.08)),
+    rgba(12, 17, 27, 0.88);
 }
 
 button {
@@ -379,6 +413,8 @@ button:focus-visible {
     rgba(12, 17, 27, 0.88);
 }
 
+/* ── Stats ────────────────────────────────────────────────────────────────── */
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -424,6 +460,8 @@ button:focus-visible {
   line-height: 1.1;
   overflow-wrap: anywhere;
 }
+
+/* ── Board ────────────────────────────────────────────────────────────────── */
 
 .board-wrap {
   position: relative;
@@ -546,6 +584,8 @@ button:focus-visible {
     0 16px 30px rgba(0, 0, 0, 0.28);
 }
 
+/* ── Overlays ─────────────────────────────────────────────────────────────── */
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -609,6 +649,151 @@ button:focus-visible {
   color: #160d02;
   box-shadow: 0 16px 28px rgba(192, 117, 21, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
 }
+
+/* ── Scoreboard overlay ───────────────────────────────────────────────────── */
+
+.scoreboard-card {
+  width: min(520px, 100%);
+  text-align: left;
+  padding: 1.35rem;
+}
+
+.scoreboard-title {
+  margin: 0 0 1rem;
+  color: var(--accent-strong);
+  font-size: 1.4rem;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 8px 24px rgba(245, 184, 75, 0.2);
+}
+
+.scoreboard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.scoreboard-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(255, 248, 232, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.scoreboard-row--active {
+  border-color: rgba(245, 184, 75, 0.38);
+  background: rgba(245, 184, 75, 0.07);
+}
+
+.scoreboard-rank {
+  font-size: 1.15rem;
+  line-height: 1;
+  min-width: 1.8rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.scoreboard-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 850;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scoreboard-you {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(245, 184, 75, 0.18);
+  border: 1px solid rgba(245, 184, 75, 0.32);
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.scoreboard-stats {
+  display: flex;
+  gap: 0.9rem;
+  flex-shrink: 0;
+}
+
+.scoreboard-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+  min-width: 44px;
+}
+
+.scoreboard-stat-value {
+  color: var(--text);
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.scoreboard-stat-value--grand {
+  color: var(--accent-strong);
+}
+
+.scoreboard-stat-value--checked {
+  color: var(--checked-light);
+}
+
+.scoreboard-stat-denom {
+  font-size: 0.72em;
+  opacity: 0.55;
+  font-weight: 700;
+}
+
+.scoreboard-stat-label {
+  color: rgba(255, 248, 232, 0.44);
+  font-size: 0.65rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.scoreboard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(255, 248, 232, 0.1);
+}
+
+.reset-scores-btn {
+  padding: 0.45rem 0.65rem;
+  background: transparent;
+  color: rgba(255, 177, 189, 0.72);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.reset-scores-btn:hover,
+.reset-scores-btn:focus-visible {
+  color: #ffd8de;
+  text-decoration: underline;
+}
+
+.scoreboard-close-btn {
+  padding: 0.7rem 1.4rem;
+}
+
+/* ── Canvas & animations ──────────────────────────────────────────────────── */
 
 .confetti {
   position: fixed;
@@ -691,6 +876,8 @@ button:focus-visible {
   }
 }
 
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
 @media (max-width: 680px) {
   .app {
     gap: 0.75rem;
@@ -709,7 +896,19 @@ button:focus-visible {
     font-size: 0.9rem;
   }
 
-  .controls,
+  .controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Ny bricka tar hela första raden, de andra delar andra raden */
+  #new-board-btn {
+    grid-column: 1 / -1;
+  }
+
+  .scoreboard-toggle-btn {
+    grid-column: 1 / -1;
+  }
+
   .stats {
     grid-template-columns: 1fr;
   }
@@ -731,6 +930,18 @@ button:focus-visible {
     padding: 0.48rem;
     font-size: 0.68rem;
     line-height: 1.08;
+  }
+
+  .scoreboard-stats {
+    gap: 0.6rem;
+  }
+
+  .scoreboard-stat {
+    min-width: 36px;
+  }
+
+  .scoreboard-stat-value {
+    font-size: 1rem;
   }
 }
 
@@ -757,5 +968,9 @@ button:focus-visible {
   .cell {
     min-height: 78px;
     font-size: 0.62rem;
+  }
+
+  .scoreboard-name {
+    font-size: 0.82rem;
   }
 }

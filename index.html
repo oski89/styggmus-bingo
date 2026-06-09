@@ -73,6 +73,13 @@
         <button id="new-board-btn" class="primary-btn" type="button">Ny bricka</button>
         <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>
         <button id="change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
+        <button id="scoreboard-btn" class="scoreboard-toggle-btn" type="button" aria-label="Visa poängtavla">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          Poängtavla
+        </button>
       </section>
 
       <section class="stats" aria-live="polite">
@@ -81,7 +88,7 @@
           <span id="current-player" class="stat-value">-</span>
         </div>
         <div class="stat">
-          <span class="stat-label">Markerade</span>
+          <span class="stat-label">Markerade fält</span>
           <span id="marked-count" class="stat-value">0/25</span>
         </div>
         <div class="stat">
@@ -97,11 +104,24 @@
       <p class="version-line">Stygg Mus 2026</p>
     </main>
 
+    <!-- Bingo prize overlay -->
     <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-live="assertive">
       <div class="overlay-card">
         <h2 id="overlay-title">BINGO!</h2>
         <p id="overlay-text"></p>
         <button id="close-overlay-btn" type="button">Fortsätt spela</button>
+      </div>
+    </div>
+
+    <!-- Scoreboard overlay -->
+    <div id="scoreboard-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Poängtavla">
+      <div class="overlay-card scoreboard-card">
+        <h2 class="scoreboard-title">Poängtavla</h2>
+        <div id="scoreboard-body" class="scoreboard-body"></div>
+        <div class="scoreboard-footer">
+          <button id="reset-scores-btn" class="reset-scores-btn" type="button">Nollställ poäng</button>
+          <button id="close-scoreboard-btn" class="primary-btn scoreboard-close-btn" type="button">Stäng</button>
+        </div>
       </div>
     </div>
 

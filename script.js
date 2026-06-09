@@ -4,6 +4,7 @@
   const AUTH_KEY = "styggmus-bingo-auth-v1";
   const PLAYER_KEY = "styggmus-bingo-player-v1";
   const BOARD_STORAGE_PREFIX = "styggmus-bingo-board-v2";
+  const SCORES_KEY = "styggmus-bingo-scores-v1";
   const PASSWORD = "AFC";
   const BOARD_SIZE = 5;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
@@ -124,6 +125,8 @@
   const grandPrize =
     "UTOPISK VINST: Du blir Stygg Mus-kejsare 2026. Du får först tjing på bästa sovplats, slipper nästa tråkiga syssla och alla måste skåla för din historiskt välkryssade bricka.";
 
+  // ── DOM-refs ──────────────────────────────────────────────────────────────
+
   const appEl = document.getElementById("app");
   const accessScreenEl = document.getElementById("access-screen");
   const passwordForm = document.getElementById("password-form");
@@ -140,10 +143,15 @@
   const newBoardBtn = document.getElementById("new-board-btn");
   const resetBoardBtn = document.getElementById("reset-board-btn");
   const changePlayerBtn = document.getElementById("change-player-btn");
+  const scoreboardBtn = document.getElementById("scoreboard-btn");
   const overlayEl = document.getElementById("overlay");
   const overlayTitleEl = document.getElementById("overlay-title");
   const overlayTextEl = document.getElementById("overlay-text");
   const closeOverlayBtn = document.getElementById("close-overlay-btn");
+  const scoreboardOverlayEl = document.getElementById("scoreboard-overlay");
+  const scoreboardBodyEl = document.getElementById("scoreboard-body");
+  const closeScoreboardBtn = document.getElementById("close-scoreboard-btn");
+  const resetScoresBtn = document.getElementById("reset-scores-btn");
   const confettiCanvas = document.getElementById("confetti");
 
   let state = null;
@@ -157,6 +165,8 @@
 
   registerEventListeners();
   renderAccessFlow();
+
+  // ── Event listeners ───────────────────────────────────────────────────────
 
   function registerEventListeners() {
     passwordForm.addEventListener("submit", onPasswordSubmit);
@@ -172,12 +182,21 @@
     resetBoardBtn.addEventListener("click", onResetBoard);
     changePlayerBtn.addEventListener("click", showPlayerGate);
     resetAllBtn.addEventListener("click", onResetAll);
+    scoreboardBtn.addEventListener("click", showScoreboard);
+    closeScoreboardBtn.addEventListener("click", hideScoreboard);
     gameTitleEl.addEventListener("click", onGameTitleClick);
     closeOverlayBtn.addEventListener("click", hideOverlay);
+    resetScoresBtn.addEventListener("click", onResetScores);
+
+    scoreboardOverlayEl.addEventListener("click", (e) => {
+      if (e.target === scoreboardOverlayEl) hideScoreboard();
+    });
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", resizeConfettiCanvas);
   }
+
+  // ── Access flow ───────────────────────────────────────────────────────────
 
   function renderAccessFlow() {
     if (!isAuthenticated()) {
@@ -242,12 +261,13 @@
 
   function onResetAll() {
     const confirmed = window.confirm(
-      "Nollställa alla sparade brickor, markeringar och spelarval?"
+      "Nollställa alla sparade brickor, markeringar, poäng och spelarval?"
     );
     if (!confirmed) return;
 
     clearSavedBoards();
     safeRemove(PLAYER_KEY);
+    safeRemove(SCORES_KEY);
     safeRemove("styggmus-bingo-theme-v1");
     safeRemoveSession(AUTH_KEY);
     state = null;
@@ -263,6 +283,8 @@
   function isAuthenticated() {
     return safeGetSession(AUTH_KEY) === "true";
   }
+
+  // ── State ─────────────────────────────────────────────────────────────────
 
   function loadOrCreateState(playerId) {
     const raw = safeGet(getBoardStorageKey(playerId));
@@ -334,6 +356,161 @@
     if (!state) return;
     safeSet(getBoardStorageKey(state.playerId), JSON.stringify(state));
   }
+
+  // ── Scoreboard state ──────────────────────────────────────────────────────
+
+  function loadScores() {
+    try {
+      const raw = safeGet(SCORES_KEY);
+      if (!raw) return createEmptyScores();
+      const parsed = JSON.parse(raw);
+      return isValidScores(parsed) ? parsed : createEmptyScores();
+    } catch {
+      return createEmptyScores();
+    }
+  }
+
+  function createEmptyScores() {
+    const scores = {};
+    players.forEach((p) => {
+      scores[p.id] = { bingoLines: 0, grandWins: 0, lastBingoAt: null };
+    });
+    return scores;
+  }
+
+  function isValidScores(candidate) {
+    return candidate && typeof candidate === "object" && !Array.isArray(candidate);
+  }
+
+  function saveScores(scores) {
+    safeSet(SCORES_KEY, JSON.stringify(scores));
+  }
+
+  function recordBingoLines(playerId, newLinesCount) {
+    const scores = loadScores();
+    if (!scores[playerId]) {
+      scores[playerId] = { bingoLines: 0, grandWins: 0, lastBingoAt: null };
+    }
+    scores[playerId].bingoLines += newLinesCount;
+    scores[playerId].lastBingoAt = new Date().toISOString();
+    saveScores(scores);
+  }
+
+  function recordGrandWin(playerId) {
+    const scores = loadScores();
+    if (!scores[playerId]) {
+      scores[playerId] = { bingoLines: 0, grandWins: 0, lastBingoAt: null };
+    }
+    scores[playerId].grandWins += 1;
+    scores[playerId].lastBingoAt = new Date().toISOString();
+    saveScores(scores);
+  }
+
+  function onResetScores() {
+    const confirmed = window.confirm(
+      "Nollställa poängtavlan för alla spelare? Brickorna påverkas inte."
+    );
+    if (!confirmed) return;
+    saveScores(createEmptyScores());
+    renderScoreboardBody();
+  }
+
+  // ── Scoreboard UI ─────────────────────────────────────────────────────────
+
+  function getCheckedCountForPlayer(playerId) {
+    try {
+      const raw = safeGet(getBoardStorageKey(playerId));
+      if (!raw) return 0;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed.checked)) return 0;
+      return parsed.checked.length;
+    } catch {
+      return 0;
+    }
+  }
+
+  function showScoreboard() {
+    renderScoreboardBody();
+    scoreboardOverlayEl.classList.remove("hidden");
+  }
+
+  function hideScoreboard() {
+    scoreboardOverlayEl.classList.add("hidden");
+  }
+
+  function renderScoreboardBody() {
+    const scores = loadScores();
+
+    const ranked = players
+      .map((p) => {
+        const checkedCount = getCheckedCountForPlayer(p.id);
+        return {
+          player: p,
+          bingoLines: scores[p.id]?.bingoLines ?? 0,
+          grandWins: scores[p.id]?.grandWins ?? 0,
+          lastBingoAt: scores[p.id]?.lastBingoAt ?? null,
+          checkedCount,
+        };
+      })
+      .sort((a, b) => {
+        if (b.grandWins !== a.grandWins) return b.grandWins - a.grandWins;
+        return b.bingoLines - a.bingoLines;
+      });
+
+    const medals = ["🥇", "🥈", "🥉"];
+    const hasAnyScore = ranked.some((r) => r.bingoLines > 0 || r.grandWins > 0);
+
+    scoreboardBodyEl.innerHTML = "";
+
+    ranked.forEach((entry, index) => {
+      const isCurrentPlayer = entry.player.id === activePlayerId;
+      const rank = index + 1;
+      const medalOrRank = medals[index] ?? `${rank}.`;
+
+      const row = document.createElement("div");
+      row.className = "scoreboard-row" + (isCurrentPlayer ? " scoreboard-row--active" : "");
+
+      const rankEl = document.createElement("span");
+      rankEl.className = "scoreboard-rank";
+      rankEl.textContent = hasAnyScore ? medalOrRank : `${rank}.`;
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "scoreboard-name";
+      nameEl.textContent = entry.player.label;
+      if (isCurrentPlayer) {
+        const youBadge = document.createElement("span");
+        youBadge.className = "scoreboard-you";
+        youBadge.textContent = "du";
+        nameEl.appendChild(youBadge);
+      }
+
+      const statsEl = document.createElement("span");
+      statsEl.className = "scoreboard-stats";
+
+      const checkedStat = document.createElement("span");
+      checkedStat.className = "scoreboard-stat";
+      checkedStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--checked">${entry.checkedCount}<span class="scoreboard-stat-denom">/${CELL_COUNT}</span></span><span class="scoreboard-stat-label">fält</span>`;
+
+      const linesStat = document.createElement("span");
+      linesStat.className = "scoreboard-stat";
+      linesStat.innerHTML = `<span class="scoreboard-stat-value">${entry.bingoLines}</span><span class="scoreboard-stat-label">bingo</span>`;
+
+      const grandStat = document.createElement("span");
+      grandStat.className = "scoreboard-stat";
+      grandStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--grand">${entry.grandWins}</span><span class="scoreboard-stat-label">full bricka</span>`;
+
+      statsEl.appendChild(checkedStat);
+      statsEl.appendChild(linesStat);
+      statsEl.appendChild(grandStat);
+
+      row.appendChild(rankEl);
+      row.appendChild(nameEl);
+      row.appendChild(statsEl);
+      scoreboardBodyEl.appendChild(row);
+    });
+  }
+
+  // ── Board ─────────────────────────────────────────────────────────────────
 
   function renderBoard() {
     if (!state) return;
@@ -415,6 +592,8 @@
     updateStatsAndWinState({ triggerEffects: false });
   }
 
+  // ── Player helpers ────────────────────────────────────────────────────────
+
   function getAvailablePrompts(playerId) {
     const player = getPlayer(playerId);
     return promptGroups
@@ -439,6 +618,8 @@
   function getBoardStorageKey(playerId) {
     return `${BOARD_STORAGE_PREFIX}:${playerId}`;
   }
+
+  // ── Easter eggs ───────────────────────────────────────────────────────────
 
   function onGameTitleClick() {
     titleClickCount += 1;
@@ -513,6 +694,8 @@
     return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable;
   }
 
+  // ── Win detection ─────────────────────────────────────────────────────────
+
   function updateStatsAndWinState({ triggerEffects }) {
     if (!state) return;
 
@@ -529,12 +712,14 @@
       if (newLines.length > 0) {
         state.bingoLinesAwarded = [...state.bingoLinesAwarded, ...newLines];
         saveState();
+        recordBingoLines(state.playerId, newLines.length);
         celebrateBingo();
       }
 
       if (marked === CELL_COUNT && !state.grandWin) {
         state.grandWin = true;
         saveState();
+        recordGrandWin(state.playerId);
         celebrateGrandWin();
       } else if (marked < CELL_COUNT && state.grandWin) {
         state.grandWin = false;
@@ -582,6 +767,8 @@
     return lines;
   }
 
+  // ── Celebrations ──────────────────────────────────────────────────────────
+
   function celebrateBingo() {
     playWinSound(false);
     runConfetti(1800);
@@ -605,6 +792,8 @@
   function hideOverlay() {
     overlayEl.classList.add("hidden");
   }
+
+  // ── Confetti ──────────────────────────────────────────────────────────────
 
   function runConfetti(durationMs) {
     if (!(confettiCanvas instanceof HTMLCanvasElement)) return;
@@ -669,6 +858,8 @@
     if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   }
 
+  // ── Audio ─────────────────────────────────────────────────────────────────
+
   function playWinSound(isGrandWin) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
@@ -694,6 +885,8 @@
       osc.stop(now + i * 0.12 + 0.18);
     });
   }
+
+  // ── Utilities ─────────────────────────────────────────────────────────────
 
   function shuffleWithSeed(items, seedString) {
     const copy = [...items];
@@ -733,6 +926,8 @@
     }
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
+
+  // ── Storage ───────────────────────────────────────────────────────────────
 
   function safeGet(key) {
     try {
