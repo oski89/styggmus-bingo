@@ -806,6 +806,24 @@ button:focus-visible {
   display: none;
 }
 
+.demo-indicator {
+  display: none;
+}
+
+body.demo-mode .demo-indicator {
+  display: inline-block;
+  margin: 0.55rem auto 0;
+  padding: 0.22rem 0.7rem;
+  border: 1px solid rgba(245, 184, 75, 0.4);
+  border-radius: 999px;
+  background: rgba(245, 184, 75, 0.14);
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
 .champion {
   animation: champion-glow 900ms ease-in-out 6 alternate;
 }

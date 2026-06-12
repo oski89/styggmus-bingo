@@ -2,10 +2,17 @@
   "use strict";
 
   const AUTH_KEY = "styggmus-bingo-auth-v1";
+  const MODE_KEY = "styggmus-bingo-mode-v1";
   const PLAYER_KEY = "styggmus-bingo-player-v1";
   const BOARD_STORAGE_PREFIX = "styggmus-bingo-board-v2";
   const SCORES_KEY = "styggmus-bingo-scores-v1";
-  const PASSWORD = "AFC";
+  const MODE_LIVE = "live";
+  const MODE_DEMO = "demo";
+  const VALID_MODES = [MODE_LIVE, MODE_DEMO];
+  const PASSWORDS = {
+    AFC: MODE_LIVE,
+    GRINDER: MODE_DEMO,
+  };
   const BOARD_SIZE = 5;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
   const FREE_INDEX = Math.floor(CELL_COUNT / 2);
@@ -109,6 +116,64 @@
     },
   ];
 
+  const demoPromptGroups = [
+    {
+      id: "lagget",
+      prompts: [
+        "Lorem ipsum dolor sit amet",
+        "Consectetur adipiscing elit",
+        "Sed do eiusmod tempor incididunt",
+        "Ut labore et dolore magna",
+        "Aliqua ut enim ad minim",
+        "Veniam quis nostrud exercitation",
+      ],
+    },
+    {
+      id: "ks",
+      prompts: [
+        "Ullamco laboris nisi ut aliquip",
+        "Ex ea commodo consequat",
+        "Duis aute irure dolor",
+        "Reprehenderit in voluptate velit",
+        "Esse cillum dolore eu fugiat",
+        "Nulla pariatur excepteur sint",
+      ],
+    },
+    {
+      id: "marcus",
+      prompts: [
+        "Occaecat cupidatat non proident",
+        "Sunt in culpa qui officia",
+        "Deserunt mollit anim id est",
+        "Laborum sed ut perspiciatis",
+        "Unde omnis iste natus error",
+        "Sit voluptatem accusantium doloremque",
+      ],
+    },
+    {
+      id: "oski",
+      prompts: [
+        "Laudantium totam rem aperiam",
+        "Eaque ipsa quae ab illo",
+        "Inventore veritatis et quasi",
+        "Architecto beatae vitae dicta sunt",
+        "Explicabo nemo enim ipsam",
+        "Voluptatem quia voluptas sit",
+      ],
+    },
+    {
+      id: "per",
+      prompts: [
+        "Aspernatur aut odit aut fugit",
+        "Sed quia consequuntur magni",
+        "Dolores eos qui ratione",
+        "Voluptatem sequi nesciunt",
+        "Neque porro quisquam est qui",
+        "Dolorem ipsum quia dolor",
+      ],
+    },
+  ];
+
   const bingoPrizes = [
     "Du får utse kvällens officiella pommesinspektör. Personen måste leverera en seriös recension av nästa laddning.",
     "Välj en person som måste hålla ett högtidligt tal till Stygg Mus innan nästa skål.",
@@ -124,6 +189,22 @@
 
   const grandPrize =
     "UTOPISK VINST: Du blir Stygg Mus-kejsare 2026. Du får först tjing på bästa sovplats, slipper nästa tråkiga syssla och alla måste skåla för din historiskt välkryssade bricka.";
+
+  const demoBingoPrizes = [
+    "Demo-pris 1: Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "Demo-pris 2: Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+    "Demo-pris 3: Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+    "Demo-pris 4: Duis aute irure dolor in reprehenderit in voluptate velit.",
+    "Demo-pris 5: Excepteur sint occaecat cupidatat non proident, sunt in culpa.",
+    "Demo-pris 6: Sed ut perspiciatis unde omnis iste natus error sit voluptatem.",
+    "Demo-pris 7: Nemo enim ipsam voluptatem quia voluptas sit aspernatur.",
+    "Demo-pris 8: Neque porro quisquam est qui dolorem ipsum quia dolor sit.",
+    "Demo-pris 9: At vero eos et accusamus et iusto odio dignissimos ducimus.",
+    "Demo-pris 10: Et harum quidem rerum facilis est et expedita distinctio.",
+  ];
+
+  const demoGrandPrize =
+    "DEMO GRAND-PRIS: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Du har testat hela brickan i beta-läget.";
 
   // ── DOM-refs ──────────────────────────────────────────────────────────────
 
@@ -156,6 +237,7 @@
 
   let state = null;
   let activePlayerId = null;
+  let currentMode = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
   let titleClickCount = 0;
@@ -200,11 +282,16 @@
 
   function renderAccessFlow() {
     if (!isAuthenticated()) {
+      currentMode = null;
+      applyModeToUI();
       showPasswordGate();
       return;
     }
 
-    const savedPlayerId = safeGet(PLAYER_KEY);
+    currentMode = safeGetSession(MODE_KEY);
+    applyModeToUI();
+
+    const savedPlayerId = safeGet(getPlayerKey());
     if (!isValidPlayerId(savedPlayerId)) {
       showPlayerGate();
       return;
@@ -233,19 +320,25 @@
   function onPasswordSubmit(event) {
     event.preventDefault();
 
-    if (passwordInput.value.trim().toUpperCase() !== PASSWORD) {
+    const entered = passwordInput.value.trim().toUpperCase();
+    const mode = PASSWORDS[entered];
+
+    if (!mode) {
       passwordFeedbackEl.textContent = "Fel lösenord. Testa igen.";
       passwordInput.select();
       return;
     }
 
+    currentMode = mode;
     safeSetSession(AUTH_KEY, "true");
+    safeSetSession(MODE_KEY, mode);
+    applyModeToUI();
     showPlayerGate();
   }
 
   function onChoosePlayer(playerId) {
     if (!isValidPlayerId(playerId)) return;
-    safeSet(PLAYER_KEY, playerId);
+    safeSet(getPlayerKey(), playerId);
     startGame(playerId);
   }
 
@@ -266,10 +359,12 @@
     if (!confirmed) return;
 
     clearSavedBoards();
-    safeRemove(PLAYER_KEY);
-    safeRemove(SCORES_KEY);
+    safeRemove(getPlayerKey());
+    safeRemove(getScoresKey());
     safeRemove("styggmus-bingo-theme-v1");
     safeRemoveSession(AUTH_KEY);
+    safeRemoveSession(MODE_KEY);
+    currentMode = null;
     state = null;
     activePlayerId = null;
     passwordInput.value = "";
@@ -277,11 +372,40 @@
     bingoCountEl.textContent = "0";
     currentPlayerEl.textContent = "-";
     boardEl.innerHTML = "";
+    applyModeToUI();
     showPasswordGate();
   }
 
   function isAuthenticated() {
-    return safeGetSession(AUTH_KEY) === "true";
+    return (
+      safeGetSession(AUTH_KEY) === "true" &&
+      VALID_MODES.includes(safeGetSession(MODE_KEY))
+    );
+  }
+
+  function applyModeToUI() {
+    const isDemo = currentMode === MODE_DEMO;
+    document.body.classList.toggle("demo-mode", isDemo);
+  }
+
+  function getActivePromptGroups() {
+    return currentMode === MODE_DEMO ? demoPromptGroups : promptGroups;
+  }
+
+  function getActiveBingoPrizes() {
+    return currentMode === MODE_DEMO ? demoBingoPrizes : bingoPrizes;
+  }
+
+  function getActiveGrandPrize() {
+    return currentMode === MODE_DEMO ? demoGrandPrize : grandPrize;
+  }
+
+  function getPlayerKey() {
+    return currentMode === MODE_DEMO ? `${PLAYER_KEY}:demo` : PLAYER_KEY;
+  }
+
+  function getScoresKey() {
+    return currentMode === MODE_DEMO ? `${SCORES_KEY}:demo` : SCORES_KEY;
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -361,7 +485,7 @@
 
   function loadScores() {
     try {
-      const raw = safeGet(SCORES_KEY);
+      const raw = safeGet(getScoresKey());
       if (!raw) return createEmptyScores();
       const parsed = JSON.parse(raw);
       return isValidScores(parsed) ? parsed : createEmptyScores();
@@ -383,7 +507,7 @@
   }
 
   function saveScores(scores) {
-    safeSet(SCORES_KEY, JSON.stringify(scores));
+    safeSet(getScoresKey(), JSON.stringify(scores));
   }
 
   function recordBingoLines(playerId, newLinesCount) {
@@ -596,14 +720,14 @@
 
   function getAvailablePrompts(playerId) {
     const player = getPlayer(playerId);
-    return promptGroups
+    return getActivePromptGroups()
       .filter((group) => group.id !== player.excludedGroup)
       .flatMap((group) => group.prompts);
   }
 
   function getExcludedPrompts(playerId) {
     const player = getPlayer(playerId);
-    const group = promptGroups.find((item) => item.id === player.excludedGroup);
+    const group = getActivePromptGroups().find((item) => item.id === player.excludedGroup);
     return group ? group.prompts : [];
   }
 
@@ -616,7 +740,9 @@
   }
 
   function getBoardStorageKey(playerId) {
-    return `${BOARD_STORAGE_PREFIX}:${playerId}`;
+    return currentMode === MODE_DEMO
+      ? `${BOARD_STORAGE_PREFIX}:demo:${playerId}`
+      : `${BOARD_STORAGE_PREFIX}:${playerId}`;
   }
 
   // ── Easter eggs ───────────────────────────────────────────────────────────
@@ -772,7 +898,7 @@
   function celebrateBingo() {
     playWinSound(false);
     runConfetti(1800);
-    showOverlay("BINGO!", randomItem(bingoPrizes));
+    showOverlay("BINGO!", randomItem(getActiveBingoPrizes()));
   }
 
   function celebrateGrandWin() {
@@ -780,7 +906,7 @@
     runConfetti(3400);
     document.body.classList.add("champion");
     setTimeout(() => document.body.classList.remove("champion"), 5600);
-    showOverlay("HELA BRICKAN KLAR!", grandPrize);
+    showOverlay("HELA BRICKAN KLAR!", getActiveGrandPrize());
   }
 
   function showOverlay(title, text) {
@@ -954,9 +1080,17 @@
   }
 
   function clearSavedBoards() {
+    const demoPrefix = `${BOARD_STORAGE_PREFIX}:demo:`;
+    const livePrefix = `${BOARD_STORAGE_PREFIX}:`;
     try {
       Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith(`${BOARD_STORAGE_PREFIX}:`)) localStorage.removeItem(key);
+        if (currentMode === MODE_DEMO) {
+          if (key.startsWith(demoPrefix)) localStorage.removeItem(key);
+        } else {
+          if (key.startsWith(livePrefix) && !key.startsWith(demoPrefix)) {
+            localStorage.removeItem(key);
+          }
+        }
       });
     } catch (error) {
       return;
