@@ -252,7 +252,6 @@
   const scoreboardOverlayEl = document.getElementById("scoreboard-overlay");
   const scoreboardBodyEl = document.getElementById("scoreboard-body");
   const closeScoreboardBtn = document.getElementById("close-scoreboard-btn");
-  const resetScoresBtn = document.getElementById("reset-scores-btn");
   const confettiCanvas = document.getElementById("confetti");
 
   let state = null;
@@ -300,7 +299,6 @@
 
     closeOverlayBtn.addEventListener("click", hideOverlay);
     closeScoreboardBtn.addEventListener("click", hideScoreboard);
-    resetScoresBtn.addEventListener("click", onResetScores);
 
     scoreboardOverlayEl.addEventListener("click", (e) => {
       if (e.target === scoreboardOverlayEl) hideScoreboard();
@@ -576,15 +574,6 @@
     scores[playerId].grandWins += 1;
     scores[playerId].lastBingoAt = new Date().toISOString();
     saveScores(scores);
-  }
-
-  function onResetScores() {
-    const confirmed = window.confirm(
-      "Nollställa poängtavlan för alla spelare? Brickorna och ölräknaren påverkas inte."
-    );
-    if (!confirmed) return;
-    saveScores(createEmptyScores());
-    renderScoreboardBody();
   }
 
   // ── Beer state ────────────────────────────────────────────────────────────

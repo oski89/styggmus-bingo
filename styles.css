@@ -773,24 +773,10 @@ button:focus-visible {
 .scoreboard-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.75rem;
   padding-top: 0.8rem;
   border-top: 1px solid rgba(255, 248, 232, 0.1);
-}
-
-.reset-scores-btn {
-  padding: 0.45rem 0.65rem;
-  background: transparent;
-  color: rgba(255, 177, 189, 0.72);
-  font-size: 0.76rem;
-  font-weight: 800;
-}
-
-.reset-scores-btn:hover,
-.reset-scores-btn:focus-visible {
-  color: #ffd8de;
-  text-decoration: underline;
 }
 
 .scoreboard-close-btn {
