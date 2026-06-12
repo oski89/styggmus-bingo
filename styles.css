@@ -265,14 +265,14 @@ input {
   margin-top: 0.8rem;
   padding: 0.45rem 0.65rem;
   background: transparent;
-  color: rgba(255, 177, 189, 0.72);
+  color: rgba(255, 248, 232, 0.6);
   font-size: 0.76rem;
   font-weight: 800;
 }
 
 .reset-all-btn:hover,
 .reset-all-btn:focus-visible {
-  color: #ffd8de;
+  color: var(--accent-strong);
   text-decoration: underline;
 }
 

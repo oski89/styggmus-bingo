@@ -279,7 +279,7 @@
       });
     });
 
-    resetAllBtn.addEventListener("click", onResetAll);
+    resetAllBtn.addEventListener("click", onBackFromPlayerSelect);
 
     dashboardChangePlayerBtn.addEventListener("click", showPlayerGate);
     dashboardScoreboardBtn.addEventListener("click", showScoreboard);
@@ -410,29 +410,14 @@
     renderBeerLeaderboard();
   }
 
-  function onResetAll() {
-    const confirmed = window.confirm(
-      "Nollställa alla sparade brickor, markeringar, poäng, öl och spelarval?"
-    );
-    if (!confirmed) return;
-
-    clearSavedBoards();
-    safeRemove(getPlayerKey());
-    safeRemove(getScoresKey());
-    safeRemove(getBeerKey());
-    safeRemove("styggmus-bingo-theme-v1");
-    safeRemoveSession(AUTH_KEY);
-    safeRemoveSession(MODE_KEY);
-    currentMode = null;
-    state = null;
-    activePlayerId = null;
-    passwordInput.value = "";
-    markedCountEl.textContent = `0/${CELL_COUNT}`;
-    bingoCountEl.textContent = "0";
-    currentPlayerEl.textContent = "-";
-    boardEl.innerHTML = "";
-    applyModeToUI();
-    showPasswordGate();
+  function onBackFromPlayerSelect() {
+    // Back to the dashboard if a player is already chosen, otherwise to the
+    // password gate (the player-select screen is the first stop on fresh login).
+    if (isValidPlayerId(activePlayerId)) {
+      showDashboard();
+    } else {
+      showPasswordGate();
+    }
   }
 
   function isAuthenticated() {
@@ -1230,24 +1215,6 @@
     }
   }
 
-  function clearSavedBoards() {
-    const demoPrefix = `${BOARD_STORAGE_PREFIX}:demo:`;
-    const livePrefix = `${BOARD_STORAGE_PREFIX}:`;
-    try {
-      Object.keys(localStorage).forEach((key) => {
-        if (currentMode === MODE_DEMO) {
-          if (key.startsWith(demoPrefix)) localStorage.removeItem(key);
-        } else {
-          if (key.startsWith(livePrefix) && !key.startsWith(demoPrefix)) {
-            localStorage.removeItem(key);
-          }
-        }
-      });
-    } catch (error) {
-      return;
-    }
-  }
-
   function safeGetSession(key) {
     try {
       return sessionStorage.getItem(key);
@@ -1259,14 +1226,6 @@
   function safeSetSession(key, value) {
     try {
       sessionStorage.setItem(key, value);
-    } catch (error) {
-      return;
-    }
-  }
-
-  function safeRemoveSession(key) {
-    try {
-      sessionStorage.removeItem(key);
     } catch (error) {
       return;
     }
