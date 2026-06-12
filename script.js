@@ -442,16 +442,22 @@
     return currentMode === MODE_DEMO ? demoGrandPrize : grandPrize;
   }
 
+  // Demo mode namespaces every stored key with a ":demo" suffix so live and
+  // beta-test data never collide.
+  function modeKey(baseKey) {
+    return currentMode === MODE_DEMO ? `${baseKey}:demo` : baseKey;
+  }
+
   function getPlayerKey() {
-    return currentMode === MODE_DEMO ? `${PLAYER_KEY}:demo` : PLAYER_KEY;
+    return modeKey(PLAYER_KEY);
   }
 
   function getScoresKey() {
-    return currentMode === MODE_DEMO ? `${SCORES_KEY}:demo` : SCORES_KEY;
+    return modeKey(SCORES_KEY);
   }
 
   function getBeerKey() {
-    return currentMode === MODE_DEMO ? `${BEERS_KEY}:demo` : BEERS_KEY;
+    return modeKey(BEERS_KEY);
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -530,73 +536,51 @@
   // ── Scoreboard state ──────────────────────────────────────────────────────
 
   function loadScores() {
-    try {
-      const raw = safeGet(getScoresKey());
-      if (!raw) return createEmptyScores();
-      const parsed = JSON.parse(raw);
-      return isValidScores(parsed) ? parsed : createEmptyScores();
-    } catch {
-      return createEmptyScores();
-    }
+    return loadJSON(getScoresKey(), createEmptyScores, isPlainObject);
   }
 
   function createEmptyScores() {
-    const scores = {};
-    players.forEach((p) => {
-      scores[p.id] = { bingoLines: 0, grandWins: 0, lastBingoAt: null };
-    });
-    return scores;
+    return buildPlayerMap(emptyScoreEntry);
   }
 
-  function isValidScores(candidate) {
-    return candidate && typeof candidate === "object" && !Array.isArray(candidate);
+  function emptyScoreEntry() {
+    return { bingoLines: 0, grandWins: 0, lastBingoAt: null };
   }
 
   function saveScores(scores) {
     safeSet(getScoresKey(), JSON.stringify(scores));
   }
 
-  function recordBingoLines(playerId, newLinesCount) {
+  // Loads the score map, applies `mutate` to the player's entry (creating it if
+  // missing), stamps the time, and persists.
+  function updatePlayerScore(playerId, mutate) {
     const scores = loadScores();
-    if (!scores[playerId]) {
-      scores[playerId] = { bingoLines: 0, grandWins: 0, lastBingoAt: null };
-    }
-    scores[playerId].bingoLines += newLinesCount;
-    scores[playerId].lastBingoAt = new Date().toISOString();
+    const entry = scores[playerId] || (scores[playerId] = emptyScoreEntry());
+    mutate(entry);
+    entry.lastBingoAt = new Date().toISOString();
     saveScores(scores);
   }
 
+  function recordBingoLines(playerId, newLinesCount) {
+    updatePlayerScore(playerId, (entry) => {
+      entry.bingoLines += newLinesCount;
+    });
+  }
+
   function recordGrandWin(playerId) {
-    const scores = loadScores();
-    if (!scores[playerId]) {
-      scores[playerId] = { bingoLines: 0, grandWins: 0, lastBingoAt: null };
-    }
-    scores[playerId].grandWins += 1;
-    scores[playerId].lastBingoAt = new Date().toISOString();
-    saveScores(scores);
+    updatePlayerScore(playerId, (entry) => {
+      entry.grandWins += 1;
+    });
   }
 
   // ── Beer state ────────────────────────────────────────────────────────────
 
   function loadBeers() {
-    try {
-      const raw = safeGet(getBeerKey());
-      if (!raw) return createEmptyBeers();
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-        ? parsed
-        : createEmptyBeers();
-    } catch {
-      return createEmptyBeers();
-    }
+    return loadJSON(getBeerKey(), createEmptyBeers, isPlainObject);
   }
 
   function createEmptyBeers() {
-    const beers = {};
-    players.forEach((p) => {
-      beers[p.id] = 0;
-    });
-    return beers;
+    return buildPlayerMap(() => 0);
   }
 
   function saveBeers(beers) {
@@ -606,11 +590,14 @@
   function adjustBeerForPlayer(playerId, delta) {
     if (!playerId) return;
     const beers = loadBeers();
-    const current = typeof beers[playerId] === "number" ? beers[playerId] : 0;
-    beers[playerId] = Math.max(0, current + delta);
+    beers[playerId] = Math.max(0, beerCountOf(beers, playerId) + delta);
     saveBeers(beers);
     renderBeerCounter();
     renderBeerLeaderboard();
+  }
+
+  function beerCountOf(beers, playerId) {
+    return typeof beers[playerId] === "number" ? beers[playerId] : 0;
   }
 
   // ── Scoreboard UI ─────────────────────────────────────────────────────────
@@ -636,6 +623,25 @@
     scoreboardOverlayEl.classList.add("hidden");
   }
 
+  // Builds one `.scoreboard-stat` column. `valueHTML` may contain markup (e.g.
+  // the "/25" denominator); `valueModifier` is an optional value-span class.
+  function makeStat(valueHTML, label, valueModifier) {
+    const stat = document.createElement("span");
+    stat.className = "scoreboard-stat";
+    const modifier = valueModifier ? ` ${valueModifier}` : "";
+    stat.innerHTML =
+      `<span class="scoreboard-stat-value${modifier}">${valueHTML}</span>` +
+      `<span class="scoreboard-stat-label">${label}</span>`;
+    return stat;
+  }
+
+  function makeYouBadge() {
+    const badge = document.createElement("span");
+    badge.className = "scoreboard-you";
+    badge.textContent = "du";
+    return badge;
+  }
+
   function renderScoreboardBody() {
     const scores = loadScores();
     const beers = loadBeers();
@@ -649,7 +655,7 @@
           grandWins: scores[p.id]?.grandWins ?? 0,
           lastBingoAt: scores[p.id]?.lastBingoAt ?? null,
           checkedCount,
-          beerCount: typeof beers[p.id] === "number" ? beers[p.id] : 0,
+          beerCount: beerCountOf(beers, p.id),
         };
       })
       .sort((a, b) => {
@@ -677,36 +683,20 @@
       const nameEl = document.createElement("span");
       nameEl.className = "scoreboard-name";
       nameEl.textContent = entry.player.label;
-      if (isCurrentPlayer) {
-        const youBadge = document.createElement("span");
-        youBadge.className = "scoreboard-you";
-        youBadge.textContent = "du";
-        nameEl.appendChild(youBadge);
-      }
+      if (isCurrentPlayer) nameEl.appendChild(makeYouBadge());
 
       const statsEl = document.createElement("span");
       statsEl.className = "scoreboard-stats";
-
-      const checkedStat = document.createElement("span");
-      checkedStat.className = "scoreboard-stat";
-      checkedStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--checked">${entry.checkedCount}<span class="scoreboard-stat-denom">/${CELL_COUNT}</span></span><span class="scoreboard-stat-label">fält</span>`;
-
-      const linesStat = document.createElement("span");
-      linesStat.className = "scoreboard-stat";
-      linesStat.innerHTML = `<span class="scoreboard-stat-value">${entry.bingoLines}</span><span class="scoreboard-stat-label">bingo</span>`;
-
-      const grandStat = document.createElement("span");
-      grandStat.className = "scoreboard-stat";
-      grandStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--grand">${entry.grandWins}</span><span class="scoreboard-stat-label">full</span>`;
-
-      const beerStat = document.createElement("span");
-      beerStat.className = "scoreboard-stat";
-      beerStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--beer">${entry.beerCount}</span><span class="scoreboard-stat-label">🍺 öl</span>`;
-
-      statsEl.appendChild(checkedStat);
-      statsEl.appendChild(linesStat);
-      statsEl.appendChild(grandStat);
-      statsEl.appendChild(beerStat);
+      statsEl.appendChild(
+        makeStat(
+          `${entry.checkedCount}<span class="scoreboard-stat-denom">/${CELL_COUNT}</span>`,
+          "fält",
+          "scoreboard-stat-value--checked"
+        )
+      );
+      statsEl.appendChild(makeStat(entry.bingoLines, "bingo"));
+      statsEl.appendChild(makeStat(entry.grandWins, "full", "scoreboard-stat-value--grand"));
+      statsEl.appendChild(makeStat(entry.beerCount, "🍺 öl", "scoreboard-stat-value--beer"));
 
       row.appendChild(rankEl);
       row.appendChild(nameEl);
@@ -719,8 +709,7 @@
 
   function renderBeerCounter() {
     const beers = loadBeers();
-    const count = typeof beers[activePlayerId] === "number" ? beers[activePlayerId] : 0;
-    beerCountDisplay.textContent = String(count);
+    beerCountDisplay.textContent = String(beerCountOf(beers, activePlayerId));
   }
 
   function renderBeerLeaderboard() {
@@ -728,7 +717,7 @@
     const sorted = [...players]
       .map((p) => ({
         player: p,
-        count: typeof beers[p.id] === "number" ? beers[p.id] : 0,
+        count: beerCountOf(beers, p.id),
       }))
       .sort((a, b) => b.count - a.count);
 
@@ -742,12 +731,7 @@
       const nameEl = document.createElement("span");
       nameEl.className = "beer-leaderboard-name";
       nameEl.textContent = entry.player.label;
-      if (isActive) {
-        const badge = document.createElement("span");
-        badge.className = "scoreboard-you";
-        badge.textContent = "du";
-        nameEl.appendChild(badge);
-      }
+      if (isActive) nameEl.appendChild(makeYouBadge());
 
       const countEl = document.createElement("span");
       countEl.className = "beer-leaderboard-count";
@@ -865,9 +849,7 @@
   }
 
   function getBoardStorageKey(playerId) {
-    return currentMode === MODE_DEMO
-      ? `${BOARD_STORAGE_PREFIX}:demo:${playerId}`
-      : `${BOARD_STORAGE_PREFIX}:${playerId}`;
+    return `${modeKey(BOARD_STORAGE_PREFIX)}:${playerId}`;
   }
 
   // ── Easter eggs ───────────────────────────────────────────────────────────
@@ -1171,6 +1153,20 @@
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  function isPlainObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value);
+  }
+
+  // Builds a `{ [playerId]: valueFactory() }` map over every player — used for
+  // the empty score and beer maps.
+  function buildPlayerMap(valueFactory) {
+    const map = {};
+    players.forEach((player) => {
+      map[player.id] = valueFactory();
+    });
+    return map;
+  }
+
   function generateSeed() {
     if (window.crypto && "randomUUID" in window.crypto) {
       return window.crypto.randomUUID();
@@ -1180,43 +1176,43 @@
 
   // ── Storage ───────────────────────────────────────────────────────────────
 
-  function safeGet(key) {
+  // All Web Storage access is wrapped so a disabled or full store (private mode,
+  // quota exceeded) degrades to the fallback instead of throwing. The store is
+  // touched inside the try so even property access can't escape.
+  function tryStorage(operation, fallback) {
     try {
-      return localStorage.getItem(key);
+      return operation();
     } catch (error) {
-      return null;
+      return fallback;
     }
+  }
+
+  function safeGet(key) {
+    return tryStorage(() => localStorage.getItem(key), null);
   }
 
   function safeSet(key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch (error) {
-      return;
-    }
-  }
-
-  function safeRemove(key) {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      return;
-    }
+    tryStorage(() => localStorage.setItem(key, value));
   }
 
   function safeGetSession(key) {
-    try {
-      return sessionStorage.getItem(key);
-    } catch (error) {
-      return null;
-    }
+    return tryStorage(() => sessionStorage.getItem(key), null);
   }
 
   function safeSetSession(key, value) {
+    tryStorage(() => sessionStorage.setItem(key, value));
+  }
+
+  // Reads and parses JSON at `key`, returning `fallback()` when the slot is
+  // empty, unparseable, or fails the `isValid` check.
+  function loadJSON(key, fallback, isValid) {
     try {
-      sessionStorage.setItem(key, value);
+      const raw = safeGet(key);
+      if (!raw) return fallback();
+      const parsed = JSON.parse(raw);
+      return isValid(parsed) ? parsed : fallback();
     } catch (error) {
-      return;
+      return fallback();
     }
   }
 })();
