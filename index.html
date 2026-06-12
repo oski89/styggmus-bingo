@@ -3,15 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Stygg Mus Bingo</title>
+    <title>Stygg Mus 2026</title>
     <meta
       name="description"
-      content="Mobilvänlig bingoapp för Stygg Mus-helgen med unika brickor, ljud, animationer och priser."
+      content="Stygg Mus 2026 – Bingo och Ölräknare."
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="page-bg" aria-hidden="true"></div>
+
+    <!-- Access screen: password + player select -->
     <section id="access-screen" class="access-screen" aria-live="polite">
       <div class="access-panel">
         <div class="brand-mark" aria-hidden="true">
@@ -22,7 +24,7 @@
             <text x="48" y="57" text-anchor="middle">SM</text>
           </svg>
         </div>
-        <h1>Stygg Mus Bingo</h1>
+        <h1>Stygg Mus 2026</h1>
         <p class="demo-indicator" aria-live="polite">Beta-test</p>
 
         <form id="password-form" class="password-form">
@@ -55,6 +57,63 @@
       </div>
     </section>
 
+    <!-- Dashboard -->
+    <main id="dashboard" class="dashboard hidden">
+      <div class="dashboard-inner">
+        <header class="dashboard-header">
+          <div class="dashboard-greeting">
+            <span class="dashboard-greeting-label">Inloggad som</span>
+            <span id="dashboard-player-name" class="dashboard-greeting-name">-</span>
+          </div>
+          <button id="dashboard-change-player-btn" class="secondary-btn dashboard-change-btn" type="button">Byt spelare</button>
+        </header>
+
+        <div class="dashboard-brand">
+          <div class="brand-mark dashboard-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 96 96" focusable="false">
+              <path class="mark-shadow" d="M48 7 81 20v27c0 22-13 35-33 42C28 82 15 69 15 47V20L48 7Z" />
+              <path class="mark-plate" d="M48 11 76 22v24c0 19-11 31-28 37-17-6-28-18-28-37V22L48 11Z" />
+              <path class="mark-line" d="M31 30h34M28 62h40" />
+              <text x="48" y="57" text-anchor="middle">SM</text>
+            </svg>
+          </div>
+          <h1 class="dashboard-title">Stygg Mus 2026</h1>
+          <p class="demo-indicator" aria-live="polite">Beta-test</p>
+        </div>
+
+        <div class="app-grid" aria-label="Appar">
+          <button id="bingo-tile" class="app-tile" type="button">
+            <div class="app-tile-icon" aria-hidden="true">
+              <svg viewBox="0 0 96 96" focusable="false">
+                <path class="mark-shadow" d="M48 7 81 20v27c0 22-13 35-33 42C28 82 15 69 15 47V20L48 7Z" />
+                <path class="mark-plate" d="M48 11 76 22v24c0 19-11 31-28 37-17-6-28-18-28-37V22L48 11Z" />
+                <path class="mark-line" d="M31 30h34M28 62h40" />
+                <text x="48" y="57" text-anchor="middle">SM</text>
+              </svg>
+            </div>
+            <span class="app-tile-name">Stygg Mus Bingo</span>
+            <span class="app-tile-desc">Helgens officiella stygghetsprotokoll</span>
+          </button>
+          <button id="beer-tile" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🍺</div>
+            <span class="app-tile-name">Ölräknaren</span>
+            <span class="app-tile-desc">Håll koll på ölen</span>
+          </button>
+        </div>
+
+        <button id="dashboard-scoreboard-btn" class="scoreboard-toggle-btn" type="button" aria-label="Visa poängtavla">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          Poängtavla
+        </button>
+
+        <p class="version-line">Stygg Mus 2026</p>
+      </div>
+    </main>
+
+    <!-- Bingo app -->
     <main id="app" class="app hidden">
       <header class="hero">
         <div class="brand-mark hero-mark" aria-hidden="true">
@@ -74,7 +133,7 @@
       <section class="controls" aria-label="Kontroller">
         <button id="new-board-btn" class="primary-btn" type="button">Ny bricka</button>
         <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>
-        <button id="change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
+        <button id="change-player-btn" class="secondary-btn" type="button">← Hem</button>
         <button id="scoreboard-btn" class="scoreboard-toggle-btn" type="button" aria-label="Visa poängtavla">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -104,6 +163,47 @@
       </section>
 
       <p class="version-line">Stygg Mus 2026</p>
+    </main>
+
+    <!-- Beer app -->
+    <main id="beer-app" class="beer-app hidden">
+      <div class="beer-app-inner">
+        <header class="beer-app-header">
+          <button id="beer-back-btn" class="secondary-btn beer-back-btn" type="button">← Hem</button>
+          <button id="beer-scoreboard-btn" class="scoreboard-toggle-btn beer-scoreboard-btn" type="button" aria-label="Visa poängtavla">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18M9 21V9"/>
+            </svg>
+            Poängtavla
+          </button>
+        </header>
+
+        <div class="beer-hero">
+          <div class="beer-hero-icon" aria-hidden="true">🍺</div>
+          <h1 class="beer-hero-title">Ölräknaren</h1>
+          <p class="demo-indicator" aria-live="polite">Beta-test</p>
+        </div>
+
+        <section class="beer-counter-wrap" aria-label="Ölräknare">
+          <p id="beer-player-label" class="beer-player-label">-</p>
+          <div class="beer-counter">
+            <button id="beer-minus-btn" class="beer-btn beer-btn--minus" type="button" aria-label="Ta bort en öl">−</button>
+            <div class="beer-display" aria-live="polite" aria-atomic="true">
+              <span id="beer-count-display" class="beer-count">0</span>
+              <span class="beer-unit" aria-hidden="true">🍺</span>
+            </div>
+            <button id="beer-plus-btn" class="beer-btn beer-btn--plus" type="button" aria-label="Lägg till en öl">+</button>
+          </div>
+        </section>
+
+        <section class="beer-leaderboard" aria-label="Ölliga">
+          <h2 class="beer-leaderboard-title">Ölliga</h2>
+          <div id="beer-leaderboard-body"></div>
+        </section>
+
+        <p class="version-line">Stygg Mus 2026</p>
+      </div>
     </main>
 
     <!-- Bingo prize overlay -->

@@ -6,6 +6,7 @@
   const PLAYER_KEY = "styggmus-bingo-player-v1";
   const BOARD_STORAGE_PREFIX = "styggmus-bingo-board-v2";
   const SCORES_KEY = "styggmus-bingo-scores-v1";
+  const BEERS_KEY = "styggmus-bingo-beers-v1";
   const MODE_LIVE = "live";
   const MODE_DEMO = "demo";
   const VALID_MODES = [MODE_LIVE, MODE_DEMO];
@@ -210,12 +211,22 @@
 
   const appEl = document.getElementById("app");
   const accessScreenEl = document.getElementById("access-screen");
+  const dashboardEl = document.getElementById("dashboard");
+  const beerAppEl = document.getElementById("beer-app");
+
   const passwordForm = document.getElementById("password-form");
   const passwordInput = document.getElementById("password-input");
   const passwordFeedbackEl = document.getElementById("password-feedback");
   const playerSelectEl = document.getElementById("player-select");
   const playerButtons = document.querySelectorAll("[data-player-id]");
   const resetAllBtn = document.getElementById("reset-all-btn");
+
+  const dashboardPlayerNameEl = document.getElementById("dashboard-player-name");
+  const dashboardChangePlayerBtn = document.getElementById("dashboard-change-player-btn");
+  const bingoTileBtn = document.getElementById("bingo-tile");
+  const beerTileBtn = document.getElementById("beer-tile");
+  const dashboardScoreboardBtn = document.getElementById("dashboard-scoreboard-btn");
+
   const gameTitleEl = document.getElementById("game-title");
   const boardEl = document.getElementById("board");
   const currentPlayerEl = document.getElementById("current-player");
@@ -225,6 +236,15 @@
   const resetBoardBtn = document.getElementById("reset-board-btn");
   const changePlayerBtn = document.getElementById("change-player-btn");
   const scoreboardBtn = document.getElementById("scoreboard-btn");
+
+  const beerBackBtn = document.getElementById("beer-back-btn");
+  const beerScoreboardBtn = document.getElementById("beer-scoreboard-btn");
+  const beerMinusBtn = document.getElementById("beer-minus-btn");
+  const beerPlusBtn = document.getElementById("beer-plus-btn");
+  const beerCountDisplay = document.getElementById("beer-count-display");
+  const beerPlayerLabelEl = document.getElementById("beer-player-label");
+  const beerLeaderboardBodyEl = document.getElementById("beer-leaderboard-body");
+
   const overlayEl = document.getElementById("overlay");
   const overlayTitleEl = document.getElementById("overlay-title");
   const overlayTextEl = document.getElementById("overlay-text");
@@ -259,15 +279,27 @@
       });
     });
 
+    resetAllBtn.addEventListener("click", onResetAll);
+
+    dashboardChangePlayerBtn.addEventListener("click", showPlayerGate);
+    dashboardScoreboardBtn.addEventListener("click", showScoreboard);
+    bingoTileBtn.addEventListener("click", startBingoGame);
+    beerTileBtn.addEventListener("click", showBeerApp);
+
     boardEl.addEventListener("click", onBoardClick);
     newBoardBtn.addEventListener("click", onNewBoard);
     resetBoardBtn.addEventListener("click", onResetBoard);
-    changePlayerBtn.addEventListener("click", showPlayerGate);
-    resetAllBtn.addEventListener("click", onResetAll);
+    changePlayerBtn.addEventListener("click", showDashboard);
     scoreboardBtn.addEventListener("click", showScoreboard);
-    closeScoreboardBtn.addEventListener("click", hideScoreboard);
     gameTitleEl.addEventListener("click", onGameTitleClick);
+
+    beerBackBtn.addEventListener("click", showDashboard);
+    beerScoreboardBtn.addEventListener("click", showScoreboard);
+    beerMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
+    beerPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
+
     closeOverlayBtn.addEventListener("click", hideOverlay);
+    closeScoreboardBtn.addEventListener("click", hideScoreboard);
     resetScoresBtn.addEventListener("click", onResetScores);
 
     scoreboardOverlayEl.addEventListener("click", (e) => {
@@ -297,11 +329,12 @@
       return;
     }
 
-    startGame(savedPlayerId);
+    activePlayerId = savedPlayerId;
+    showDashboard();
   }
 
   function showPasswordGate() {
-    appEl.classList.add("hidden");
+    hideAllScreens();
     accessScreenEl.classList.remove("hidden");
     passwordForm.classList.remove("hidden");
     playerSelectEl.classList.add("hidden");
@@ -310,11 +343,25 @@
   }
 
   function showPlayerGate() {
-    appEl.classList.add("hidden");
+    hideAllScreens();
     accessScreenEl.classList.remove("hidden");
     passwordForm.classList.add("hidden");
     playerSelectEl.classList.remove("hidden");
     passwordFeedbackEl.textContent = "";
+  }
+
+  function showDashboard() {
+    hideAllScreens();
+    dashboardEl.classList.remove("hidden");
+    const player = getPlayer(activePlayerId);
+    dashboardPlayerNameEl.textContent = player ? player.label : "-";
+  }
+
+  function hideAllScreens() {
+    accessScreenEl.classList.add("hidden");
+    dashboardEl.classList.add("hidden");
+    appEl.classList.add("hidden");
+    beerAppEl.classList.add("hidden");
   }
 
   function onPasswordSubmit(event) {
@@ -338,29 +385,41 @@
 
   function onChoosePlayer(playerId) {
     if (!isValidPlayerId(playerId)) return;
+    activePlayerId = playerId;
     safeSet(getPlayerKey(), playerId);
-    startGame(playerId);
+    showDashboard();
   }
 
-  function startGame(playerId) {
-    activePlayerId = playerId;
-    state = loadOrCreateState(playerId);
-    accessScreenEl.classList.add("hidden");
+  function startBingoGame() {
+    if (!activePlayerId) return;
+    state = loadOrCreateState(activePlayerId);
+    hideAllScreens();
     appEl.classList.remove("hidden");
-    currentPlayerEl.textContent = getPlayer(playerId).label;
+    currentPlayerEl.textContent = getPlayer(activePlayerId).label;
     renderBoard();
     updateStatsAndWinState({ triggerEffects: false });
   }
 
+  function showBeerApp() {
+    if (!activePlayerId) return;
+    hideAllScreens();
+    beerAppEl.classList.remove("hidden");
+    const player = getPlayer(activePlayerId);
+    beerPlayerLabelEl.textContent = player ? player.label : "-";
+    renderBeerCounter();
+    renderBeerLeaderboard();
+  }
+
   function onResetAll() {
     const confirmed = window.confirm(
-      "Nollställa alla sparade brickor, markeringar, poäng och spelarval?"
+      "Nollställa alla sparade brickor, markeringar, poäng, öl och spelarval?"
     );
     if (!confirmed) return;
 
     clearSavedBoards();
     safeRemove(getPlayerKey());
     safeRemove(getScoresKey());
+    safeRemove(getBeerKey());
     safeRemove("styggmus-bingo-theme-v1");
     safeRemoveSession(AUTH_KEY);
     safeRemoveSession(MODE_KEY);
@@ -406,6 +465,10 @@
 
   function getScoresKey() {
     return currentMode === MODE_DEMO ? `${SCORES_KEY}:demo` : SCORES_KEY;
+  }
+
+  function getBeerKey() {
+    return currentMode === MODE_DEMO ? `${BEERS_KEY}:demo` : BEERS_KEY;
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -532,17 +595,53 @@
 
   function onResetScores() {
     const confirmed = window.confirm(
-      "Nollställa poängtavlan för alla spelare? Brickorna påverkas inte."
+      "Nollställa poängtavlan för alla spelare? Brickorna och ölräknaren påverkas inte."
     );
     if (!confirmed) return;
     saveScores(createEmptyScores());
     renderScoreboardBody();
   }
 
+  // ── Beer state ────────────────────────────────────────────────────────────
+
+  function loadBeers() {
+    try {
+      const raw = safeGet(getBeerKey());
+      if (!raw) return createEmptyBeers();
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : createEmptyBeers();
+    } catch {
+      return createEmptyBeers();
+    }
+  }
+
+  function createEmptyBeers() {
+    const beers = {};
+    players.forEach((p) => {
+      beers[p.id] = 0;
+    });
+    return beers;
+  }
+
+  function saveBeers(beers) {
+    safeSet(getBeerKey(), JSON.stringify(beers));
+  }
+
+  function adjustBeerForPlayer(playerId, delta) {
+    if (!playerId) return;
+    const beers = loadBeers();
+    const current = typeof beers[playerId] === "number" ? beers[playerId] : 0;
+    beers[playerId] = Math.max(0, current + delta);
+    saveBeers(beers);
+    renderBeerCounter();
+    renderBeerLeaderboard();
+  }
+
   // ── Scoreboard UI ─────────────────────────────────────────────────────────
 
   function getCheckedCountForPlayer(playerId) {
-    // Free cell is always pre-checked, so minimum is 1 even before first save.
     try {
       const raw = safeGet(getBoardStorageKey(playerId));
       if (!raw) return 1;
@@ -565,6 +664,7 @@
 
   function renderScoreboardBody() {
     const scores = loadScores();
+    const beers = loadBeers();
 
     const ranked = players
       .map((p) => {
@@ -575,6 +675,7 @@
           grandWins: scores[p.id]?.grandWins ?? 0,
           lastBingoAt: scores[p.id]?.lastBingoAt ?? null,
           checkedCount,
+          beerCount: typeof beers[p.id] === "number" ? beers[p.id] : 0,
         };
       })
       .sort((a, b) => {
@@ -622,16 +723,65 @@
 
       const grandStat = document.createElement("span");
       grandStat.className = "scoreboard-stat";
-      grandStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--grand">${entry.grandWins}</span><span class="scoreboard-stat-label">full bricka</span>`;
+      grandStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--grand">${entry.grandWins}</span><span class="scoreboard-stat-label">full</span>`;
+
+      const beerStat = document.createElement("span");
+      beerStat.className = "scoreboard-stat";
+      beerStat.innerHTML = `<span class="scoreboard-stat-value scoreboard-stat-value--beer">${entry.beerCount}</span><span class="scoreboard-stat-label">🍺 öl</span>`;
 
       statsEl.appendChild(checkedStat);
       statsEl.appendChild(linesStat);
       statsEl.appendChild(grandStat);
+      statsEl.appendChild(beerStat);
 
       row.appendChild(rankEl);
       row.appendChild(nameEl);
       row.appendChild(statsEl);
       scoreboardBodyEl.appendChild(row);
+    });
+  }
+
+  // ── Beer UI ───────────────────────────────────────────────────────────────
+
+  function renderBeerCounter() {
+    const beers = loadBeers();
+    const count = typeof beers[activePlayerId] === "number" ? beers[activePlayerId] : 0;
+    beerCountDisplay.textContent = String(count);
+  }
+
+  function renderBeerLeaderboard() {
+    const beers = loadBeers();
+    const sorted = [...players]
+      .map((p) => ({
+        player: p,
+        count: typeof beers[p.id] === "number" ? beers[p.id] : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    beerLeaderboardBodyEl.innerHTML = "";
+    sorted.forEach((entry) => {
+      const isActive = entry.player.id === activePlayerId;
+
+      const row = document.createElement("div");
+      row.className = "beer-leaderboard-row" + (isActive ? " beer-leaderboard-row--active" : "");
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "beer-leaderboard-name";
+      nameEl.textContent = entry.player.label;
+      if (isActive) {
+        const badge = document.createElement("span");
+        badge.className = "scoreboard-you";
+        badge.textContent = "du";
+        nameEl.appendChild(badge);
+      }
+
+      const countEl = document.createElement("span");
+      countEl.className = "beer-leaderboard-count";
+      countEl.textContent = `${entry.count} 🍺`;
+
+      row.appendChild(nameEl);
+      row.appendChild(countEl);
+      beerLeaderboardBodyEl.appendChild(row);
     });
   }
 
