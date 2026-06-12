@@ -542,14 +542,15 @@
   // ── Scoreboard UI ─────────────────────────────────────────────────────────
 
   function getCheckedCountForPlayer(playerId) {
+    // Free cell is always pre-checked, so minimum is 1 even before first save.
     try {
       const raw = safeGet(getBoardStorageKey(playerId));
-      if (!raw) return 0;
+      if (!raw) return 1;
       const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed.checked)) return 0;
-      return parsed.checked.length;
+      if (!Array.isArray(parsed.checked)) return 1;
+      return Math.max(1, parsed.checked.length);
     } catch {
-      return 0;
+      return 1;
     }
   }
 
