@@ -92,27 +92,27 @@
   const players = [
     {
       id: "stygg-mus-president",
-      label: "Stygg mus president",
+      label: "🐭 Stygg mus president",
       excludedGroup: "lagget",
     },
     {
       id: "mouse-trap-pukie",
-      label: "Mouse trap pukie",
+      label: "🤮 Mouse trap pukie",
       excludedGroup: "ks",
     },
     {
       id: "pommesansvarig",
-      label: "Pommesansvarig",
+      label: "👨🏿 Pommesansvarig",
       excludedGroup: "marcus",
     },
     {
       id: "afc-master",
-      label: "AFC master",
+      label: "⚽ AFC master",
       excludedGroup: "oski",
     },
     {
       id: "prospect",
-      label: "Prospect",
+      label: "🌱 Prospect",
       excludedGroup: "per",
     },
   ];
