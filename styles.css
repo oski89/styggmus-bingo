@@ -143,28 +143,14 @@ input {
   height: 100%;
 }
 
-.mark-shadow {
-  fill: rgba(0, 0, 0, 0.34);
-}
-
-.mark-plate {
-  fill: #111721;
-  stroke: var(--accent-strong);
-  stroke-width: 2.2;
-}
-
-.mark-line {
-  fill: none;
-  stroke: rgba(255, 248, 232, 0.34);
-  stroke-linecap: round;
-  stroke-width: 2;
-}
-
-.brand-mark text {
-  fill: var(--accent-strong);
-  font-family: var(--font-main);
-  font-size: 24px;
-  font-weight: 900;
+/* The shared <symbol> sprite is referenced via <use>; it never renders itself.
+   (Brand-mark colours are carried as inline styles on the symbol so they apply
+   through <use> in every browser — see index.html.) */
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .access-panel h1,
@@ -930,7 +916,10 @@ body.demo-mode .demo-indicator {
   line-height: 1.1;
 }
 
-.dashboard-change-btn {
+/* Compact header buttons shared by the dashboard and beer-app headers. */
+.dashboard-change-btn,
+.beer-back-btn,
+.beer-scoreboard-btn {
   flex-shrink: 0;
   padding: 0.52rem 0.85rem;
   font-size: 0.82rem;
@@ -1045,18 +1034,6 @@ body.demo-mode .demo-indicator {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-}
-
-.beer-back-btn {
-  flex-shrink: 0;
-  padding: 0.52rem 0.85rem;
-  font-size: 0.82rem;
-}
-
-.beer-scoreboard-btn {
-  flex-shrink: 0;
-  padding: 0.52rem 0.85rem;
-  font-size: 0.82rem;
 }
 
 .beer-scoreboard-btn svg {
