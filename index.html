@@ -216,6 +216,18 @@
       </div>
     </div>
 
+    <!-- Confirm dialog -->
+    <div id="confirm-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="overlay-card confirm-card">
+        <h2 id="confirm-title" class="confirm-title">Bekräfta</h2>
+        <p id="confirm-text"></p>
+        <div class="confirm-actions">
+          <button id="confirm-cancel-btn" class="secondary-btn" type="button">Avbryt</button>
+          <button id="confirm-accept-btn" class="primary-btn" type="button">OK</button>
+        </div>
+      </div>
+    </div>
+
     <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
     <script src="./script.js"></script>
   </body>
