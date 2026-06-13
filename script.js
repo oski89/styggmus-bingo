@@ -258,6 +258,8 @@
   let state = null;
   let activePlayerId = null;
   let currentMode = null;
+  let activeDialog = null;
+  let dialogReturnFocus = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
   let titleClickCount = 0;
@@ -304,6 +306,10 @@
 
     scoreboardOverlayEl.addEventListener("click", (e) => {
       if (e.target === scoreboardOverlayEl) hideScoreboard();
+    });
+
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target === overlayEl) hideOverlay();
     });
 
     window.addEventListener("keydown", onKeyDown);
@@ -635,11 +641,11 @@
 
   function showScoreboard() {
     renderScoreboardBody();
-    scoreboardOverlayEl.classList.remove("hidden");
+    openDialog(scoreboardOverlayEl);
   }
 
   function hideScoreboard() {
-    scoreboardOverlayEl.classList.add("hidden");
+    closeDialog(scoreboardOverlayEl);
   }
 
   // Builds one `.scoreboard-stat` column. `valueHTML` may contain markup (e.g.
@@ -800,17 +806,23 @@
     if (index === FREE_INDEX) return;
 
     const checkedSet = new Set(state.checked);
+    const willCheck = !checkedSet.has(index);
 
-    if (checkedSet.has(index)) {
-      checkedSet.delete(index);
-    } else {
+    if (willCheck) {
       checkedSet.add(index);
+    } else {
+      checkedSet.delete(index);
     }
 
     checkedSet.add(FREE_INDEX);
     state.checked = [...checkedSet].sort((a, b) => a - b);
     saveState();
-    renderBoard();
+
+    // Toggle just the clicked cell in place rather than rebuilding the whole
+    // board — a full re-render would drop keyboard focus back to page start.
+    target.classList.toggle("checked", willCheck);
+    target.ariaPressed = willCheck ? "true" : "false";
+
     updateStatsAndWinState({ triggerEffects: true });
   }
 
@@ -893,6 +905,18 @@
   }
 
   function onKeyDown(event) {
+    // While a dialog is open it owns the keyboard: Escape closes it, Tab is
+    // trapped, and other keys are swallowed so easter eggs don't fire behind it.
+    if (activeDialog) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeDialog(activeDialog);
+      } else if (event.key === "Tab") {
+        trapTabKey(event, activeDialog);
+      }
+      return;
+    }
+
     if (isTextInputTarget(event.target)) return;
 
     handleKonamiKey(event.key);
@@ -1038,11 +1062,64 @@
   function showOverlay(title, text) {
     overlayTitleEl.textContent = title;
     overlayTextEl.textContent = text;
-    overlayEl.classList.remove("hidden");
+    openDialog(overlayEl);
   }
 
   function hideOverlay() {
-    overlayEl.classList.add("hidden");
+    closeDialog(overlayEl);
+  }
+
+  // ── Dialog helpers ────────────────────────────────────────────────────────
+
+  // Opening a dialog records the element that had focus, reveals the overlay,
+  // and moves focus to the first focusable control inside it. Closing restores
+  // focus to wherever it was. Escape / Tab handling lives in onKeyDown, keyed
+  // off `activeDialog`.
+  function openDialog(dialogEl) {
+    dialogReturnFocus =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    activeDialog = dialogEl;
+    dialogEl.classList.remove("hidden");
+    const focusable = getFocusable(dialogEl);
+    if (focusable.length) focusable[0].focus();
+  }
+
+  function closeDialog(dialogEl) {
+    dialogEl.classList.add("hidden");
+    if (activeDialog === dialogEl) activeDialog = null;
+    if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
+      dialogReturnFocus.focus();
+    }
+    dialogReturnFocus = null;
+  }
+
+  function getFocusable(container) {
+    const selector =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    return Array.from(container.querySelectorAll(selector)).filter(
+      (el) => !el.disabled && el.offsetParent !== null
+    );
+  }
+
+  // Keeps Tab focus cycling inside the open dialog instead of escaping to the
+  // page behind it.
+  function trapTabKey(event, container) {
+    const focusable = getFocusable(container);
+    if (!focusable.length) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    if (event.shiftKey && (active === first || !container.contains(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || !container.contains(active))) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   // ── Confetti ──────────────────────────────────────────────────────────────
