@@ -3,31 +3,32 @@
 Förslag på förbättringar för Stygg Mus 2026, grupperade efter hur mycket de
 påverkar känslan i appen. Referenser pekar på `fil:rad` i nuvarande kod.
 
+Status: alla fem hög-prioritet-punkterna är klara. Kvar är medel- och
+låg-prioritet nedan.
+
 ## Hög prioritet — friktion & tillgänglighet
 
-- [ ] **Stäng overlays med Escape och bakgrundsklick.** Prisrutan (`#overlay`)
-  går bara att stänga via knappen — varken Escape eller klick utanför funkar
-  (`script.js:302`, `script.js:1038`). Poängtavlan stängs på bakgrundsklick men
-  inte med Escape (`script.js:305`). Lägg till en gemensam `keydown`-lyssnare för
-  Escape och bakgrundsklick på båda.
-- [ ] **Fokushantering för dialoger.** När en overlay öppnas flyttas inte fokus
-  in i den, och vid stängning återställs det inte till knappen som öppnade
-  (`script.js:636`, `script.js:1038`). Tangentbords- och skärmläsaranvändare
-  tappar helt platsen. Flytta fokus till dialogen, fånga Tab inom den, och
-  återlämna fokus vid stängning.
-- [ ] **Brädet tappar tangentbordsfokus vid varje klick.** `onBoardClick` kör
-  `renderBoard()` som river hela `innerHTML` och bygger 25 nya knappar
-  (`script.js:813`, `script.js:767`). En tangentbordsanvändare som kryssar en
-  ruta kastas tillbaka till sidans början. Växla i stället bara `.checked`-klass
-  och aria-attribut på den klickade cellen.
-- [ ] **Respektera `prefers-reduced-motion`.** Konfetti, champion-glow,
-  stygg-wobble, konami-flash och pop-in körs alltid (`styles.css:825-893`,
-  `script.js:1050`). Lägg en media-query som dämpar/animationsstoppar och hoppa
-  över konfetti för användare som valt minskad rörelse.
-- [ ] **Ersätt `window.confirm()` med stilren dialog.** Tre native-confirms
-  (Ny bricka, Nollställ, Avsluta) bryter mot den polerade looken och ser
-  ostyled ut på mobil (`script.js:425`, `script.js:820`, `script.js:834`).
-  Återanvänd overlay-komponenten för bekräftelser.
+- [x] **Stäng overlays med Escape och bakgrundsklick.** ~~Prisrutan (`#overlay`)
+  går bara att stänga via knappen — varken Escape eller klick utanför funkar.
+  Poängtavlan stängs på bakgrundsklick men inte med Escape.~~ Klart: Escape
+  stänger aktiv dialog och bakgrundsklick stänger båda overlays (`onKeyDown`
+  + backdrop-lyssnare).
+- [x] **Fokushantering för dialoger.** ~~När en overlay öppnas flyttas inte fokus
+  in i den, och vid stängning återställs det inte till knappen som öppnade.~~
+  Klart: `openDialog`/`closeDialog` flyttar fokus in, fångar Tab (`trapTabKey`)
+  och återlämnar fokus vid stängning.
+- [x] **Brädet tappar tangentbordsfokus vid varje klick.** ~~`onBoardClick` kör
+  `renderBoard()` som river hela `innerHTML` och bygger 25 nya knappar.~~ Klart:
+  `onBoardClick` växlar bara `.checked` och `aria-pressed` på den klickade
+  cellen; fokus blir kvar.
+- [x] **Respektera `prefers-reduced-motion`.** ~~Konfetti, champion-glow,
+  stygg-wobble, konami-flash och pop-in körs alltid.~~ Klart: media-query dämpar
+  alla animationer/transitions och `runConfetti` hoppas över via
+  `prefersReducedMotion()`.
+- [x] **Ersätt `window.confirm()` med stilren dialog.** ~~Tre native-confirms
+  (Ny bricka, Nollställ, Avsluta) bryter mot den polerade looken.~~ Klart: ny
+  `#confirm-overlay` + `showConfirm()` återanvänder overlay-fokushanteringen;
+  alla tre flöden använder den.
 
 ## Medel — mobilkänsla & feedback
 
