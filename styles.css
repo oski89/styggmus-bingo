@@ -791,6 +791,45 @@ button:focus-visible {
   padding: 0.7rem 1.4rem;
 }
 
+/* ── Confirm dialog ───────────────────────────────────────────────────────── */
+
+.confirm-card {
+  width: min(440px, 100%);
+}
+
+/* Smaller, calmer than the celebratory "BINGO!" heading the card normally
+   carries. More specific than `.overlay-card h2` so it wins. */
+.overlay-card .confirm-title {
+  font-size: 1.5rem;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.confirm-actions button {
+  min-width: 8rem;
+}
+
+/* The generic `.overlay-card button` rule paints every overlay button gold;
+   re-assert the neutral secondary look for the cancel button (two classes beat
+   the one-class-one-type selector). */
+.confirm-actions .secondary-btn {
+  border: 1px solid rgba(255, 248, 232, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
+    rgba(12, 17, 27, 0.8);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.confirm-actions .secondary-btn:hover,
+.confirm-actions .secondary-btn:focus-visible {
+  border-color: rgba(49, 198, 157, 0.46);
+}
+
 /* ── Canvas & animations ──────────────────────────────────────────────────── */
 
 .confetti {
@@ -1367,5 +1406,21 @@ body.demo-mode .demo-indicator {
 
   .scoreboard-stat-label {
     font-size: 0.54rem;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+
+/* Honour the OS "reduce motion" setting: collapse animations and transitions to
+   near-instant so the easter-egg wobble/flash, champion glow, pop-in, and hover
+   lifts don't move. Confetti is skipped separately in script.js. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

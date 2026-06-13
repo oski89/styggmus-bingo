@@ -253,6 +253,11 @@
   const scoreboardOverlayEl = document.getElementById("scoreboard-overlay");
   const scoreboardBodyEl = document.getElementById("scoreboard-body");
   const closeScoreboardBtn = document.getElementById("close-scoreboard-btn");
+  const confirmOverlayEl = document.getElementById("confirm-overlay");
+  const confirmTitleEl = document.getElementById("confirm-title");
+  const confirmTextEl = document.getElementById("confirm-text");
+  const confirmAcceptBtn = document.getElementById("confirm-accept-btn");
+  const confirmCancelBtn = document.getElementById("confirm-cancel-btn");
   const confettiCanvas = document.getElementById("confetti");
 
   let state = null;
@@ -260,6 +265,7 @@
   let currentMode = null;
   let activeDialog = null;
   let dialogReturnFocus = null;
+  let pendingConfirmAction = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
   let titleClickCount = 0;
@@ -310,6 +316,12 @@
 
     overlayEl.addEventListener("click", (e) => {
       if (e.target === overlayEl) hideOverlay();
+    });
+
+    confirmAcceptBtn.addEventListener("click", onConfirmAccept);
+    confirmCancelBtn.addEventListener("click", () => closeDialog(confirmOverlayEl));
+    confirmOverlayEl.addEventListener("click", (e) => {
+      if (e.target === confirmOverlayEl) closeDialog(confirmOverlayEl);
     });
 
     window.addEventListener("keydown", onKeyDown);
@@ -429,18 +441,20 @@
   // Ends the session and returns to the password gate. Saved boards, scores, and
   // beers stay in localStorage — only the session auth is cleared.
   function onExit() {
-    const confirmed = window.confirm(
-      "Avsluta och återgå till lösenordsskärmen?"
-    );
-    if (!confirmed) return;
-
-    safeRemoveSession(AUTH_KEY);
-    safeRemoveSession(MODE_KEY);
-    currentMode = null;
-    state = null;
-    applyModeToUI();
-    passwordInput.value = "";
-    showPasswordGate();
+    showConfirm({
+      title: "Avsluta?",
+      message: "Avsluta och återgå till lösenordsskärmen?",
+      confirmLabel: "Avsluta",
+      onConfirm: () => {
+        safeRemoveSession(AUTH_KEY);
+        safeRemoveSession(MODE_KEY);
+        currentMode = null;
+        state = null;
+        applyModeToUI();
+        passwordInput.value = "";
+        showPasswordGate();
+      },
+    });
   }
 
   function isAuthenticated() {
@@ -829,31 +843,35 @@
   function onNewBoard() {
     if (!activePlayerId) return;
 
-    const confirmed = window.confirm(
-      "Skapa en helt ny bricka? Din nuvarande markering nollställs."
-    );
-    if (!confirmed) return;
-
-    state = createFreshState(activePlayerId);
-    saveState();
-    renderBoard();
-    updateStatsAndWinState({ triggerEffects: false });
+    showConfirm({
+      title: "Ny bricka?",
+      message: "Skapa en helt ny bricka? Din nuvarande markering nollställs.",
+      confirmLabel: "Ny bricka",
+      onConfirm: () => {
+        state = createFreshState(activePlayerId);
+        saveState();
+        renderBoard();
+        updateStatsAndWinState({ triggerEffects: false });
+      },
+    });
   }
 
   function onResetBoard() {
     if (!state) return;
 
-    const confirmed = window.confirm(
-      "Nollställa markeringarna på den här brickan? Rutorna ligger kvar."
-    );
-    if (!confirmed) return;
-
-    state.checked = [FREE_INDEX];
-    state.bingoLinesAwarded = [];
-    state.grandWin = false;
-    saveState();
-    renderBoard();
-    updateStatsAndWinState({ triggerEffects: false });
+    showConfirm({
+      title: "Nollställ bricka?",
+      message: "Nollställa markeringarna på den här brickan? Rutorna ligger kvar.",
+      confirmLabel: "Nollställ",
+      onConfirm: () => {
+        state.checked = [FREE_INDEX];
+        state.bingoLinesAwarded = [];
+        state.grandWin = false;
+        saveState();
+        renderBoard();
+        updateStatsAndWinState({ triggerEffects: false });
+      },
+    });
   }
 
   // ── Player helpers ────────────────────────────────────────────────────────
@@ -1087,10 +1105,30 @@
   function closeDialog(dialogEl) {
     dialogEl.classList.add("hidden");
     if (activeDialog === dialogEl) activeDialog = null;
+    // A confirm that's dismissed any way other than its accept button (cancel,
+    // Escape, backdrop) is a "no" — drop the pending action.
+    if (dialogEl === confirmOverlayEl) pendingConfirmAction = null;
     if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
       dialogReturnFocus.focus();
     }
     dialogReturnFocus = null;
+  }
+
+  // Styled stand-in for window.confirm(): shows the confirm overlay and runs
+  // `onConfirm` only if the user presses the accept button.
+  function showConfirm({ title, message, confirmLabel, onConfirm }) {
+    confirmTitleEl.textContent = title;
+    confirmTextEl.textContent = message;
+    confirmAcceptBtn.textContent = confirmLabel || "OK";
+    pendingConfirmAction = typeof onConfirm === "function" ? onConfirm : null;
+    openDialog(confirmOverlayEl);
+  }
+
+  function onConfirmAccept() {
+    const action = pendingConfirmAction;
+    pendingConfirmAction = null;
+    closeDialog(confirmOverlayEl);
+    if (action) action();
   }
 
   function getFocusable(container) {
@@ -1126,6 +1164,7 @@
 
   function runConfetti(durationMs) {
     if (!(confettiCanvas instanceof HTMLCanvasElement)) return;
+    if (prefersReducedMotion()) return;
     resizeConfettiCanvas();
 
     const ctx = confettiCanvas.getContext("2d");
@@ -1247,6 +1286,13 @@
 
   function randomItem(list) {
     return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function prefersReducedMotion() {
+    return (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
   }
 
   function isPlainObject(value) {
