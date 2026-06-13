@@ -220,6 +220,7 @@
   const playerSelectEl = document.getElementById("player-select");
   const playerButtons = document.querySelectorAll("[data-player-id]");
   const resetAllBtn = document.getElementById("reset-all-btn");
+  const exitButtons = document.querySelectorAll(".exit-btn");
 
   const dashboardPlayerNameEl = document.getElementById("dashboard-player-name");
   const dashboardChangePlayerBtn = document.getElementById("dashboard-change-player-btn");
@@ -279,6 +280,7 @@
     });
 
     resetAllBtn.addEventListener("click", onBackFromPlayerSelect);
+    exitButtons.forEach((button) => button.addEventListener("click", onExit));
 
     dashboardChangePlayerBtn.addEventListener("click", showPlayerGate);
     dashboardScoreboardBtn.addEventListener("click", showScoreboard);
@@ -416,6 +418,23 @@
     } else {
       showPasswordGate();
     }
+  }
+
+  // Ends the session and returns to the password gate. Saved boards, scores, and
+  // beers stay in localStorage — only the session auth is cleared.
+  function onExit() {
+    const confirmed = window.confirm(
+      "Avsluta och återgå till lösenordsskärmen?"
+    );
+    if (!confirmed) return;
+
+    safeRemoveSession(AUTH_KEY);
+    safeRemoveSession(MODE_KEY);
+    currentMode = null;
+    state = null;
+    applyModeToUI();
+    passwordInput.value = "";
+    showPasswordGate();
   }
 
   function isAuthenticated() {
@@ -1201,6 +1220,10 @@
 
   function safeSetSession(key, value) {
     tryStorage(() => sessionStorage.setItem(key, value));
+  }
+
+  function safeRemoveSession(key) {
+    tryStorage(() => sessionStorage.removeItem(key));
   }
 
   // Reads and parses JSON at `key`, returning `fallback()` when the slot is

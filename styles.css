@@ -262,6 +262,28 @@ input {
   text-decoration: underline;
 }
 
+/* "Avsluta" — ends the session and returns to the password gate. Lives at the
+   bottom of every logged-in page; centred so it doesn't stretch to fill its
+   flex (dashboard/beer) or grid (bingo) parent. */
+.exit-btn {
+  align-self: center;
+  justify-self: center;
+  width: auto;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid rgba(255, 177, 189, 0.28);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 177, 189, 0.78);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.exit-btn:hover,
+.exit-btn:focus-visible {
+  border-color: rgba(255, 177, 189, 0.6);
+  color: #ffd8de;
+}
+
 .version-line {
   margin: 0;
   color: rgba(255, 248, 232, 0.48);
