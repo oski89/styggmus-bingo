@@ -978,6 +978,9 @@ body.demo-mode .demo-indicator {
 }
 
 .app-tile-icon {
+  /* Keep the tile's "SM" dark/muted (its original look) instead of the gold
+     used by the standalone brand marks. Inherits into the <use> shadow tree. */
+  --mark-text-color: #000;
   width: 52px;
   height: 52px;
   display: flex;
