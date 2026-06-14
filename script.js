@@ -1325,7 +1325,7 @@
     if (ms <= REAKTION_YELLOW_MAX) {
       return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg. Fortsätt dricka." };
     }
-    return { cls: "red", label: "Full som ett ägg", message: "Fortsätt dricka." };
+    return { cls: "red", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka." };
   }
 
   function showReaktionResult(msText, message, cls, label) {
