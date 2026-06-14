@@ -35,7 +35,7 @@
   // it can never land on a Reaktionskollen (every 2) or Fyllekollen (every 5) beer.
   const MINNE_PERIOD = 10;
   const MINNE_OFFSET = 3;
-  const MINNE_FLASH_MS = 100;
+  const MINNE_FLASH_MS = 300;
   const MINNE_MIN = 1;
   const MINNE_MAX = 10;
   const MINNE_WHEEL_ITEM_H = 40; // px per wheel row; matches .memory-wheel-opt height

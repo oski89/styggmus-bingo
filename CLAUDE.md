@@ -126,7 +126,7 @@ Fires from `countBeerPress` on beers where `beerAddedTotal % MINNE_PERIOD (10)
 never multiples of 5, so the test can **never** collide with Reaktionskollen
 (every 2) or Fyllekollen (every 5). The round (`#memory-overlay`): a 5s countdown,
 then X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
-`MINNE_FLASH_MS` (100ms), then the player dials the two counts on iOS-style scroll
+`MINNE_FLASH_MS` (300ms), then the player dials the two counts on iOS-style scroll
 wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
 MINNE_WHEEL_ITEM_H`) and submits. Accuracy (2/1/0 of the two counts correct) maps
 to the same green/yellow/red verdict, shown with the facit. A `memoryPhase` state
