@@ -12,7 +12,7 @@
   const VALID_MODES = [MODE_LIVE, MODE_DEMO];
   const PASSWORDS = {
     AFC: MODE_LIVE,
-    GRINDER: MODE_DEMO,
+    FLÖTET: MODE_DEMO,
   };
   const BOARD_SIZE = 5;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;

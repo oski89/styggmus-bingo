@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 python3 -m http.server 4173
 # open http://localhost:4173
-# Password: AFC (live mode) or GRINDER (demo / beta-test mode)
+# Password: AFC (live mode) or FLÖTET (demo / beta-test mode)
 ```
 
 There is no build, install, lint, or test step — open the served page directly.
@@ -38,7 +38,7 @@ as an overlay from the dashboard, bingo, and beer screens.
 ### Auth & modes
 
 Two passwords map to two modes (`PASSWORDS` in `script.js`): `AFC` → `live`,
-`GRINDER` → `demo`. Auth and the active mode are session-only
+`FLÖTET` → `demo`. Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
 clears them and returns to the password gate. **Demo mode** uses placeholder
 lorem-ipsum prompts/prizes and namespaces every persisted key with a `:demo`
