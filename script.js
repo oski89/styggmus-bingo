@@ -27,13 +27,13 @@
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
-  const MAZE_MS_PER_STEP = 200;
+  const MAZE_MS_PER_STEP = 400;
   // Reaktionskollen (reaction test): reaction time (ms) → three-tier verdict.
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
   // Minnesluckatestet (memory / flash-count test): flashes X 🍺 + Y 🐭 for a blink,
   // then the player dials in the counts (each MINNE_MIN..MINNE_MAX).
-  const MINNE_FLASH_MS = 2000;
+  const MINNE_FLASH_MS = 4000;
   const MINNE_MIN = 1;
   const MINNE_MAX = 10;
   const MINNE_WHEEL_ITEM_H = 40; // px per wheel row; matches .memory-wheel-opt height
