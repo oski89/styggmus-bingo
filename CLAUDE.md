@@ -94,8 +94,9 @@ Each adds a temporary `body` class, plays a sound, and runs confetti.
 
 ### Fyllekollen (swipe maze mini-game)
 
-Every `FYLLEKOLLEN_TRIGGER` (20) taps of the beer `+`/`−` buttons launches
-**Fyllekollen**, a perfect maze (recursive backtracker, `MAZE_COLS`×`MAZE_ROWS`)
+Every `FYLLEKOLLEN_TRIGGER` (3) beers added on the beer counter (only `+`
+presses count) launches **Fyllekollen**, a perfect maze (recursive backtracker,
+`MAZE_COLS`×`MAZE_ROWS`)
 rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
 🐭 one cell per swipe (pointer events on the canvas, `touch-action: none`) or per
 arrow key — arrow keys are routed in `onKeyDown` while that dialog is active.

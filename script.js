@@ -19,8 +19,8 @@
   const FREE_INDEX = Math.floor(CELL_COUNT / 2);
   const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
   // Fyllekollen (the "drunk check" mini-game): a swipe maze that pops up every
-  // FYLLEKOLLEN_TRIGGER taps of the beer +/- buttons.
-  const FYLLEKOLLEN_TRIGGER = 20;
+  // FYLLEKOLLEN_TRIGGER beers added on the beer counter.
+  const FYLLEKOLLEN_TRIGGER = 3;
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
@@ -657,12 +657,13 @@
     saveBeers(beers);
     renderBeerCounter();
     renderBeerLeaderboard();
-    countBeerPress();
+    if (delta > 0) countBeerPress();
   }
 
-  // Every FYLLEKOLLEN_TRIGGER beer-button taps launches the Fyllekollen maze
-  // (unless a dialog is already up). The counter is session-only and wraps, so
-  // the drunk check keeps coming back the longer the night goes.
+  // Every FYLLEKOLLEN_TRIGGER beers added launches the Fyllekollen maze (unless a
+  // dialog is already up). Only counts increments — removing a beer doesn't count.
+  // The counter is session-only and wraps, so the drunk check keeps coming back
+  // the longer the night goes.
   function countBeerPress() {
     beerPressCount += 1;
     if (beerPressCount < FYLLEKOLLEN_TRIGGER) return;
