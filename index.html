@@ -228,6 +228,21 @@
       </div>
     </div>
 
+    <!-- Fyllekollen mini-game (swipe maze) -->
+    <div id="fyllekollen-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="fyllekollen-title">
+      <div class="overlay-card fyllekollen-card">
+        <h2 id="fyllekollen-title" class="fyllekollen-title">Fyllekollen</h2>
+        <p class="fyllekollen-text">Dags att kolla läget. Swipea 🐭 genom labyrinten till 🎯 — piltangenterna funkar också.</p>
+        <div class="maze-wrap">
+          <canvas id="maze-canvas" class="maze-canvas" aria-label="Labyrint, swipea för att flytta"></canvas>
+        </div>
+        <div class="confirm-actions maze-controls">
+          <button id="maze-restart-btn" class="secondary-btn" type="button">Ny labyrint</button>
+          <button id="fyllekollen-close-btn" class="secondary-btn" type="button">Avbryt</button>
+        </div>
+      </div>
+    </div>
+
     <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
     <script src="./script.js"></script>
   </body>

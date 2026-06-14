@@ -18,6 +18,12 @@
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
   const FREE_INDEX = Math.floor(CELL_COUNT / 2);
   const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
+  // Fyllekollen (the "drunk check" mini-game): a swipe maze that pops up every
+  // FYLLEKOLLEN_TRIGGER taps of the beer +/- buttons.
+  const FYLLEKOLLEN_TRIGGER = 20;
+  const MAZE_COLS = 7;
+  const MAZE_ROWS = 9;
+  const MAZE_SWIPE_THRESHOLD = 18;
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -259,6 +265,10 @@
   const confirmAcceptBtn = document.getElementById("confirm-accept-btn");
   const confirmCancelBtn = document.getElementById("confirm-cancel-btn");
   const confettiCanvas = document.getElementById("confetti");
+  const fyllekollenOverlayEl = document.getElementById("fyllekollen-overlay");
+  const mazeCanvas = document.getElementById("maze-canvas");
+  const mazeRestartBtn = document.getElementById("maze-restart-btn");
+  const fyllekollenCloseBtn = document.getElementById("fyllekollen-close-btn");
 
   let state = null;
   let activePlayerId = null;
@@ -272,6 +282,9 @@
   let titleClickTimer = null;
   let konamiIndex = 0;
   let typedBuffer = "";
+  let beerPressCount = 0;
+  let mazeState = null;
+  let mazePointerStart = null;
 
   registerEventListeners();
   renderAccessFlow();
@@ -324,8 +337,19 @@
       if (e.target === confirmOverlayEl) closeDialog(confirmOverlayEl);
     });
 
+    mazeRestartBtn.addEventListener("click", buildNewMaze);
+    fyllekollenCloseBtn.addEventListener("click", () => closeDialog(fyllekollenOverlayEl));
+    fyllekollenOverlayEl.addEventListener("click", (e) => {
+      if (e.target === fyllekollenOverlayEl) closeDialog(fyllekollenOverlayEl);
+    });
+    mazeCanvas.addEventListener("pointerdown", onMazePointerDown);
+    mazeCanvas.addEventListener("pointerup", onMazePointerUp);
+
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", resizeConfettiCanvas);
+    window.addEventListener("resize", () => {
+      if (mazeState && activeDialog === fyllekollenOverlayEl) drawMaze();
+    });
   }
 
   // ── Access flow ───────────────────────────────────────────────────────────
@@ -633,6 +657,17 @@
     saveBeers(beers);
     renderBeerCounter();
     renderBeerLeaderboard();
+    countBeerPress();
+  }
+
+  // Every FYLLEKOLLEN_TRIGGER beer-button taps launches the Fyllekollen maze
+  // (unless a dialog is already up). The counter is session-only and wraps, so
+  // the drunk check keeps coming back the longer the night goes.
+  function countBeerPress() {
+    beerPressCount += 1;
+    if (beerPressCount < FYLLEKOLLEN_TRIGGER) return;
+    beerPressCount = 0;
+    if (!activeDialog) openFyllekollen();
   }
 
   function beerCountOf(beers, playerId) {
@@ -926,7 +961,11 @@
     // While a dialog is open it owns the keyboard: Escape closes it, Tab is
     // trapped, and other keys are swallowed so easter eggs don't fire behind it.
     if (activeDialog) {
-      if (event.key === "Escape") {
+      const mazeDir = activeDialog === fyllekollenOverlayEl ? arrowKeyToDir(event.key) : null;
+      if (mazeDir) {
+        event.preventDefault();
+        moveMaze(mazeDir);
+      } else if (event.key === "Escape") {
         event.preventDefault();
         closeDialog(activeDialog);
       } else if (event.key === "Tab") {
@@ -986,6 +1025,177 @@
   function isTextInputTarget(target) {
     if (!(target instanceof HTMLElement)) return false;
     return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable;
+  }
+
+  // ── Fyllekollen (swipe maze) ──────────────────────────────────────────────
+
+  function openFyllekollen() {
+    openDialog(fyllekollenOverlayEl);
+    buildNewMaze();
+    playWinSound(false);
+  }
+
+  function buildNewMaze() {
+    mazeState = createMaze(MAZE_COLS, MAZE_ROWS);
+    drawMaze();
+  }
+
+  // Carves a perfect maze with an iterative recursive-backtracker. Each cell
+  // tracks its four walls; knocking down a wall also clears the matching wall on
+  // the neighbour. Player starts top-left, goal sits bottom-right.
+  function createMaze(cols, rows) {
+    const total = cols * rows;
+    const cells = Array.from({ length: total }, () => ({ n: true, e: true, s: true, w: true }));
+    const visited = new Array(total).fill(false);
+    const opposite = { n: "s", s: "n", e: "w", w: "e" };
+    const stack = [];
+
+    let current = 0;
+    visited[0] = true;
+    let visitedCount = 1;
+
+    while (visitedCount < total) {
+      const c = current % cols;
+      const r = Math.floor(current / cols);
+      const neighbors = [];
+      if (r > 0 && !visited[current - cols]) neighbors.push(["n", current - cols]);
+      if (c < cols - 1 && !visited[current + 1]) neighbors.push(["e", current + 1]);
+      if (r < rows - 1 && !visited[current + cols]) neighbors.push(["s", current + cols]);
+      if (c > 0 && !visited[current - 1]) neighbors.push(["w", current - 1]);
+
+      if (neighbors.length === 0) {
+        current = stack.pop();
+        continue;
+      }
+
+      const [dir, next] = randomItem(neighbors);
+      cells[current][dir] = false;
+      cells[next][opposite[dir]] = false;
+      stack.push(current);
+      visited[next] = true;
+      visitedCount += 1;
+      current = next;
+    }
+
+    return {
+      cols,
+      rows,
+      cells,
+      player: { c: 0, r: 0 },
+      goal: { c: cols - 1, r: rows - 1 },
+      solved: false,
+    };
+  }
+
+  function drawMaze() {
+    if (!mazeState || !(mazeCanvas instanceof HTMLCanvasElement)) return;
+    const ctx = mazeCanvas.getContext("2d");
+    if (!ctx) return;
+
+    const { cols, rows, cells, player, goal } = mazeState;
+    const available = (mazeCanvas.parentElement && mazeCanvas.parentElement.clientWidth) || 300;
+    const cell = Math.max(20, Math.floor(available / cols));
+    const cssW = cell * cols;
+    const cssH = cell * rows;
+    const ratio = window.devicePixelRatio || 1;
+
+    mazeCanvas.width = Math.floor(cssW * ratio);
+    mazeCanvas.height = Math.floor(cssH * ratio);
+    mazeCanvas.style.width = `${cssW}px`;
+    mazeCanvas.style.height = `${cssH}px`;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    ctx.strokeStyle = "rgba(255, 248, 232, 0.72)";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const data = cells[r * cols + c];
+        const x = c * cell;
+        const y = r * cell;
+        ctx.beginPath();
+        if (data.n) { ctx.moveTo(x, y); ctx.lineTo(x + cell, y); }
+        if (data.e) { ctx.moveTo(x + cell, y); ctx.lineTo(x + cell, y + cell); }
+        if (data.s) { ctx.moveTo(x, y + cell); ctx.lineTo(x + cell, y + cell); }
+        if (data.w) { ctx.moveTo(x, y); ctx.lineTo(x, y + cell); }
+        ctx.stroke();
+      }
+    }
+
+    const glyph = Math.floor(cell * 0.64);
+    ctx.font = `${glyph}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("🎯", goal.c * cell + cell / 2, goal.r * cell + cell / 2);
+    ctx.fillText("🐭", player.c * cell + cell / 2, player.r * cell + cell / 2);
+  }
+
+  // Steps the mouse one cell in `dir` when no wall blocks it; reaching the goal
+  // ends the round.
+  function moveMaze(dir) {
+    if (!mazeState || mazeState.solved) return;
+    const { cols, cells, player, goal } = mazeState;
+    const data = cells[player.r * cols + player.c];
+    if (data[dir]) return;
+
+    if (dir === "n") player.r -= 1;
+    else if (dir === "s") player.r += 1;
+    else if (dir === "e") player.c += 1;
+    else if (dir === "w") player.c -= 1;
+
+    drawMaze();
+    if (player.c === goal.c && player.r === goal.r) onMazeSolved();
+  }
+
+  function onMazeSolved() {
+    mazeState.solved = true;
+    closeDialog(fyllekollenOverlayEl);
+    playWinSound(true);
+    runConfetti(2600);
+    showOverlay(
+      "Godkänd fyllekoll!",
+      "Stadig på handen — labyrinten besegrad. Du får utse nästa rundas officiella vattenchef."
+    );
+  }
+
+  function arrowKeyToDir(key) {
+    switch (key) {
+      case "ArrowUp":
+        return "n";
+      case "ArrowRight":
+        return "e";
+      case "ArrowDown":
+        return "s";
+      case "ArrowLeft":
+        return "w";
+      default:
+        return null;
+    }
+  }
+
+  function onMazePointerDown(event) {
+    mazePointerStart = { x: event.clientX, y: event.clientY };
+    // Capture so the matching pointerup still lands here if the finger lifts
+    // just outside the canvas mid-swipe.
+    if (typeof mazeCanvas.setPointerCapture === "function") {
+      tryStorage(() => mazeCanvas.setPointerCapture(event.pointerId));
+    }
+  }
+
+  function onMazePointerUp(event) {
+    if (!mazePointerStart) return;
+    const dx = event.clientX - mazePointerStart.x;
+    const dy = event.clientY - mazePointerStart.y;
+    mazePointerStart = null;
+
+    if (Math.abs(dx) < MAZE_SWIPE_THRESHOLD && Math.abs(dy) < MAZE_SWIPE_THRESHOLD) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      moveMaze(dx > 0 ? "e" : "w");
+    } else {
+      moveMaze(dy > 0 ? "s" : "n");
+    }
   }
 
   // ── Win detection ─────────────────────────────────────────────────────────

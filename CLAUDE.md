@@ -22,7 +22,7 @@ Single-page vanilla JS app with no dependencies, no bundler, and no build step. 
 
 - `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus three dialog overlays — `#overlay` (bingo/easter-egg prizes), `#scoreboard-overlay`, `#confirm-overlay` (styled `confirm()` replacement) — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
 UI language is Swedish.
 
@@ -91,6 +91,17 @@ Three hidden triggers (handled in the Easter eggs section, suppressed while a
 dialog is open or a text field is focused): 5 rapid `#game-title` clicks →
 "STYGG MODE", Konami code → "KONAMI-KUBB!", typing "DDKO" → "DDKO REQUESTAD".
 Each adds a temporary `body` class, plays a sound, and runs confetti.
+
+### Fyllekollen (swipe maze mini-game)
+
+Every `FYLLEKOLLEN_TRIGGER` (20) taps of the beer `+`/`−` buttons launches
+**Fyllekollen**, a perfect maze (recursive backtracker, `MAZE_COLS`×`MAZE_ROWS`)
+rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
+🐭 one cell per swipe (pointer events on the canvas, `touch-action: none`) or per
+arrow key — arrow keys are routed in `onKeyDown` while that dialog is active.
+Reaching the 🎯 goal closes the maze and shows a success prize overlay with
+confetti + sound. The tap counter is session-only (`beerPressCount`) and wraps,
+so the check recurs through the night; it never fires while another dialog is up.
 
 ### Storage safety
 
