@@ -94,7 +94,7 @@ Each adds a temporary `body` class, plays a sound, and runs confetti.
 
 ### Fyllekollen (swipe maze mini-game)
 
-Every `FYLLEKOLLEN_TRIGGER` (2) beers added on the beer counter (only `+`
+Every `FYLLEKOLLEN_TRIGGER` (5) beers added on the beer counter (only `+`
 presses count) launches **Fyllekollen**, a perfect maze (recursive backtracker,
 `MAZE_COLS`×`MAZE_ROWS`)
 rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
@@ -106,7 +106,7 @@ so the check recurs through the night; it never fires while another dialog is up
 
 ### Reaktionskollen (reaction-test mini-game)
 
-Every `REAKTION_TRIGGER` (5) beers added launches **Reaktionskollen** in
+Every `REAKTION_TRIGGER` (2) beers added launches **Reaktionskollen** in
 `#reaktion-overlay`: a 5-second countdown, then a blank "waiting" phase for a
 random 1–5s, then a 🍺 appears and a `performance.now()` clock starts. The first
 tap (pointerdown on `#reaktion-stage`, or Space) stops it; tapping during

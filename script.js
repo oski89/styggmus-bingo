@@ -20,13 +20,13 @@
   const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
   // Fyllekollen (the "drunk check" mini-game): a swipe maze that pops up every
   // FYLLEKOLLEN_TRIGGER beers added on the beer counter.
-  const FYLLEKOLLEN_TRIGGER = 2;
+  const FYLLEKOLLEN_TRIGGER = 5;
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
   // Reaktionskollen (reaction test): pops up every REAKTION_TRIGGER beers added.
   // Reaction time (ms) maps to a "how drunk are you" verdict in three tiers.
-  const REAKTION_TRIGGER = 5;
+  const REAKTION_TRIGGER = 2;
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
   const KONAMI_SEQUENCE = [
