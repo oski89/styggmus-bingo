@@ -18,23 +18,20 @@
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
   const FREE_INDEX = Math.floor(CELL_COUNT / 2);
   const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
-  // Fyllekollen (the "drunk check" mini-game): a swipe maze that pops up every
-  // FYLLEKOLLEN_TRIGGER beers added on the beer counter.
-  const FYLLEKOLLEN_TRIGGER = 5;
+  // The three beer-counter mini-games rotate on a MINIGAME_CYCLE-beer cycle keyed
+  // off the running count of beers added (beerAddedTotal): Reaktionskollen on
+  // 1+3n, Minnesluckatestet on 2+3n, Fyllekollen on 3+3n. Every added beer fires
+  // exactly one, so they never collide.
+  const MINIGAME_CYCLE = 3;
+  // Fyllekollen (swipe maze).
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
-  // Reaktionskollen (reaction test): pops up every REAKTION_TRIGGER beers added.
-  // Reaction time (ms) maps to a "how drunk are you" verdict in three tiers.
-  const REAKTION_TRIGGER = 2;
+  // Reaktionskollen (reaction test): reaction time (ms) → three-tier verdict.
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
   // Minnesluckatestet (memory / flash-count test): flashes X 🍺 + Y 🐭 for a blink,
-  // then the player dials in the counts. Fires on beers where (total % MINNE_PERIOD
-  // === MINNE_OFFSET), i.e. 3, 13, 23 … — always odd and never a multiple of 5, so
-  // it can never land on a Reaktionskollen (every 2) or Fyllekollen (every 5) beer.
-  const MINNE_PERIOD = 10;
-  const MINNE_OFFSET = 3;
+  // then the player dials in the counts (each MINNE_MIN..MINNE_MAX).
   const MINNE_FLASH_MS = 300;
   const MINNE_MIN = 1;
   const MINNE_MAX = 10;
@@ -319,10 +316,8 @@
   let titleClickTimer = null;
   let konamiIndex = 0;
   let typedBuffer = "";
-  let beerPressCount = 0;
   let mazeState = null;
   let mazePointerStart = null;
-  let reaktionPressCount = 0;
   let reaktionPhase = "idle";
   let reaktionShownAt = 0;
   let reaktionCountdownTimer = null;
@@ -721,34 +716,18 @@
     if (delta > 0) countBeerPress();
   }
 
-  // Beers added drive the three beer-counter mini-games: Reaktionskollen every
-  // REAKTION_TRIGGER, Fyllekollen every FYLLEKOLLEN_TRIGGER, and Minnesluckatestet
-  // on beers where total % MINNE_PERIOD === MINNE_OFFSET (so it never coincides
-  // with the other two). Only counts increments — removing a beer doesn't count.
-  // Counters are session-only and wrap, so the checks keep coming back through the
-  // night. Nothing fires while a dialog is already open; on the (impossible for
-  // Minnet) chance two are due, Minnet > Reaktion > Fyllekollen.
+  // Each added beer launches one of the three mini-games on a rotating
+  // MINIGAME_CYCLE-beer cycle: Reaktionskollen on 1+3n, Minnesluckatestet on
+  // 2+3n, Fyllekollen on 3+3n. Exactly one fires per beer, so they never
+  // collide. Only increments count — removing a beer doesn't. The counter is
+  // session-only; nothing fires while a dialog is already open.
   function countBeerPress() {
     beerAddedTotal += 1;
-    beerPressCount += 1;
-    reaktionPressCount += 1;
-
-    let dueFyllekollen = false;
-    let dueReaktion = false;
-    if (beerPressCount >= FYLLEKOLLEN_TRIGGER) {
-      beerPressCount = 0;
-      dueFyllekollen = true;
-    }
-    if (reaktionPressCount >= REAKTION_TRIGGER) {
-      reaktionPressCount = 0;
-      dueReaktion = true;
-    }
-    const dueMinne = beerAddedTotal % MINNE_PERIOD === MINNE_OFFSET;
-
     if (activeDialog) return;
-    if (dueMinne) openMinneslucka();
-    else if (dueReaktion) openReaktionskollen();
-    else if (dueFyllekollen) openFyllekollen();
+    const slot = beerAddedTotal % MINIGAME_CYCLE;
+    if (slot === 1) openReaktionskollen();
+    else if (slot === 2) openMinneslucka();
+    else openFyllekollen();
   }
 
   function beerCountOf(beers, playerId) {

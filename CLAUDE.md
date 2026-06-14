@@ -94,44 +94,41 @@ Each adds a temporary `body` class, plays a sound, and runs confetti.
 
 ### Fyllekollen (swipe maze mini-game)
 
-Every `FYLLEKOLLEN_TRIGGER` (5) beers added on the beer counter (only `+`
-presses count) launches **Fyllekollen**, a perfect maze (recursive backtracker,
-`MAZE_COLS`×`MAZE_ROWS`)
+The three beer-counter mini-games rotate on a fixed `MINIGAME_CYCLE` (3) beat in
+`countBeerPress`, keyed off the running count of beers added (`beerAddedTotal`,
+session-only; only `+` presses count): **Reaktionskollen** on beers `1+3n` (`%3
+=== 1`), **Minnesluckatestet** on `2+3n` (`%3 === 2`), **Fyllekollen** on `3+3n`
+(`%3 === 0`). Exactly one fires per added beer, so they never collide; none fires
+while another dialog is up.
+
+**Fyllekollen** is a perfect maze (recursive backtracker, `MAZE_COLS`×`MAZE_ROWS`)
 rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
 🐭 one cell per swipe (pointer events on the canvas, `touch-action: none`) or per
 arrow key — arrow keys are routed in `onKeyDown` while that dialog is active.
 Reaching the 🎯 goal closes the maze and shows a success prize overlay with
-confetti + sound. The tap counter is session-only (`beerPressCount`) and wraps,
-so the check recurs through the night; it never fires while another dialog is up.
+confetti + sound.
 
 ### Reaktionskollen (reaction-test mini-game)
 
-Every `REAKTION_TRIGGER` (2) beers added launches **Reaktionskollen** in
-`#reaktion-overlay`: a 5-second countdown, then a blank "waiting" phase for a
-random 1–5s, then a 🍺 appears and a `performance.now()` clock starts. The first
-tap (pointerdown on `#reaktion-stage`, or Space) stops it; tapping during
-"waiting" is a false start. The reaction time in ms maps to a three-tier "how
-drunk are you" verdict (`reaktionLevel`): `< REAKTION_GREEN_MAX` (350) → green
-"Nykter", `<= REAKTION_YELLOW_MAX` (550) → yellow "Salongsberusad", else red
-"Full som ett ägg". A `reaktionPhase` state machine drives the round; its two
-timers are cleared in `closeDialog` so a queued tick can't fire into a closed
-dialog. It shares the beer-tap hook with Fyllekollen (`countBeerPress`): the two
-counters are independent, and when both land on the same beer Reaktionskollen
-takes precedence.
+**Reaktionskollen** (`#reaktion-overlay`): a 5-second countdown, then a blank
+"waiting" phase for a random 1–5s, then a 🍺 appears and a `performance.now()`
+clock starts. The first tap (pointerdown on `#reaktion-stage`, or Space) stops
+it; tapping during "waiting" is a false start. The reaction time in ms maps to a
+three-tier "how drunk are you" verdict (`reaktionLevel`): `< REAKTION_GREEN_MAX`
+(350) → green "Nykter", `<= REAKTION_YELLOW_MAX` (550) → yellow "Salongsberusad",
+else red "Full som ett ägg". A `reaktionPhase` state machine drives the round;
+its two timers are cleared in `closeDialog` so a queued tick can't fire into a
+closed dialog.
 
 ### Minnesluckatestet (memory / flash-count mini-game)
 
-Fires from `countBeerPress` on beers where `beerAddedTotal % MINNE_PERIOD (10)
-=== MINNE_OFFSET (3)` — i.e. beers 3, 13, 23 … Those counts are always odd and
-never multiples of 5, so the test can **never** collide with Reaktionskollen
-(every 2) or Fyllekollen (every 5). The round (`#memory-overlay`): a 5s countdown,
-then X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
+**Minnesluckatestet** (`#memory-overlay`), on beers `2+3n`: a 5s countdown, then
+X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
 `MINNE_FLASH_MS` (300ms), then the player dials the two counts on iOS-style scroll
 wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
 MINNE_WHEEL_ITEM_H`) and submits. Accuracy (2/1/0 of the two counts correct) maps
 to the same green/yellow/red verdict, shown with the facit. A `memoryPhase` state
-machine drives it; its countdown/flash timers are cleared in `closeDialog`. The
-precedence order in `countBeerPress` is Minnet > Reaktion > Fyllekollen.
+machine drives it; its countdown/flash timers are cleared in `closeDialog`.
 
 ### Storage safety
 
