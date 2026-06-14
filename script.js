@@ -9,10 +9,12 @@
   const BEERS_KEY = "styggmus-bingo-beers-v1";
   const MODE_LIVE = "live";
   const MODE_DEMO = "demo";
-  const VALID_MODES = [MODE_LIVE, MODE_DEMO];
+  const MODE_TEST = "test";
+  const VALID_MODES = [MODE_LIVE, MODE_DEMO, MODE_TEST];
   const PASSWORDS = {
     AFC: MODE_LIVE,
     FLÖTET: MODE_DEMO,
+    MGT: MODE_TEST,
   };
   const BOARD_SIZE = 5;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
@@ -232,6 +234,10 @@
   const accessScreenEl = document.getElementById("access-screen");
   const dashboardEl = document.getElementById("dashboard");
   const beerAppEl = document.getElementById("beer-app");
+  const testScreenEl = document.getElementById("test-screen");
+  const testFyllekollenBtn = document.getElementById("test-fyllekollen-btn");
+  const testReaktionBtn = document.getElementById("test-reaktion-btn");
+  const testMinneBtn = document.getElementById("test-minne-btn");
 
   const passwordForm = document.getElementById("password-form");
   const passwordInput = document.getElementById("password-input");
@@ -355,6 +361,10 @@
     bingoTileBtn.addEventListener("click", startBingoGame);
     beerTileBtn.addEventListener("click", showBeerApp);
 
+    testFyllekollenBtn.addEventListener("click", openFyllekollen);
+    testReaktionBtn.addEventListener("click", openReaktionskollen);
+    testMinneBtn.addEventListener("click", openMinneslucka);
+
     boardEl.addEventListener("click", onBoardClick);
     newBoardBtn.addEventListener("click", onNewBoard);
     resetBoardBtn.addEventListener("click", onResetBoard);
@@ -426,6 +436,11 @@
     currentMode = safeGetSession(MODE_KEY);
     applyModeToUI();
 
+    if (currentMode === MODE_TEST) {
+      showTestScreen();
+      return;
+    }
+
     const savedPlayerId = safeGet(getPlayerKey());
     if (!isValidPlayerId(savedPlayerId)) {
       showPlayerGate();
@@ -460,11 +475,17 @@
     dashboardPlayerNameEl.textContent = player ? player.label : "-";
   }
 
+  function showTestScreen() {
+    hideAllScreens();
+    testScreenEl.classList.remove("hidden");
+  }
+
   function hideAllScreens() {
     accessScreenEl.classList.add("hidden");
     dashboardEl.classList.add("hidden");
     appEl.classList.add("hidden");
     beerAppEl.classList.add("hidden");
+    testScreenEl.classList.add("hidden");
   }
 
   function onPasswordSubmit(event) {
@@ -483,7 +504,12 @@
     safeSetSession(AUTH_KEY, "true");
     safeSetSession(MODE_KEY, mode);
     applyModeToUI();
-    showPlayerGate();
+
+    if (mode === MODE_TEST) {
+      showTestScreen();
+    } else {
+      showPlayerGate();
+    }
   }
 
   function onChoosePlayer(playerId) {

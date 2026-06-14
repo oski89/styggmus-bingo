@@ -29,7 +29,7 @@ UI language is Swedish.
 ### Screen flow
 
 `renderAccessFlow()` (called once on load) decides the entry point:
-password gate → player gate → dashboard. From the dashboard the user
+password gate → player gate → dashboard (or straight to `#test-screen` in test mode). From the dashboard the user
 launches the **Bingo** app (`#app`) or the **Ölräknaren** beer counter
 (`#beer-app`). `hideAllScreens()` + `…El.classList.remove("hidden")` is the
 show/hide mechanism throughout — there is no router. The scoreboard is reachable
@@ -37,8 +37,10 @@ as an overlay from the dashboard, bingo, and beer screens.
 
 ### Auth & modes
 
-Two passwords map to two modes (`PASSWORDS` in `script.js`): `AFC` → `live`,
-`FLÖTET` → `demo`. Auth and the active mode are session-only
+Three passwords map to three modes (`PASSWORDS` in `script.js`): `AFC` → `live`,
+`FLÖTET` → `demo`, `MGT` → `test`. **Test mode** skips the player gate and shows
+`#test-screen`, a menu whose three tiles launch each mini-game
+(`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`) directly for testing. Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
 clears them and returns to the password gate. **Demo mode** uses placeholder
 lorem-ipsum prompts/prizes and namespaces every persisted key with a `:demo`

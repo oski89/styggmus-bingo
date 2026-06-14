@@ -1327,6 +1327,19 @@ body.demo-mode .demo-indicator {
   gap: 0.85rem;
 }
 
+/* Test-mode menu: stack the three mini-game tiles in one column. Two classes so
+   it beats the single-class `.app-grid` rule inside the mobile media query. */
+.app-grid.app-grid--test {
+  grid-template-columns: 1fr;
+}
+
+.test-screen-hint {
+  margin: 0 0 0.9rem;
+  color: rgba(255, 248, 232, 0.78);
+  font-weight: 760;
+  text-align: center;
+}
+
 .app-tile {
   display: flex;
   flex-direction: column;

@@ -196,6 +196,42 @@
       </div>
     </main>
 
+    <!-- Test mode (password MGT): launch each mini-game directly -->
+    <main id="test-screen" class="dashboard hidden">
+      <div class="dashboard-inner">
+        <div class="dashboard-brand">
+          <div class="brand-mark dashboard-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 96 96" focusable="false"><use href="#sm-mark" /></svg>
+          </div>
+          <h1 class="dashboard-title">Testläge</h1>
+        </div>
+
+        <p class="test-screen-hint">Välj vilket minigame du vill testa</p>
+
+        <div class="app-grid app-grid--test" aria-label="Minigames att testa">
+          <button id="test-fyllekollen-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🐭</div>
+            <span class="app-tile-name">Fyllekollen</span>
+            <span class="app-tile-desc">Labyrint på tid</span>
+          </button>
+          <button id="test-reaktion-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">⏱️</div>
+            <span class="app-tile-name">Reaktionskollen</span>
+            <span class="app-tile-desc">Tryck när ölen dyker upp</span>
+          </button>
+          <button id="test-minne-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🧠</div>
+            <span class="app-tile-name">Minnesluckatestet</span>
+            <span class="app-tile-desc">Räkna 🍺 och 🐭</span>
+          </button>
+        </div>
+
+        <button class="exit-btn" type="button">Avsluta</button>
+
+        <p class="version-line">Stygg Mus 2026</p>
+      </div>
+    </main>
+
     <!-- Bingo prize overlay -->
     <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-live="assertive">
       <div class="overlay-card">
