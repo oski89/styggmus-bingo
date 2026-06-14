@@ -24,6 +24,11 @@
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
+  // Reaktionskollen (reaction test): pops up every REAKTION_TRIGGER beers added.
+  // Reaction time (ms) maps to a "how drunk are you" verdict in three tiers.
+  const REAKTION_TRIGGER = 5;
+  const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
+  const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -270,6 +275,15 @@
   const mazeRestartBtn = document.getElementById("maze-restart-btn");
   const fyllekollenCloseBtn = document.getElementById("fyllekollen-close-btn");
 
+  const reaktionOverlayEl = document.getElementById("reaktion-overlay");
+  const reaktionInstructionEl = document.getElementById("reaktion-instruction");
+  const reaktionStageEl = document.getElementById("reaktion-stage");
+  const reaktionCountdownEl = document.getElementById("reaktion-countdown");
+  const reaktionTargetEl = document.getElementById("reaktion-target");
+  const reaktionResultEl = document.getElementById("reaktion-result");
+  const reaktionRetryBtn = document.getElementById("reaktion-retry-btn");
+  const reaktionCloseBtn = document.getElementById("reaktion-close-btn");
+
   let state = null;
   let activePlayerId = null;
   let currentMode = null;
@@ -285,6 +299,11 @@
   let beerPressCount = 0;
   let mazeState = null;
   let mazePointerStart = null;
+  let reaktionPressCount = 0;
+  let reaktionPhase = "idle";
+  let reaktionShownAt = 0;
+  let reaktionCountdownTimer = null;
+  let reaktionAppearTimer = null;
 
   registerEventListeners();
   renderAccessFlow();
@@ -344,6 +363,13 @@
     });
     mazeCanvas.addEventListener("pointerdown", onMazePointerDown);
     mazeCanvas.addEventListener("pointerup", onMazePointerUp);
+
+    reaktionStageEl.addEventListener("pointerdown", onReaktionTap);
+    reaktionRetryBtn.addEventListener("click", startReaktionRound);
+    reaktionCloseBtn.addEventListener("click", () => closeDialog(reaktionOverlayEl));
+    reaktionOverlayEl.addEventListener("click", (e) => {
+      if (e.target === reaktionOverlayEl) closeDialog(reaktionOverlayEl);
+    });
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", resizeConfettiCanvas);
@@ -660,15 +686,30 @@
     if (delta > 0) countBeerPress();
   }
 
-  // Every FYLLEKOLLEN_TRIGGER beers added launches the Fyllekollen maze (unless a
-  // dialog is already up). Only counts increments — removing a beer doesn't count.
-  // The counter is session-only and wraps, so the drunk check keeps coming back
-  // the longer the night goes.
+  // Beers added drive the two beer-counter mini-games: Fyllekollen every
+  // FYLLEKOLLEN_TRIGGER and Reaktionskollen every REAKTION_TRIGGER. Only counts
+  // increments — removing a beer doesn't count. Counters are session-only and
+  // wrap, so the checks keep coming back the longer the night goes. When both
+  // land on the same beer, Reaktionskollen wins; neither fires while a dialog is
+  // already open.
   function countBeerPress() {
     beerPressCount += 1;
-    if (beerPressCount < FYLLEKOLLEN_TRIGGER) return;
-    beerPressCount = 0;
-    if (!activeDialog) openFyllekollen();
+    reaktionPressCount += 1;
+
+    let dueFyllekollen = false;
+    let dueReaktion = false;
+    if (beerPressCount >= FYLLEKOLLEN_TRIGGER) {
+      beerPressCount = 0;
+      dueFyllekollen = true;
+    }
+    if (reaktionPressCount >= REAKTION_TRIGGER) {
+      reaktionPressCount = 0;
+      dueReaktion = true;
+    }
+
+    if (activeDialog) return;
+    if (dueReaktion) openReaktionskollen();
+    else if (dueFyllekollen) openFyllekollen();
   }
 
   function beerCountOf(beers, playerId) {
@@ -963,9 +1004,16 @@
     // trapped, and other keys are swallowed so easter eggs don't fire behind it.
     if (activeDialog) {
       const mazeDir = activeDialog === fyllekollenOverlayEl ? arrowKeyToDir(event.key) : null;
+      const reaktionTap =
+        activeDialog === reaktionOverlayEl &&
+        (event.key === " " || event.key === "Spacebar") &&
+        (reaktionPhase === "waiting" || reaktionPhase === "active");
       if (mazeDir) {
         event.preventDefault();
         moveMaze(mazeDir);
+      } else if (reaktionTap) {
+        event.preventDefault();
+        registerReaktion();
       } else if (event.key === "Escape") {
         event.preventDefault();
         closeDialog(activeDialog);
@@ -1199,6 +1247,116 @@
     }
   }
 
+  // ── Reaktionskollen (reaction mini-game) ──────────────────────────────────
+
+  // Flow: 5s countdown → blank "waiting" for a random 1–5s → 🍺 appears and the
+  // clock starts → first tap stops it. Tapping during "waiting" is a false start.
+  function openReaktionskollen() {
+    openDialog(reaktionOverlayEl);
+    startReaktionRound();
+  }
+
+  function startReaktionRound() {
+    clearReaktionTimers();
+    reaktionPhase = "countdown";
+    reaktionStageEl.dataset.state = "countdown";
+    reaktionTargetEl.classList.add("hidden");
+    reaktionResultEl.classList.add("hidden");
+    reaktionRetryBtn.classList.add("hidden");
+    reaktionCountdownEl.classList.remove("hidden");
+    reaktionInstructionEl.textContent = "Gör dig redo…";
+
+    let n = 5;
+    reaktionCountdownEl.textContent = String(n);
+    reaktionCountdownTimer = window.setInterval(() => {
+      n -= 1;
+      if (n > 0) {
+        reaktionCountdownEl.textContent = String(n);
+      } else {
+        window.clearInterval(reaktionCountdownTimer);
+        reaktionCountdownTimer = null;
+        beginReaktionWaiting();
+      }
+    }, 1000);
+  }
+
+  function beginReaktionWaiting() {
+    reaktionPhase = "waiting";
+    reaktionStageEl.dataset.state = "waiting";
+    reaktionCountdownEl.classList.add("hidden");
+    reaktionInstructionEl.textContent = "Vänta på ölen…";
+    const delay = 1000 + Math.random() * 4000;
+    reaktionAppearTimer = window.setTimeout(showReaktionTarget, delay);
+  }
+
+  function showReaktionTarget() {
+    reaktionAppearTimer = null;
+    reaktionPhase = "active";
+    reaktionShownAt = performance.now();
+    reaktionStageEl.dataset.state = "active";
+    reaktionInstructionEl.textContent = "TRYCK!";
+    reaktionTargetEl.style.left = `${15 + Math.random() * 70}%`;
+    reaktionTargetEl.style.top = `${20 + Math.random() * 60}%`;
+    reaktionTargetEl.classList.remove("hidden");
+  }
+
+  // Handles a tap/Space on the stage. A false start during "waiting", a timed
+  // hit during "active", ignored otherwise (countdown / showing a result).
+  function registerReaktion() {
+    if (reaktionPhase === "waiting") {
+      clearReaktionTimers();
+      showReaktionResult("För tidigt!", "Du tryckte innan ölen dök upp. Försök igen.", "early", "");
+    } else if (reaktionPhase === "active") {
+      const ms = Math.round(performance.now() - reaktionShownAt);
+      const level = reaktionLevel(ms);
+      showReaktionResult(`${ms} ms`, level.message, level.cls, level.label);
+    }
+  }
+
+  function onReaktionTap(event) {
+    event.preventDefault();
+    registerReaktion();
+  }
+
+  function reaktionLevel(ms) {
+    if (ms < REAKTION_GREEN_MAX) {
+      return { cls: "green", label: "Nykter", message: "Du behöver öka takten. Fortsätt dricka." };
+    }
+    if (ms <= REAKTION_YELLOW_MAX) {
+      return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg. Fortsätt dricka." };
+    }
+    return { cls: "red", label: "Full som ett ägg", message: "Fortsätt dricka." };
+  }
+
+  function showReaktionResult(msText, message, cls, label) {
+    reaktionPhase = "done";
+    reaktionStageEl.dataset.state = "done";
+    reaktionTargetEl.classList.add("hidden");
+    reaktionCountdownEl.classList.add("hidden");
+    reaktionInstructionEl.textContent = cls === "early" ? "Falskstart" : "Din reaktionstid";
+
+    reaktionResultEl.dataset.level = cls;
+    reaktionResultEl.innerHTML =
+      `<span class="reaktion-ms">${msText}</span>` +
+      (label ? `<span class="reaktion-level">${label}</span>` : "") +
+      `<span class="reaktion-msg">${message}</span>`;
+    reaktionResultEl.classList.remove("hidden");
+    reaktionRetryBtn.classList.remove("hidden");
+
+    if (cls !== "early") playWinSound(false);
+  }
+
+  function clearReaktionTimers() {
+    if (reaktionCountdownTimer) {
+      window.clearInterval(reaktionCountdownTimer);
+      reaktionCountdownTimer = null;
+    }
+    if (reaktionAppearTimer) {
+      window.clearTimeout(reaktionAppearTimer);
+      reaktionAppearTimer = null;
+    }
+  }
+
   // ── Win detection ─────────────────────────────────────────────────────────
 
   function updateStatsAndWinState({ triggerEffects }) {
@@ -1319,6 +1477,12 @@
     // A confirm that's dismissed any way other than its accept button (cancel,
     // Escape, backdrop) is a "no" — drop the pending action.
     if (dialogEl === confirmOverlayEl) pendingConfirmAction = null;
+    // Closing Reaktionskollen any way (button, Escape, backdrop) must stop its
+    // pending timers so a queued countdown/appear can't fire into a closed dialog.
+    if (dialogEl === reaktionOverlayEl) {
+      clearReaktionTimers();
+      reaktionPhase = "idle";
+    }
     if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
       dialogReturnFocus.focus();
     }

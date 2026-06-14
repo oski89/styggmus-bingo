@@ -243,6 +243,23 @@
       </div>
     </div>
 
+    <!-- Reaktionskollen mini-game (reaction test) -->
+    <div id="reaktion-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="reaktion-title">
+      <div class="overlay-card reaktion-card">
+        <h2 id="reaktion-title" class="reaktion-title">Reaktionskollen</h2>
+        <p id="reaktion-instruction" class="reaktion-instruction">Tryck på 🍺 så fort den dyker upp.</p>
+        <div id="reaktion-stage" class="reaktion-stage" role="button" tabindex="0" aria-label="Reaktionsyta — tryck när ölen dyker upp">
+          <span id="reaktion-countdown" class="reaktion-countdown">5</span>
+          <span id="reaktion-target" class="reaktion-target hidden" aria-hidden="true">🍺</span>
+          <div id="reaktion-result" class="reaktion-result hidden"></div>
+        </div>
+        <div class="confirm-actions reaktion-controls">
+          <button id="reaktion-retry-btn" class="secondary-btn hidden" type="button">Igen</button>
+          <button id="reaktion-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
     <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
     <script src="./script.js"></script>
   </body>

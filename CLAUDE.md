@@ -22,7 +22,7 @@ Single-page vanilla JS app with no dependencies, no bundler, and no build step. 
 
 - `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus three dialog overlays — `#overlay` (bingo/easter-egg prizes), `#scoreboard-overlay`, `#confirm-overlay` (styled `confirm()` replacement) — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
 UI language is Swedish.
 
@@ -103,6 +103,21 @@ arrow key — arrow keys are routed in `onKeyDown` while that dialog is active.
 Reaching the 🎯 goal closes the maze and shows a success prize overlay with
 confetti + sound. The tap counter is session-only (`beerPressCount`) and wraps,
 so the check recurs through the night; it never fires while another dialog is up.
+
+### Reaktionskollen (reaction-test mini-game)
+
+Every `REAKTION_TRIGGER` (5) beers added launches **Reaktionskollen** in
+`#reaktion-overlay`: a 5-second countdown, then a blank "waiting" phase for a
+random 1–5s, then a 🍺 appears and a `performance.now()` clock starts. The first
+tap (pointerdown on `#reaktion-stage`, or Space) stops it; tapping during
+"waiting" is a false start. The reaction time in ms maps to a three-tier "how
+drunk are you" verdict (`reaktionLevel`): `< REAKTION_GREEN_MAX` (350) → green
+"Nykter", `<= REAKTION_YELLOW_MAX` (550) → yellow "Salongsberusad", else red
+"Full som ett ägg". A `reaktionPhase` state machine drives the round; its two
+timers are cleared in `closeDialog` so a queued tick can't fire into a closed
+dialog. It shares the beer-tap hook with Fyllekollen (`countBeerPress`): the two
+counters are independent, and when both land on the same beer Reaktionskollen
+takes precedence.
 
 ### Storage safety
 
