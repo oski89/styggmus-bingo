@@ -23,16 +23,17 @@
   // 1+3n, Minnesluckatestet on 2+3n, Fyllekollen on 3+3n. Every added beer fires
   // exactly one, so they never collide.
   const MINIGAME_CYCLE = 3;
-  // Fyllekollen (swipe maze).
+  // Fyllekollen (swipe maze). Time limit = shortest-path step count × MAZE_MS_PER_STEP.
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
+  const MAZE_MS_PER_STEP = 200;
   // Reaktionskollen (reaction test): reaction time (ms) → three-tier verdict.
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
   // Minnesluckatestet (memory / flash-count test): flashes X 🍺 + Y 🐭 for a blink,
   // then the player dials in the counts (each MINNE_MIN..MINNE_MAX).
-  const MINNE_FLASH_MS = 300;
+  const MINNE_FLASH_MS = 2000;
   const MINNE_MIN = 1;
   const MINNE_MAX = 10;
   const MINNE_WHEEL_ITEM_H = 40; // px per wheel row; matches .memory-wheel-opt height
@@ -279,6 +280,7 @@
   const confettiCanvas = document.getElementById("confetti");
   const fyllekollenOverlayEl = document.getElementById("fyllekollen-overlay");
   const mazeCanvas = document.getElementById("maze-canvas");
+  const mazeTimerEl = document.getElementById("maze-timer");
   const mazeRestartBtn = document.getElementById("maze-restart-btn");
   const fyllekollenCloseBtn = document.getElementById("fyllekollen-close-btn");
 
@@ -318,6 +320,9 @@
   let typedBuffer = "";
   let mazeState = null;
   let mazePointerStart = null;
+  let mazeDeadline = 0;
+  let mazeLimitMs = 0;
+  let mazeTimerInterval = null;
   let reaktionPhase = "idle";
   let reaktionShownAt = 0;
   let reaktionCountdownTimer = null;
@@ -1105,6 +1110,7 @@
   function buildNewMaze() {
     mazeState = createMaze(MAZE_COLS, MAZE_ROWS);
     drawMaze();
+    startMazeTimer();
   }
 
   // Carves a perfect maze with an iterative recursive-backtracker. Each cell
@@ -1151,7 +1157,63 @@
       player: { c: 0, r: 0 },
       goal: { c: cols - 1, r: rows - 1 },
       solved: false,
+      stepsNeeded: mazeDistance(cells, cols, rows, 0, total - 1),
     };
+  }
+
+  // BFS over the carved passages — in a perfect maze this unique path length is
+  // the number of steps strictly needed to reach the goal.
+  function mazeDistance(cells, cols, rows, startIdx, goalIdx) {
+    const dist = new Array(cols * rows).fill(-1);
+    dist[startIdx] = 0;
+    const queue = [startIdx];
+
+    while (queue.length) {
+      const cur = queue.shift();
+      if (cur === goalIdx) return dist[cur];
+      const c = cur % cols;
+      const r = Math.floor(cur / cols);
+      const cell = cells[cur];
+      if (!cell.n && r > 0 && dist[cur - cols] < 0) { dist[cur - cols] = dist[cur] + 1; queue.push(cur - cols); }
+      if (!cell.e && c < cols - 1 && dist[cur + 1] < 0) { dist[cur + 1] = dist[cur] + 1; queue.push(cur + 1); }
+      if (!cell.s && r < rows - 1 && dist[cur + cols] < 0) { dist[cur + cols] = dist[cur] + 1; queue.push(cur + cols); }
+      if (!cell.w && c > 0 && dist[cur - 1] < 0) { dist[cur - 1] = dist[cur] + 1; queue.push(cur - 1); }
+    }
+    return dist[goalIdx];
+  }
+
+  // Starts (or restarts) the countdown clock for the current maze. The player
+  // gets stepsNeeded × MAZE_MS_PER_STEP to reach the goal.
+  function startMazeTimer() {
+    clearMazeTimer();
+    if (!mazeState) return;
+    mazeLimitMs = Math.max(1, mazeState.stepsNeeded) * MAZE_MS_PER_STEP;
+    mazeDeadline = performance.now() + mazeLimitMs;
+    renderMazeTimer();
+    mazeTimerInterval = window.setInterval(renderMazeTimer, 100);
+  }
+
+  function renderMazeTimer() {
+    const remaining = Math.max(0, mazeDeadline - performance.now());
+    mazeTimerEl.textContent = `${(remaining / 1000).toFixed(1)} s`;
+    mazeTimerEl.dataset.urgent = remaining <= mazeLimitMs * 0.34 ? "true" : "false";
+    if (remaining <= 0) onMazeTimeout();
+  }
+
+  function clearMazeTimer() {
+    if (mazeTimerInterval) {
+      window.clearInterval(mazeTimerInterval);
+      mazeTimerInterval = null;
+    }
+  }
+
+  function onMazeTimeout() {
+    if (!mazeState || mazeState.solved) return;
+    mazeState.solved = true; // lock movement
+    clearMazeTimer();
+    closeDialog(fyllekollenOverlayEl);
+    playWinSound(false);
+    showOverlay("Tiden ute!", "För långsam — reflexerna sviker. Fortsätt dricka.", "fail");
   }
 
   function drawMaze() {
@@ -1218,6 +1280,7 @@
 
   function onMazeSolved() {
     mazeState.solved = true;
+    clearMazeTimer();
     closeDialog(fyllekollenOverlayEl);
     playWinSound(true);
     runConfetti(2600);
@@ -1606,9 +1669,12 @@
     showOverlay("HELA BRICKAN KLAR!", getActiveGrandPrize());
   }
 
-  function showOverlay(title, text) {
+  // `tone` "fail" red-tints the heading (e.g. Fyllekollen time-out); default is
+  // the celebratory gold.
+  function showOverlay(title, text, tone) {
     overlayTitleEl.textContent = title;
     overlayTextEl.textContent = text;
+    overlayEl.dataset.tone = tone === "fail" ? "fail" : "normal";
     openDialog(overlayEl);
   }
 
@@ -1639,6 +1705,7 @@
     if (dialogEl === confirmOverlayEl) pendingConfirmAction = null;
     // Closing Reaktionskollen any way (button, Escape, backdrop) must stop its
     // pending timers so a queued countdown/appear can't fire into a closed dialog.
+    if (dialogEl === fyllekollenOverlayEl) clearMazeTimer();
     if (dialogEl === reaktionOverlayEl) {
       clearReaktionTimers();
       reaktionPhase = "idle";

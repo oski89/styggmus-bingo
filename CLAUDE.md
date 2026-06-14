@@ -104,9 +104,13 @@ while another dialog is up.
 **Fyllekollen** is a perfect maze (recursive backtracker, `MAZE_COLS`×`MAZE_ROWS`)
 rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
 🐭 one cell per swipe (pointer events on the canvas, `touch-action: none`) or per
-arrow key — arrow keys are routed in `onKeyDown` while that dialog is active.
-Reaching the 🎯 goal closes the maze and shows a success prize overlay with
-confetti + sound.
+arrow key — arrow keys are routed in `onKeyDown` while that dialog is active. It
+is **timed**: the limit is the shortest-path step count (`mazeDistance`, BFS) ×
+`MAZE_MS_PER_STEP` (200ms), shown as a `#maze-timer` countdown that turns red in
+the last third. Reaching 🎯 in time closes the maze and shows the gold success
+overlay (confetti + sound); running out of time shows the shared overlay in its
+`fail` tone (`showOverlay(…, "fail")` → red heading). The maze timer is cleared
+on solve, time-out, and in `closeDialog`.
 
 ### Reaktionskollen (reaction-test mini-game)
 
@@ -124,7 +128,7 @@ closed dialog.
 
 **Minnesluckatestet** (`#memory-overlay`), on beers `2+3n`: a 5s countdown, then
 X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
-`MINNE_FLASH_MS` (300ms), then the player dials the two counts on iOS-style scroll
+`MINNE_FLASH_MS` (2000ms), then the player dials the two counts on iOS-style scroll
 wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
 MINNE_WHEEL_ITEM_H`) and submits. Accuracy (2/1/0 of the two counts correct) maps
 to the same green/yellow/red verdict, shown with the facit. A `memoryPhase` state

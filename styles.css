@@ -844,6 +844,26 @@ button:focus-visible {
   margin: 0.7rem 0 1rem;
 }
 
+.maze-timer {
+  margin: 0 0 0.6rem;
+  font-size: 1.8rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Turns red when the clock is running low. */
+.maze-timer[data-urgent="true"] {
+  color: #f7706d;
+}
+
+/* Failure tone for the shared prize overlay (e.g. Fyllekollen time-out). */
+.overlay[data-tone="fail"] .overlay-card h2 {
+  color: #f7706d;
+  text-shadow: 0 16px 34px rgba(247, 112, 109, 0.24);
+}
+
 .maze-wrap {
   margin: 0 auto 1rem;
   width: 100%;
