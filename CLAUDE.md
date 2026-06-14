@@ -22,7 +22,7 @@ Single-page vanilla JS app with no dependencies, no bundler, and no build step. 
 
 - `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus three dialog overlays — `#overlay` (bingo/easter-egg prizes), `#scoreboard-overlay`, `#confirm-overlay` (styled `confirm()` replacement) — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
 UI language is Swedish.
 
@@ -118,6 +118,20 @@ timers are cleared in `closeDialog` so a queued tick can't fire into a closed
 dialog. It shares the beer-tap hook with Fyllekollen (`countBeerPress`): the two
 counters are independent, and when both land on the same beer Reaktionskollen
 takes precedence.
+
+### Minnesluckatestet (memory / flash-count mini-game)
+
+Fires from `countBeerPress` on beers where `beerAddedTotal % MINNE_PERIOD (10)
+=== MINNE_OFFSET (3)` — i.e. beers 3, 13, 23 … Those counts are always odd and
+never multiples of 5, so the test can **never** collide with Reaktionskollen
+(every 2) or Fyllekollen (every 5). The round (`#memory-overlay`): a 5s countdown,
+then X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
+`MINNE_FLASH_MS` (100ms), then the player dials the two counts on iOS-style scroll
+wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
+MINNE_WHEEL_ITEM_H`) and submits. Accuracy (2/1/0 of the two counts correct) maps
+to the same green/yellow/red verdict, shown with the facit. A `memoryPhase` state
+machine drives it; its countdown/flash timers are cleared in `closeDialog`. The
+precedence order in `countBeerPress` is Minnet > Reaktion > Fyllekollen.
 
 ### Storage safety
 

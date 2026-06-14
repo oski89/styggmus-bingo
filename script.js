@@ -29,6 +29,16 @@
   const REAKTION_TRIGGER = 2;
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
+  // Minnesluckatestet (memory / flash-count test): flashes X 🍺 + Y 🐭 for a blink,
+  // then the player dials in the counts. Fires on beers where (total % MINNE_PERIOD
+  // === MINNE_OFFSET), i.e. 3, 13, 23 … — always odd and never a multiple of 5, so
+  // it can never land on a Reaktionskollen (every 2) or Fyllekollen (every 5) beer.
+  const MINNE_PERIOD = 10;
+  const MINNE_OFFSET = 3;
+  const MINNE_FLASH_MS = 100;
+  const MINNE_MIN = 1;
+  const MINNE_MAX = 10;
+  const MINNE_WHEEL_ITEM_H = 40; // px per wheel row; matches .memory-wheel-opt height
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -284,6 +294,19 @@
   const reaktionRetryBtn = document.getElementById("reaktion-retry-btn");
   const reaktionCloseBtn = document.getElementById("reaktion-close-btn");
 
+  const memoryOverlayEl = document.getElementById("memory-overlay");
+  const memoryInstructionEl = document.getElementById("memory-instruction");
+  const memoryStageEl = document.getElementById("memory-stage");
+  const memoryCountdownEl = document.getElementById("memory-countdown");
+  const memoryFlashEl = document.getElementById("memory-flash");
+  const memoryAnswerEl = document.getElementById("memory-answer");
+  const memoryWheelBeerEl = document.getElementById("memory-wheel-beer");
+  const memoryWheelMouseEl = document.getElementById("memory-wheel-mouse");
+  const memorySubmitBtn = document.getElementById("memory-submit-btn");
+  const memoryResultEl = document.getElementById("memory-result");
+  const memoryRetryBtn = document.getElementById("memory-retry-btn");
+  const memoryCloseBtn = document.getElementById("memory-close-btn");
+
   let state = null;
   let activePlayerId = null;
   let currentMode = null;
@@ -304,6 +327,11 @@
   let reaktionShownAt = 0;
   let reaktionCountdownTimer = null;
   let reaktionAppearTimer = null;
+  let beerAddedTotal = 0;
+  let memoryPhase = "idle";
+  let memoryAnswer = { beer: 0, mouse: 0 };
+  let memoryCountdownTimer = null;
+  let memoryFlashTimer = null;
 
   registerEventListeners();
   renderAccessFlow();
@@ -369,6 +397,13 @@
     reaktionCloseBtn.addEventListener("click", () => closeDialog(reaktionOverlayEl));
     reaktionOverlayEl.addEventListener("click", (e) => {
       if (e.target === reaktionOverlayEl) closeDialog(reaktionOverlayEl);
+    });
+
+    memorySubmitBtn.addEventListener("click", submitMemoryAnswer);
+    memoryRetryBtn.addEventListener("click", startMemoryRound);
+    memoryCloseBtn.addEventListener("click", () => closeDialog(memoryOverlayEl));
+    memoryOverlayEl.addEventListener("click", (e) => {
+      if (e.target === memoryOverlayEl) closeDialog(memoryOverlayEl);
     });
 
     window.addEventListener("keydown", onKeyDown);
@@ -686,13 +721,15 @@
     if (delta > 0) countBeerPress();
   }
 
-  // Beers added drive the two beer-counter mini-games: Fyllekollen every
-  // FYLLEKOLLEN_TRIGGER and Reaktionskollen every REAKTION_TRIGGER. Only counts
-  // increments — removing a beer doesn't count. Counters are session-only and
-  // wrap, so the checks keep coming back the longer the night goes. When both
-  // land on the same beer, Reaktionskollen wins; neither fires while a dialog is
-  // already open.
+  // Beers added drive the three beer-counter mini-games: Reaktionskollen every
+  // REAKTION_TRIGGER, Fyllekollen every FYLLEKOLLEN_TRIGGER, and Minnesluckatestet
+  // on beers where total % MINNE_PERIOD === MINNE_OFFSET (so it never coincides
+  // with the other two). Only counts increments — removing a beer doesn't count.
+  // Counters are session-only and wrap, so the checks keep coming back through the
+  // night. Nothing fires while a dialog is already open; on the (impossible for
+  // Minnet) chance two are due, Minnet > Reaktion > Fyllekollen.
   function countBeerPress() {
+    beerAddedTotal += 1;
     beerPressCount += 1;
     reaktionPressCount += 1;
 
@@ -706,9 +743,11 @@
       reaktionPressCount = 0;
       dueReaktion = true;
     }
+    const dueMinne = beerAddedTotal % MINNE_PERIOD === MINNE_OFFSET;
 
     if (activeDialog) return;
-    if (dueReaktion) openReaktionskollen();
+    if (dueMinne) openMinneslucka();
+    else if (dueReaktion) openReaktionskollen();
     else if (dueFyllekollen) openFyllekollen();
   }
 
@@ -1357,6 +1396,148 @@
     }
   }
 
+  // ── Minnesluckatestet (memory / flash-count test) ─────────────────────────
+
+  // Flow: 5s countdown → a cluster of X 🍺 + Y 🐭 flashes for MINNE_FLASH_MS →
+  // the player dials the two counts on the scroll wheels and submits. Accuracy
+  // (2/1/0 correct) maps to the same three-tier drunkenness verdict.
+  function openMinneslucka() {
+    populateMemoryWheel(memoryWheelBeerEl);
+    populateMemoryWheel(memoryWheelMouseEl);
+    openDialog(memoryOverlayEl);
+    startMemoryRound();
+  }
+
+  function startMemoryRound() {
+    clearMemoryTimers();
+    memoryPhase = "countdown";
+    memoryStageEl.dataset.state = "countdown";
+    memoryFlashEl.classList.add("hidden");
+    memoryAnswerEl.classList.add("hidden");
+    memoryResultEl.classList.add("hidden");
+    memoryRetryBtn.classList.add("hidden");
+    memoryCountdownEl.classList.remove("hidden");
+    memoryInstructionEl.textContent = "Gör dig redo…";
+
+    memoryAnswer = { beer: randomCount(), mouse: randomCount() };
+
+    let n = 5;
+    memoryCountdownEl.textContent = String(n);
+    memoryCountdownTimer = window.setInterval(() => {
+      n -= 1;
+      if (n > 0) {
+        memoryCountdownEl.textContent = String(n);
+      } else {
+        window.clearInterval(memoryCountdownTimer);
+        memoryCountdownTimer = null;
+        flashMemory();
+      }
+    }, 1000);
+  }
+
+  function randomCount() {
+    return MINNE_MIN + Math.floor(Math.random() * (MINNE_MAX - MINNE_MIN + 1));
+  }
+
+  function flashMemory() {
+    memoryPhase = "flash";
+    memoryStageEl.dataset.state = "flash";
+    memoryCountdownEl.classList.add("hidden");
+    memoryInstructionEl.textContent = "Håll koll!";
+
+    const items = [];
+    for (let i = 0; i < memoryAnswer.beer; i++) items.push("🍺");
+    for (let i = 0; i < memoryAnswer.mouse; i++) items.push("🐭");
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    memoryFlashEl.innerHTML = items.map((emoji) => `<span>${emoji}</span>`).join("");
+    memoryFlashEl.classList.remove("hidden");
+
+    memoryFlashTimer = window.setTimeout(() => {
+      memoryFlashTimer = null;
+      showMemoryAnswer();
+    }, MINNE_FLASH_MS);
+  }
+
+  function showMemoryAnswer() {
+    memoryPhase = "answer";
+    memoryStageEl.dataset.state = "answer";
+    memoryFlashEl.classList.add("hidden");
+    memoryFlashEl.innerHTML = "";
+    memoryInstructionEl.textContent = "Hur många 🍺 och 🐭 såg du?";
+    memoryAnswerEl.classList.remove("hidden");
+    // Default both wheels to a neutral middle value (must run while visible so
+    // scrollTop takes effect).
+    setMemoryWheel(memoryWheelBeerEl, 5);
+    setMemoryWheel(memoryWheelMouseEl, 5);
+  }
+
+  function submitMemoryAnswer() {
+    if (memoryPhase !== "answer") return;
+    const guessBeer = readMemoryWheel(memoryWheelBeerEl);
+    const guessMouse = readMemoryWheel(memoryWheelMouseEl);
+    const correct =
+      (guessBeer === memoryAnswer.beer ? 1 : 0) + (guessMouse === memoryAnswer.mouse ? 1 : 0);
+    const level = memoryLevel(correct);
+
+    memoryPhase = "done";
+    memoryStageEl.dataset.state = "done";
+    memoryAnswerEl.classList.add("hidden");
+    memoryInstructionEl.textContent = "Facit";
+
+    memoryResultEl.dataset.level = level.cls;
+    memoryResultEl.innerHTML =
+      `<span class="memory-result-headline">${level.label}</span>` +
+      `<span class="memory-facit">Rätt: ${memoryAnswer.beer} 🍺 · ${memoryAnswer.mouse} 🐭</span>` +
+      `<span class="memory-msg">Du gissade ${guessBeer} 🍺 · ${guessMouse} 🐭. ${level.message}</span>`;
+    memoryResultEl.classList.remove("hidden");
+    memoryRetryBtn.classList.remove("hidden");
+    playWinSound(false);
+  }
+
+  function memoryLevel(correctCount) {
+    if (correctCount === 2) {
+      return { cls: "green", label: "Nykter", message: "Skärpt blick! Du behöver öka takten. Fortsätt dricka." };
+    }
+    if (correctCount === 1) {
+      return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg. Fortsätt dricka." };
+    }
+    return { cls: "red", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka." };
+  }
+
+  // The scroll wheels: a padded list of MINNE_MIN..MINNE_MAX with a spacer top and
+  // bottom so the first/last value can snap to the centre band.
+  function populateMemoryWheel(el) {
+    let html = '<div class="memory-wheel-spacer"></div>';
+    for (let value = MINNE_MIN; value <= MINNE_MAX; value++) {
+      html += `<div class="memory-wheel-opt">${value}</div>`;
+    }
+    html += '<div class="memory-wheel-spacer"></div>';
+    el.innerHTML = html;
+  }
+
+  function setMemoryWheel(el, value) {
+    el.scrollTop = (value - MINNE_MIN) * MINNE_WHEEL_ITEM_H;
+  }
+
+  function readMemoryWheel(el) {
+    const index = Math.round(el.scrollTop / MINNE_WHEEL_ITEM_H);
+    return Math.min(MINNE_MAX, Math.max(MINNE_MIN, index + MINNE_MIN));
+  }
+
+  function clearMemoryTimers() {
+    if (memoryCountdownTimer) {
+      window.clearInterval(memoryCountdownTimer);
+      memoryCountdownTimer = null;
+    }
+    if (memoryFlashTimer) {
+      window.clearTimeout(memoryFlashTimer);
+      memoryFlashTimer = null;
+    }
+  }
+
   // ── Win detection ─────────────────────────────────────────────────────────
 
   function updateStatsAndWinState({ triggerEffects }) {
@@ -1482,6 +1663,10 @@
     if (dialogEl === reaktionOverlayEl) {
       clearReaktionTimers();
       reaktionPhase = "idle";
+    }
+    if (dialogEl === memoryOverlayEl) {
+      clearMemoryTimers();
+      memoryPhase = "idle";
     }
     if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
       dialogReturnFocus.focus();

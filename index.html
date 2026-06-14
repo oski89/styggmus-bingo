@@ -260,6 +260,42 @@
       </div>
     </div>
 
+    <!-- Minnesluckatestet mini-game (memory / flash-count test) -->
+    <div id="memory-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="memory-title">
+      <div class="overlay-card memory-card">
+        <h2 id="memory-title" class="memory-title">Minnesluckatestet</h2>
+        <p id="memory-instruction" class="memory-instruction">Gör dig redo…</p>
+        <div id="memory-stage" class="memory-stage">
+          <span id="memory-countdown" class="memory-countdown">5</span>
+          <div id="memory-flash" class="memory-flash hidden" aria-hidden="true"></div>
+          <div id="memory-answer" class="memory-answer hidden">
+            <div class="memory-pickers">
+              <div class="memory-wheel">
+                <span class="memory-wheel-label" aria-hidden="true">🍺</span>
+                <div class="memory-wheel-viewport">
+                  <div id="memory-wheel-beer" class="memory-wheel-scroll" tabindex="0" role="spinbutton" aria-label="Antal ölemojis"></div>
+                  <div class="memory-wheel-band" aria-hidden="true"></div>
+                </div>
+              </div>
+              <div class="memory-wheel">
+                <span class="memory-wheel-label" aria-hidden="true">🐭</span>
+                <div class="memory-wheel-viewport">
+                  <div id="memory-wheel-mouse" class="memory-wheel-scroll" tabindex="0" role="spinbutton" aria-label="Antal musemojis"></div>
+                  <div class="memory-wheel-band" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+            <button id="memory-submit-btn" class="primary-btn memory-submit-btn" type="button">Svara</button>
+          </div>
+          <div id="memory-result" class="memory-result hidden"></div>
+        </div>
+        <div class="confirm-actions memory-controls">
+          <button id="memory-retry-btn" class="secondary-btn hidden" type="button">Igen</button>
+          <button id="memory-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
     <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
     <script src="./script.js"></script>
   </body>
