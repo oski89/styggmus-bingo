@@ -1703,7 +1703,8 @@
     const ctx = spyCanvas.getContext("2d");
     if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-    const couchSize = w * 0.26;
+    const couchW = w * 0.3;
+    const couchH = couchW * 0.46;
     const nauseaSize = w * 0.11;
     const nauseaCount = 6;
     const nauseaX = [];
@@ -1712,9 +1713,10 @@
     spyGame = {
       w,
       h,
-      couchSize,
+      couchW,
+      couchH,
       couchX: w / 2,
-      couchCenterY: h - couchSize * 0.5 - 6,
+      couchCenterY: h - couchH * 0.5 - 8,
       vomitSize: w * 0.11,
       nauseaSize,
       nauseaY: nauseaSize * 0.75 + 4,
@@ -1755,9 +1757,9 @@
     g.lastFrame = now;
     const elapsed = (now - g.startAt) / 1000;
 
-    // Move the couch, clamped to the stage.
+    // Move the couch, clamped so the whole couch stays on the stage.
     g.couchX += spyMoveDir * SPY_COUCH_SPEED * g.w * dt;
-    g.couchX = Math.max(g.couchSize * 0.5, Math.min(g.w - g.couchSize * 0.5, g.couchX));
+    g.couchX = Math.max(g.couchW * 0.5, Math.min(g.w - g.couchW * 0.5, g.couchX));
 
     // Drop a burst of vomit from distinct nausea emojis — usually 1, more often
     // 2–3 as the round ramps, but never all of them so a dodge gap always exists.
@@ -1767,10 +1769,11 @@
       g.lastSpawnAt = now;
     }
 
-    // Fall + resolve at the couch line (crossing test avoids tunnelling).
+    // Fall + resolve at the couch line (crossing test avoids tunnelling). The
+    // hitbox is exactly the drawn couch width plus a little of the splat radius.
     const fall = SPY_BASE_FALL * g.h * (1 + elapsed * SPY_FALL_RAMP);
-    const couchTopY = g.couchCenterY - g.couchSize * 0.35;
-    const half = g.couchSize * 0.45;
+    const couchTopY = g.couchCenterY - g.couchH * 0.5;
+    const half = g.couchW * 0.5;
     for (const v of g.vomits) {
       const prevY = v.y;
       v.y += fall * dt;
@@ -1819,8 +1822,46 @@
     ctx.font = `${g.vomitSize}px serif`;
     for (const v of g.vomits) ctx.fillText("🤮", v.x, v.y);
 
-    ctx.font = `${g.couchSize}px serif`;
-    ctx.fillText("🛋️", g.couchX, g.couchCenterY);
+    drawCouch(ctx, g.couchX, g.couchCenterY, g.couchW, g.couchH);
+  }
+
+  // Draws a simple couch whose footprint is exactly couchW × couchH (so it lines
+  // up with the hitbox) — no stray lamp like the 🛋️ emoji carries.
+  function drawCouch(ctx, cx, cy, cw, ch) {
+    const left = cx - cw / 2;
+    const top = cy - ch / 2;
+    const r = ch * 0.22;
+    // backrest
+    ctx.fillStyle = "#3f78c2";
+    roundRectPath(ctx, left, top, cw, ch * 0.62, r);
+    ctx.fill();
+    // armrests
+    ctx.fillStyle = "#4a86d6";
+    roundRectPath(ctx, left, top + ch * 0.28, cw * 0.16, ch * 0.72, r * 0.7);
+    ctx.fill();
+    roundRectPath(ctx, left + cw * 0.84, top + ch * 0.28, cw * 0.16, ch * 0.72, r * 0.7);
+    ctx.fill();
+    // seat base
+    ctx.fillStyle = "#345f97";
+    roundRectPath(ctx, left, top + ch * 0.5, cw, ch * 0.5, r * 0.8);
+    ctx.fill();
+    // cushions
+    ctx.fillStyle = "#5b95df";
+    roundRectPath(ctx, left + cw * 0.2, top + ch * 0.1, cw * 0.28, ch * 0.42, r * 0.6);
+    ctx.fill();
+    roundRectPath(ctx, left + cw * 0.52, top + ch * 0.1, cw * 0.28, ch * 0.42, r * 0.6);
+    ctx.fill();
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r) {
+    const rad = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rad, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rad);
+    ctx.arcTo(x + w, y + h, x, y + h, rad);
+    ctx.arcTo(x, y + h, x, y, rad);
+    ctx.arcTo(x, y, x + w, y, rad);
+    ctx.closePath();
   }
 
   function onSpyHit() {

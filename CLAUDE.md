@@ -142,9 +142,10 @@ machine drives it; its countdown/flash timers are cleared in `closeDialog`.
 **Spykollen** (`#spy-canvas` in `#spykollen-overlay`), on beers `4+4n`: a
 `requestAnimationFrame` arcade game. A row of 🤢 along the top
 drop 🤮 in bursts of 1–`SPY_MAX_BURST` (3) from distinct columns (never all, so a
-dodge gap always exists); the player steers a 🛋️ couch with on-screen ◀ ▶ buttons
-(held; `pointerdown`/`pointerup` set `spyMoveDir`) or arrow keys (routed in
-`onKeyDown` + a `keyup` handler). Difficulty ramps each second (faster fall via
+dodge gap always exists); the player steers a canvas-drawn couch (footprint =
+hitbox exactly, clamped fully on-stage; `drawCouch`/`roundRectPath`) with
+on-screen ◀ ▶ buttons (held; `pointerdown`/`pointerup` set `spyMoveDir`) or arrow
+keys (routed in `onKeyDown` + a `keyup` handler). Difficulty ramps each second (faster fall via
 `SPY_BASE_FALL`/`SPY_FALL_RAMP`, tighter spawns via `SPY_BASE_SPAWN_MS`/
 `SPY_SPAWN_RAMP`) so a round lands ~10–30s; one hit ends it. Dodged count maps to
 the green/yellow/red verdict (`spyLevel`: ≥`SPY_GREEN_MIN` 15 / ≥`SPY_YELLOW_MIN`
