@@ -224,6 +224,11 @@
             <span class="app-tile-name">Minnesluckatestet</span>
             <span class="app-tile-desc">Räkna 🍺 och 🐭</span>
           </button>
+          <button id="test-spykollen-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🤮</div>
+            <span class="app-tile-name">Spykollen</span>
+            <span class="app-tile-desc">Undvik spyorna med soffan</span>
+          </button>
         </div>
 
         <button class="exit-btn" type="button">Avsluta</button>
@@ -329,6 +334,28 @@
         <div class="confirm-actions memory-controls">
           <button id="memory-retry-btn" class="secondary-btn hidden" type="button">Igen</button>
           <button id="memory-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spykollen mini-game (dodge the falling vomit) -->
+    <div id="spykollen-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="spykollen-title">
+      <div class="overlay-card spykollen-card">
+        <h2 id="spykollen-title" class="spykollen-title">Spykollen</h2>
+        <p id="spykollen-instruction" class="spykollen-instruction">Styr soffan och undvik spyorna!</p>
+        <div class="spy-stage-wrap">
+          <canvas id="spy-canvas" class="spy-canvas" aria-label="Undvik spyorna med soffan"></canvas>
+          <span id="spy-countdown" class="spy-countdown" aria-hidden="true">3</span>
+          <div id="spy-result" class="spy-result hidden"></div>
+        </div>
+        <div class="spy-controls" aria-label="Styrning">
+          <button id="spy-left-btn" class="spy-dir-btn" type="button" aria-label="Flytta vänster">◀</button>
+          <span id="spy-score" class="spy-score" aria-live="off">0</span>
+          <button id="spy-right-btn" class="spy-dir-btn" type="button" aria-label="Flytta höger">▶</button>
+        </div>
+        <div class="confirm-actions spykollen-footer">
+          <button id="spy-retry-btn" class="secondary-btn hidden" type="button">Igen</button>
+          <button id="spy-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ Single-page vanilla JS app with no dependencies, no bundler, and no build step. 
 
 - `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus three dialog overlays — `#overlay` (bingo/easter-egg prizes), `#scoreboard-overlay`, `#confirm-overlay` (styled `confirm()` replacement) — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
 UI language is Swedish.
 
@@ -39,8 +39,8 @@ as an overlay from the dashboard, bingo, and beer screens.
 
 Three passwords map to three modes (`PASSWORDS` in `script.js`): `AFC` → `live`,
 `FLÖTET` → `demo`, `MGT` → `test`. **Test mode** skips the player gate and shows
-`#test-screen`, a menu whose three tiles launch each mini-game
-(`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`) directly for testing. Auth and the active mode are session-only
+`#test-screen`, a menu whose four tiles launch each mini-game
+(`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`) directly for testing. Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
 clears them and returns to the password gate. **Demo mode** uses placeholder
 lorem-ipsum prompts/prizes and namespaces every persisted key with a `:demo`
@@ -96,12 +96,13 @@ Each adds a temporary `body` class, plays a sound, and runs confetti.
 
 ### Fyllekollen (swipe maze mini-game)
 
-The three beer-counter mini-games rotate on a fixed `MINIGAME_CYCLE` (3) beat in
+The four beer-counter mini-games rotate on a fixed `MINIGAME_CYCLE` (4) beat in
 `countBeerPress`, keyed off the running count of beers added (`beerAddedTotal`,
-session-only; only `+` presses count): **Reaktionskollen** on beers `1+3n` (`%3
-=== 1`), **Minnesluckatestet** on `2+3n` (`%3 === 2`), **Fyllekollen** on `3+3n`
-(`%3 === 0`). Exactly one fires per added beer, so they never collide; none fires
-while another dialog is up.
+session-only; only `+` presses count): **Reaktionskollen** on beers `1+4n` (`%4
+=== 1`), **Minnesluckatestet** on `2+4n` (`%4 === 2`), **Fyllekollen** on `3+4n`
+(`%4 === 3`), **Spykollen** on `4+4n` (`%4 === 0`). Exactly one fires per added
+beer, so they never collide; none fires while another dialog is up. All four are
+also launchable directly from the test-mode menu (`#test-screen`).
 
 **Fyllekollen** is a perfect maze (recursive backtracker, `MAZE_COLS`×`MAZE_ROWS`)
 rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
@@ -128,13 +129,28 @@ closed dialog.
 
 ### Minnesluckatestet (memory / flash-count mini-game)
 
-**Minnesluckatestet** (`#memory-overlay`), on beers `2+3n`: a 5s countdown, then
+**Minnesluckatestet** (`#memory-overlay`), on beers `2+4n`: a 5s countdown, then
 X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
 `MINNE_FLASH_MS` (4000ms), then the player dials the two counts on iOS-style scroll
 wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
 MINNE_WHEEL_ITEM_H`) and submits. Accuracy (2/1/0 of the two counts correct) maps
 to the same green/yellow/red verdict, shown with the facit. A `memoryPhase` state
 machine drives it; its countdown/flash timers are cleared in `closeDialog`.
+
+### Spykollen (dodge mini-game)
+
+**Spykollen** (`#spy-canvas` in `#spykollen-overlay`), on beers `4+4n`: a
+`requestAnimationFrame` arcade game. A row of 🤢 along the top
+drop 🤮 in bursts of 1–`SPY_MAX_BURST` (3) from distinct columns (never all, so a
+dodge gap always exists); the player steers a 🛋️ couch with on-screen ◀ ▶ buttons
+(held; `pointerdown`/`pointerup` set `spyMoveDir`) or arrow keys (routed in
+`onKeyDown` + a `keyup` handler). Difficulty ramps each second (faster fall via
+`SPY_BASE_FALL`/`SPY_FALL_RAMP`, tighter spawns via `SPY_BASE_SPAWN_MS`/
+`SPY_SPAWN_RAMP`) so a round lands ~10–30s; one hit ends it. Dodged count maps to
+the green/yellow/red verdict (`spyLevel`: ≥`SPY_GREEN_MIN` 15 / ≥`SPY_YELLOW_MIN`
+6 / below). A `spyPhase` state machine drives it; the rAF + countdown timer are
+cancelled in `stopSpyGame`, called from `closeDialog`. Collisions use a
+crossing test at the couch line to avoid tunnelling at high speeds.
 
 ### Storage safety
 

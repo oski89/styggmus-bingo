@@ -20,11 +20,11 @@
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
   const FREE_INDEX = Math.floor(CELL_COUNT / 2);
   const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
-  // The three beer-counter mini-games rotate on a MINIGAME_CYCLE-beer cycle keyed
+  // The four beer-counter mini-games rotate on a MINIGAME_CYCLE-beer cycle keyed
   // off the running count of beers added (beerAddedTotal): Reaktionskollen on
-  // 1+3n, Minnesluckatestet on 2+3n, Fyllekollen on 3+3n. Every added beer fires
-  // exactly one, so they never collide.
-  const MINIGAME_CYCLE = 3;
+  // 1+4n, Minnesluckatestet on 2+4n, Fyllekollen on 3+4n, Spykollen on 4+4n.
+  // Every added beer fires exactly one, so they never collide.
+  const MINIGAME_CYCLE = 4;
   // Fyllekollen (swipe maze). Time limit = shortest-path step count × MAZE_MS_PER_STEP.
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
@@ -39,6 +39,19 @@
   const MINNE_MIN = 1;
   const MINNE_MAX = 10;
   const MINNE_WHEEL_ITEM_H = 40; // px per wheel row; matches .memory-wheel-opt height
+  // Spykollen (dodge game): steer a couch to dodge falling vomit. Difficulty ramps
+  // (faster fall + tighter spawns) so a round lands ~10–30s; one hit ends it.
+  // Avoided count → three-tier verdict (more dodged = more sober).
+  const SPY_COUNTDOWN = 3; // "get ready" 3-2-1 before play
+  const SPY_BASE_FALL = 0.45; // fraction of stage height per second at t=0
+  const SPY_FALL_RAMP = 0.13; // fall speed grows by this fraction per elapsed second
+  const SPY_BASE_SPAWN_MS = 950; // gap between drops at t=0
+  const SPY_MIN_SPAWN_MS = 300; // hardest spawn gap
+  const SPY_SPAWN_RAMP = 38; // ms shaved off the gap per elapsed second
+  const SPY_COUCH_SPEED = 1.25; // couch travel in stage-widths per second
+  const SPY_GREEN_MIN = 15; // dodged ≥ this → "Nykter"
+  const SPY_YELLOW_MIN = 6; // dodged ≥ this → "Salongsberusad"; below → "Full som ett ägg"
+  const SPY_MAX_BURST = 3; // most vomits that can drop at once (never all 6)
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -312,6 +325,18 @@
   const memoryRetryBtn = document.getElementById("memory-retry-btn");
   const memoryCloseBtn = document.getElementById("memory-close-btn");
 
+  const spykollenOverlayEl = document.getElementById("spykollen-overlay");
+  const spykollenInstructionEl = document.getElementById("spykollen-instruction");
+  const spyCanvas = document.getElementById("spy-canvas");
+  const spyCountdownEl = document.getElementById("spy-countdown");
+  const spyResultEl = document.getElementById("spy-result");
+  const spyScoreEl = document.getElementById("spy-score");
+  const spyLeftBtn = document.getElementById("spy-left-btn");
+  const spyRightBtn = document.getElementById("spy-right-btn");
+  const spyRetryBtn = document.getElementById("spy-retry-btn");
+  const spyCloseBtn = document.getElementById("spy-close-btn");
+  const testSpykollenBtn = document.getElementById("test-spykollen-btn");
+
   let state = null;
   let activePlayerId = null;
   let currentMode = null;
@@ -338,6 +363,11 @@
   let memoryAnswer = { beer: 0, mouse: 0 };
   let memoryCountdownTimer = null;
   let memoryFlashTimer = null;
+  let spyPhase = "idle";
+  let spyGame = null;
+  let spyMoveDir = 0;
+  let spyCountdownTimer = null;
+  let spyRaf = null;
 
   registerEventListeners();
   renderAccessFlow();
@@ -415,6 +445,17 @@
     memoryOverlayEl.addEventListener("click", (e) => {
       if (e.target === memoryOverlayEl) closeDialog(memoryOverlayEl);
     });
+
+    testSpykollenBtn.addEventListener("click", openSpykollen);
+    spyRetryBtn.addEventListener("click", startSpyRound);
+    spyCloseBtn.addEventListener("click", () => closeDialog(spykollenOverlayEl));
+    spykollenOverlayEl.addEventListener("click", (e) => {
+      if (e.target === spykollenOverlayEl) closeDialog(spykollenOverlayEl);
+    });
+    spyLeftBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); spyMoveDir = -1; });
+    spyRightBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); spyMoveDir = 1; });
+    window.addEventListener("pointerup", () => { spyMoveDir = 0; });
+    window.addEventListener("keyup", onSpyKeyUp);
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", resizeConfettiCanvas);
@@ -747,18 +788,19 @@
     if (delta > 0) countBeerPress();
   }
 
-  // Each added beer launches one of the three mini-games on a rotating
-  // MINIGAME_CYCLE-beer cycle: Reaktionskollen on 1+3n, Minnesluckatestet on
-  // 2+3n, Fyllekollen on 3+3n. Exactly one fires per beer, so they never
-  // collide. Only increments count — removing a beer doesn't. The counter is
-  // session-only; nothing fires while a dialog is already open.
+  // Each added beer launches one of the four mini-games on a rotating
+  // MINIGAME_CYCLE-beer cycle: Reaktionskollen on 1+4n, Minnesluckatestet on
+  // 2+4n, Fyllekollen on 3+4n, Spykollen on 4+4n. Exactly one fires per beer,
+  // so they never collide. Only increments count — removing a beer doesn't. The
+  // counter is session-only; nothing fires while a dialog is already open.
   function countBeerPress() {
     beerAddedTotal += 1;
     if (activeDialog) return;
     const slot = beerAddedTotal % MINIGAME_CYCLE;
     if (slot === 1) openReaktionskollen();
     else if (slot === 2) openMinneslucka();
-    else openFyllekollen();
+    else if (slot === 3) openFyllekollen();
+    else openSpykollen();
   }
 
   function beerCountOf(beers, playerId) {
@@ -1057,12 +1099,19 @@
         activeDialog === reaktionOverlayEl &&
         (event.key === " " || event.key === "Spacebar") &&
         (reaktionPhase === "waiting" || reaktionPhase === "active");
+      const spyDir =
+        activeDialog === spykollenOverlayEl && spyPhase === "playing"
+          ? horizontalArrowToDir(event.key)
+          : 0;
       if (mazeDir) {
         event.preventDefault();
         moveMaze(mazeDir);
       } else if (reaktionTap) {
         event.preventDefault();
         registerReaktion();
+      } else if (spyDir !== 0) {
+        event.preventDefault();
+        spyMoveDir = spyDir;
       } else if (event.key === "Escape") {
         event.preventDefault();
         closeDialog(activeDialog);
@@ -1606,6 +1655,228 @@
     }
   }
 
+  // ── Spykollen (dodge mini-game) ───────────────────────────────────────────
+
+  // Flow: 3-2-1 countdown → a row of 🤢 along the top drop 🤮 one at a time
+  // (random emoji, spaced by a shrinking spawn gap so it stays dodgeable) → steer
+  // the 🛋️ couch left/right to dodge. Difficulty ramps; one hit ends the round.
+  function openSpykollen() {
+    openDialog(spykollenOverlayEl);
+    startSpyRound();
+  }
+
+  function startSpyRound() {
+    stopSpyGame();
+    spyResultEl.classList.add("hidden");
+    spyRetryBtn.classList.add("hidden");
+    spyCountdownEl.classList.remove("hidden");
+    spyScoreEl.textContent = "0";
+    spykollenInstructionEl.textContent = "Gör dig redo…";
+
+    setupSpyGame();
+    drawSpy();
+
+    spyPhase = "countdown";
+    let n = SPY_COUNTDOWN;
+    spyCountdownEl.textContent = String(n);
+    spyCountdownTimer = window.setInterval(() => {
+      n -= 1;
+      if (n > 0) {
+        spyCountdownEl.textContent = String(n);
+      } else {
+        window.clearInterval(spyCountdownTimer);
+        spyCountdownTimer = null;
+        beginSpyPlay();
+      }
+    }, 700);
+  }
+
+  // Sizes the canvas to the wrapper and lays out the couch + nausea row.
+  function setupSpyGame() {
+    const available = (spyCanvas.parentElement && spyCanvas.parentElement.clientWidth) || 300;
+    const w = available;
+    const h = Math.round(w * 1.4);
+    const ratio = window.devicePixelRatio || 1;
+    spyCanvas.width = Math.floor(w * ratio);
+    spyCanvas.height = Math.floor(h * ratio);
+    spyCanvas.style.height = `${h}px`;
+    const ctx = spyCanvas.getContext("2d");
+    if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    const couchSize = w * 0.26;
+    const nauseaSize = w * 0.11;
+    const nauseaCount = 6;
+    const nauseaX = [];
+    for (let i = 0; i < nauseaCount; i++) nauseaX.push(((i + 0.5) / nauseaCount) * w);
+
+    spyGame = {
+      w,
+      h,
+      couchSize,
+      couchX: w / 2,
+      couchCenterY: h - couchSize * 0.5 - 6,
+      vomitSize: w * 0.11,
+      nauseaSize,
+      nauseaY: nauseaSize * 0.75 + 4,
+      nauseaX,
+      vomits: [],
+      avoided: 0,
+      startAt: 0,
+      lastFrame: 0,
+      lastSpawnAt: 0,
+    };
+    spyMoveDir = 0;
+  }
+
+  function beginSpyPlay() {
+    if (!spyGame) return;
+    spyPhase = "playing";
+    spyCountdownEl.classList.add("hidden");
+    spykollenInstructionEl.textContent = "Undvik spyorna!";
+    const now = performance.now();
+    spyGame.startAt = now;
+    spyGame.lastFrame = now;
+    spyGame.lastSpawnAt = now;
+    spyMoveDir = 0;
+    spyRaf = window.requestAnimationFrame(spyLoop);
+  }
+
+  function spyLoop(now) {
+    if (spyPhase !== "playing" || !spyGame) return;
+    spyStep(now);
+    if (spyPhase !== "playing") return; // a hit ended it inside the step
+    drawSpy();
+    spyRaf = window.requestAnimationFrame(spyLoop);
+  }
+
+  function spyStep(now) {
+    const g = spyGame;
+    const dt = Math.min(0.05, (now - g.lastFrame) / 1000);
+    g.lastFrame = now;
+    const elapsed = (now - g.startAt) / 1000;
+
+    // Move the couch, clamped to the stage.
+    g.couchX += spyMoveDir * SPY_COUCH_SPEED * g.w * dt;
+    g.couchX = Math.max(g.couchSize * 0.5, Math.min(g.w - g.couchSize * 0.5, g.couchX));
+
+    // Drop a burst of vomit from distinct nausea emojis — usually 1, more often
+    // 2–3 as the round ramps, but never all of them so a dodge gap always exists.
+    const gap = Math.max(SPY_MIN_SPAWN_MS, SPY_BASE_SPAWN_MS - elapsed * SPY_SPAWN_RAMP);
+    if (now - g.lastSpawnAt >= gap) {
+      spawnSpyBurst(elapsed);
+      g.lastSpawnAt = now;
+    }
+
+    // Fall + resolve at the couch line (crossing test avoids tunnelling).
+    const fall = SPY_BASE_FALL * g.h * (1 + elapsed * SPY_FALL_RAMP);
+    const couchTopY = g.couchCenterY - g.couchSize * 0.35;
+    const half = g.couchSize * 0.45;
+    for (const v of g.vomits) {
+      const prevY = v.y;
+      v.y += fall * dt;
+      if (!v.resolved && prevY < couchTopY && v.y >= couchTopY) {
+        v.resolved = true;
+        if (Math.abs(v.x - g.couchX) <= half + g.vomitSize * 0.3) {
+          onSpyHit();
+          return;
+        }
+        g.avoided += 1;
+        spyScoreEl.textContent = String(g.avoided);
+      }
+    }
+    g.vomits = g.vomits.filter((v) => v.y < g.h + g.vomitSize);
+  }
+
+  // Drops `burst` vomits from distinct random columns at once. Burst grows with
+  // elapsed time but is capped at SPY_MAX_BURST (< the number of nausea emojis).
+  function spawnSpyBurst(elapsed) {
+    const g = spyGame;
+    const maxBurst = Math.min(SPY_MAX_BURST, g.nauseaX.length - 2);
+    let burst = 1;
+    const p = Math.min(0.65, elapsed * 0.035);
+    while (burst < maxBurst && Math.random() < p) burst += 1;
+
+    const indices = g.nauseaX.map((_, i) => i);
+    for (let i = 0; i < burst; i++) {
+      const j = i + Math.floor(Math.random() * (indices.length - i));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+      g.vomits.push({ x: g.nauseaX[indices[i]], y: g.nauseaY + g.nauseaSize * 0.5, resolved: false });
+    }
+  }
+
+  function drawSpy() {
+    if (!spyGame) return;
+    const ctx = spyCanvas.getContext("2d");
+    if (!ctx) return;
+    const g = spyGame;
+    ctx.clearRect(0, 0, g.w, g.h);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.font = `${g.nauseaSize}px serif`;
+    for (const nx of g.nauseaX) ctx.fillText("🤢", nx, g.nauseaY);
+
+    ctx.font = `${g.vomitSize}px serif`;
+    for (const v of g.vomits) ctx.fillText("🤮", v.x, v.y);
+
+    ctx.font = `${g.couchSize}px serif`;
+    ctx.fillText("🛋️", g.couchX, g.couchCenterY);
+  }
+
+  function onSpyHit() {
+    spyPhase = "done";
+    if (spyRaf) {
+      window.cancelAnimationFrame(spyRaf);
+      spyRaf = null;
+    }
+    const avoided = spyGame ? spyGame.avoided : 0;
+    const level = spyLevel(avoided);
+    spykollenInstructionEl.textContent = "Nedspydd!";
+    spyResultEl.dataset.level = level.cls;
+    spyResultEl.innerHTML =
+      `<span class="spy-result-headline">${level.label}</span>` +
+      `<span class="spy-result-score">${avoided} undvikna</span>` +
+      `<span class="spy-result-msg">${level.message}</span>`;
+    spyResultEl.classList.remove("hidden");
+    spyRetryBtn.classList.remove("hidden");
+    playWinSound(false);
+  }
+
+  function spyLevel(avoided) {
+    if (avoided >= SPY_GREEN_MIN) {
+      return { cls: "green", label: "Nykter", message: "Stadig hand och skärpt blick! Du behöver öka takten. Fortsätt dricka." };
+    }
+    if (avoided >= SPY_YELLOW_MIN) {
+      return { cls: "yellow", label: "Salongsberusad", message: "Hyfsade reflexer. Du är på god väg. Fortsätt dricka." };
+    }
+    return { cls: "red", label: "Full som ett ägg", message: "Soffan blev nedspydd direkt. Ser bra ut. Fortsätt dricka." };
+  }
+
+  function horizontalArrowToDir(key) {
+    if (key === "ArrowLeft") return -1;
+    if (key === "ArrowRight") return 1;
+    return 0;
+  }
+
+  function onSpyKeyUp(event) {
+    if (spyPhase !== "playing") return;
+    const dir = horizontalArrowToDir(event.key);
+    if (dir !== 0 && spyMoveDir === dir) spyMoveDir = 0;
+  }
+
+  function stopSpyGame() {
+    if (spyRaf) {
+      window.cancelAnimationFrame(spyRaf);
+      spyRaf = null;
+    }
+    if (spyCountdownTimer) {
+      window.clearInterval(spyCountdownTimer);
+      spyCountdownTimer = null;
+    }
+    spyPhase = "idle";
+    spyMoveDir = 0;
+  }
+
   // ── Win detection ─────────────────────────────────────────────────────────
 
   function updateStatsAndWinState({ triggerEffects }) {
@@ -1740,6 +2011,7 @@
       clearMemoryTimers();
       memoryPhase = "idle";
     }
+    if (dialogEl === spykollenOverlayEl) stopSpyGame();
     if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
       dialogReturnFocus.focus();
     }

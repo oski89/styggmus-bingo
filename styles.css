@@ -1145,6 +1145,130 @@ button:focus-visible {
 .memory-result[data-level="yellow"] .memory-result-headline { color: #ffcf5a; }
 .memory-result[data-level="red"] .memory-result-headline { color: #f7706d; }
 
+/* ── Spykollen (dodge mini-game) ──────────────────────────────────────────── */
+
+.spykollen-card {
+  width: min(420px, 100%);
+}
+
+.overlay-card .spykollen-title {
+  font-size: 1.5rem;
+}
+
+.spykollen-instruction {
+  margin: 0.6rem 0 0.9rem;
+  min-height: 1.2em;
+}
+
+.spy-stage-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 0.9rem;
+}
+
+.spy-canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid rgba(255, 248, 232, 0.16);
+  border-radius: 10px;
+  background: rgba(8, 14, 24, 0.92);
+  /* Own the gesture so dragging on the playfield never scrolls the page. */
+  touch-action: none;
+}
+
+.spy-countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 4rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  pointer-events: none;
+}
+
+.spy-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0 1rem;
+  text-align: center;
+  border-radius: 10px;
+  background: rgba(4, 6, 10, 0.78);
+  backdrop-filter: blur(2px);
+}
+
+.spy-result-headline {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.spy-result-score {
+  font-size: 2.2rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--text);
+}
+
+.spy-result-msg {
+  font-size: 0.9rem;
+  font-weight: 720;
+  color: rgba(255, 248, 232, 0.85);
+}
+
+.spy-result[data-level="green"] .spy-result-headline { color: #3fd99b; }
+.spy-result[data-level="yellow"] .spy-result-headline { color: #ffcf5a; }
+.spy-result[data-level="red"] .spy-result-headline { color: #f7706d; }
+
+.spy-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.spy-dir-btn {
+  width: 84px;
+  min-height: 60px;
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(12, 17, 27, 0.85);
+  color: var(--text);
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.spy-dir-btn:active {
+  border-color: rgba(255, 207, 115, 0.5);
+  background:
+    linear-gradient(180deg, rgba(255, 207, 115, 0.22), rgba(255, 207, 115, 0.08)),
+    rgba(12, 17, 27, 0.9);
+}
+
+.spy-score {
+  min-width: 3rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Canvas & animations ──────────────────────────────────────────────────── */
 
 .confetti {
