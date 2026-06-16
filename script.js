@@ -1790,20 +1790,28 @@
     g.vomits = g.vomits.filter((v) => v.y < g.h + g.vomitSize);
   }
 
-  // Drops `burst` vomits from distinct random columns at once. Burst grows with
-  // elapsed time but is capped at SPY_MAX_BURST (< the number of nausea emojis).
+  // Drops `burst` vomits from distinct random columns at once. Two adjacent
+  // columns are always reserved vomit-free (couchW ≈ 2 column widths), so a
+  // burst can never block every gap the couch could fit through. Burst grows
+  // with elapsed time but is capped at SPY_MAX_BURST.
   function spawnSpyBurst(elapsed) {
     const g = spyGame;
-    const maxBurst = Math.min(SPY_MAX_BURST, g.nauseaX.length - 2);
+    const cols = g.nauseaX.length;
+    const gapStart = Math.floor(Math.random() * (cols - 1));
+    const available = [];
+    for (let i = 0; i < cols; i++) {
+      if (i !== gapStart && i !== gapStart + 1) available.push(i);
+    }
+
+    const maxBurst = Math.min(SPY_MAX_BURST, available.length);
     let burst = 1;
     const p = Math.min(0.65, elapsed * 0.035);
     while (burst < maxBurst && Math.random() < p) burst += 1;
 
-    const indices = g.nauseaX.map((_, i) => i);
     for (let i = 0; i < burst; i++) {
-      const j = i + Math.floor(Math.random() * (indices.length - i));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-      g.vomits.push({ x: g.nauseaX[indices[i]], y: g.nauseaY + g.nauseaSize * 0.5, resolved: false });
+      const j = i + Math.floor(Math.random() * (available.length - i));
+      [available[i], available[j]] = [available[j], available[i]];
+      g.vomits.push({ x: g.nauseaX[available[i]], y: g.nauseaY + g.nauseaSize * 0.5, resolved: false });
     }
   }
 
