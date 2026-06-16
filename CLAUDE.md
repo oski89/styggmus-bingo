@@ -122,10 +122,19 @@ on solve, time-out, and in `closeDialog`.
 clock starts. The first tap (pointerdown on `#reaktion-stage`, or Space) stops
 it; tapping during "waiting" is a false start. The reaction time in ms maps to a
 three-tier "how drunk are you" verdict (`reaktionLevel`): `< REAKTION_GREEN_MAX`
-(350) → green "Nykter", `<= REAKTION_YELLOW_MAX` (550) → yellow "Salongsberusad",
-else red "Full som ett ägg". A `reaktionPhase` state machine drives the round;
-its two timers are cleared in `closeDialog` so a queued tick can't fire into a
-closed dialog.
+(350) → red "Nykter", `<= REAKTION_YELLOW_MAX` (550) → yellow "Salongsberusad",
+else green "Full som ett ägg". Because this is a drinking game, the two extreme
+tiers swap the usual emphasis and are shared by all three mini-games. *Sober is
+the bad result*: the "Nykter" tier carries `alarm: true` → `signalSoberAlarm()`
+(a flashing red `.sober-alarm` overlay class plus a `playAlarmSound()` klaxon).
+*Properly drunk is the goal*: the "Full som ett ägg" tier carries `celebrate:
+true` → `signalDrunkCelebration()` (a flashing green `.drunk-celebrate` overlay
+class, `runConfetti` lifted in front via `.confetti--front`, and a
+`playPartySound()` fanfare). Both replace the normal win chime and are torn down
+by `stopVerdictEffects()` (→ `stopSoberAlarm()` + `stopDrunkCelebration()`) on
+round restart and in `closeDialog`. A `reaktionPhase` state machine drives the
+round; its two timers are cleared in `closeDialog` so a queued tick can't fire
+into a closed dialog.
 
 ### Minnesluckatestet (memory / flash-count mini-game)
 
@@ -134,7 +143,8 @@ X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
 `MINNE_FLASH_MS` (4000ms), then the player dials the two counts on iOS-style scroll
 wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
 MINNE_WHEEL_ITEM_H`) and submits. Accuracy (2/1/0 of the two counts correct) maps
-to the same green/yellow/red verdict, shown with the facit. A `memoryPhase` state
+to the same verdict tiers (2 → red "Nykter" + alarm, 1 → yellow, 0 → green
+"Full som ett ägg" + celebration), shown with the facit. A `memoryPhase` state
 machine drives it; its countdown/flash timers are cleared in `closeDialog`.
 
 ### Spykollen (dodge mini-game)
@@ -148,8 +158,9 @@ on-screen ◀ ▶ buttons (held; `pointerdown`/`pointerup` set `spyMoveDir`) or 
 keys (routed in `onKeyDown` + a `keyup` handler). Difficulty ramps each second (faster fall via
 `SPY_BASE_FALL`/`SPY_FALL_RAMP`, tighter spawns via `SPY_BASE_SPAWN_MS`/
 `SPY_SPAWN_RAMP`) so a round lands ~10–30s; one hit ends it. Dodged count maps to
-the green/yellow/red verdict (`spyLevel`: ≥`SPY_GREEN_MIN` 15 / ≥`SPY_YELLOW_MIN`
-6 / below). A `spyPhase` state machine drives it; the rAF + countdown timer are
+the verdict (`spyLevel`: ≥`SPY_GREEN_MIN` 15 → red "Nykter" + alarm /
+≥`SPY_YELLOW_MIN` 6 → yellow / below → green "Full som ett ägg" + celebration).
+A `spyPhase` state machine drives it; the rAF + countdown timer are
 cancelled in `stopSpyGame`, called from `closeDialog`. Collisions use a
 crossing test at the couch line to avoid tunnelling at high speeds.
 

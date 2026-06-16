@@ -368,6 +368,10 @@
   let spyMoveDir = 0;
   let spyCountdownTimer = null;
   let spyRaf = null;
+  let soberAlarmTimer = null;
+  let soberAlarmEl = null;
+  let drunkPartyTimer = null;
+  let drunkPartyEl = null;
 
   registerEventListeners();
   renderAccessFlow();
@@ -1414,6 +1418,7 @@
 
   function startReaktionRound() {
     clearReaktionTimers();
+    stopVerdictEffects();
     reaktionPhase = "countdown";
     reaktionStageEl.dataset.state = "countdown";
     reaktionTargetEl.classList.add("hidden");
@@ -1465,7 +1470,7 @@
     } else if (reaktionPhase === "active") {
       const ms = Math.round(performance.now() - reaktionShownAt);
       const level = reaktionLevel(ms);
-      showReaktionResult(`${ms} ms`, level.message, level.cls, level.label);
+      showReaktionResult(`${ms} ms`, level.message, level.cls, level.label, level.alarm, level.celebrate);
     }
   }
 
@@ -1476,15 +1481,15 @@
 
   function reaktionLevel(ms) {
     if (ms < REAKTION_GREEN_MAX) {
-      return { cls: "green", label: "Nykter", message: "Du behöver öka takten. Fortsätt dricka." };
+      return { cls: "red", label: "Nykter", message: "Du behöver öka takten. Fortsätt dricka.", alarm: true };
     }
     if (ms <= REAKTION_YELLOW_MAX) {
       return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg. Fortsätt dricka." };
     }
-    return { cls: "red", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka." };
+    return { cls: "green", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka.", celebrate: true };
   }
 
-  function showReaktionResult(msText, message, cls, label) {
+  function showReaktionResult(msText, message, cls, label, alarm, celebrate) {
     reaktionPhase = "done";
     reaktionStageEl.dataset.state = "done";
     reaktionTargetEl.classList.add("hidden");
@@ -1499,7 +1504,13 @@
     reaktionResultEl.classList.remove("hidden");
     reaktionRetryBtn.classList.remove("hidden");
 
-    if (cls !== "early") playWinSound(false);
+    if (alarm) {
+      signalSoberAlarm(reaktionOverlayEl);
+    } else if (celebrate) {
+      signalDrunkCelebration(reaktionOverlayEl);
+    } else if (cls !== "early") {
+      playWinSound(false);
+    }
   }
 
   function clearReaktionTimers() {
@@ -1527,6 +1538,7 @@
 
   function startMemoryRound() {
     clearMemoryTimers();
+    stopVerdictEffects();
     memoryPhase = "countdown";
     memoryStageEl.dataset.state = "countdown";
     memoryFlashEl.classList.add("hidden");
@@ -1611,17 +1623,19 @@
       `<span class="memory-msg">Du gissade ${guessBeer} 🍺 · ${guessMouse} 🐭. ${level.message}</span>`;
     memoryResultEl.classList.remove("hidden");
     memoryRetryBtn.classList.remove("hidden");
-    playWinSound(false);
+    if (level.alarm) signalSoberAlarm(memoryOverlayEl);
+    else if (level.celebrate) signalDrunkCelebration(memoryOverlayEl);
+    else playWinSound(false);
   }
 
   function memoryLevel(correctCount) {
     if (correctCount === 2) {
-      return { cls: "green", label: "Nykter", message: "Skärpt blick! Du behöver öka takten. Fortsätt dricka." };
+      return { cls: "red", label: "Nykter", message: "Skärpt blick! Du behöver öka takten. Fortsätt dricka.", alarm: true };
     }
     if (correctCount === 1) {
       return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg. Fortsätt dricka." };
     }
-    return { cls: "red", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka." };
+    return { cls: "green", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka.", celebrate: true };
   }
 
   // The scroll wheels: a padded list of MINNE_MIN..MINNE_MAX with a spacer top and
@@ -1667,6 +1681,7 @@
 
   function startSpyRound() {
     stopSpyGame();
+    stopVerdictEffects();
     spyResultEl.classList.add("hidden");
     spyRetryBtn.classList.add("hidden");
     spyCountdownEl.classList.remove("hidden");
@@ -1888,17 +1903,19 @@
       `<span class="spy-result-msg">${level.message}</span>`;
     spyResultEl.classList.remove("hidden");
     spyRetryBtn.classList.remove("hidden");
-    playWinSound(false);
+    if (level.alarm) signalSoberAlarm(spykollenOverlayEl);
+    else if (level.celebrate) signalDrunkCelebration(spykollenOverlayEl);
+    else playWinSound(false);
   }
 
   function spyLevel(avoided) {
     if (avoided >= SPY_GREEN_MIN) {
-      return { cls: "green", label: "Nykter", message: "Stadig hand och skärpt blick! Du behöver öka takten. Fortsätt dricka." };
+      return { cls: "red", label: "Nykter", message: "Stadig hand och skärpt blick! Du behöver öka takten. Fortsätt dricka.", alarm: true };
     }
     if (avoided >= SPY_YELLOW_MIN) {
       return { cls: "yellow", label: "Salongsberusad", message: "Hyfsade reflexer. Du är på god väg. Fortsätt dricka." };
     }
-    return { cls: "red", label: "Full som ett ägg", message: "Soffan blev nedspydd direkt. Ser bra ut. Fortsätt dricka." };
+    return { cls: "green", label: "Full som ett ägg", message: "Soffan blev nedspydd direkt. Ser bra ut. Fortsätt dricka.", celebrate: true };
   }
 
   function horizontalArrowToDir(key) {
@@ -2061,6 +2078,7 @@
       memoryPhase = "idle";
     }
     if (dialogEl === spykollenOverlayEl) stopSpyGame();
+    stopVerdictEffects();
     if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
       dialogReturnFocus.focus();
     }
@@ -2205,6 +2223,152 @@
       osc.start(now + i * 0.12);
       osc.stop(now + i * 0.12 + 0.18);
     });
+  }
+
+  // A harsh two-tone klaxon for the "Nykter" (sober — too slow!) verdict. Sweeps
+  // between two dissonant tones a few times like an alarm siren.
+  function playAlarmSound() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    const start = audioCtx.currentTime + 0.02;
+    const beep = 0.16; // length of each siren tone
+    const tones = [880, 620, 880, 620, 880, 620];
+    tones.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.value = freq;
+      const t = start + i * beep;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + beep);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + beep);
+    });
+  }
+
+  // A triumphant rising fanfare for the "Full som ett ägg" (proper drunk — the
+  // goal!) verdict, capped with a shimmering high chord.
+  function playPartySound() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    const now = audioCtx.currentTime + 0.02;
+    const arp = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+    arp.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      const t = now + i * 0.1;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.24);
+    });
+
+    const chord = [783.99, 1046.5, 1318.51];
+    const ct = now + arp.length * 0.1 + 0.04;
+    chord.forEach((freq) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ct);
+      gain.gain.exponentialRampToValueAtTime(0.18, ct + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ct + 0.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(ct);
+      osc.stop(ct + 0.52);
+    });
+  }
+
+  // Flashes the overlay with a red warning and re-fires the klaxon a few times so
+  // the "Nykter" verdict feels like a genuine drink-faster alarm. The flash is a
+  // looping CSS class; the repeated sound is driven here and bounded so it can't
+  // run forever. stopVerdictEffects() (round start / dialog close) tears it down.
+  function signalSoberAlarm(overlayEl) {
+    stopVerdictEffects();
+    soberAlarmEl = overlayEl;
+    overlayEl.classList.add("sober-alarm");
+    playAlarmSound();
+    let bursts = 0;
+    soberAlarmTimer = window.setInterval(() => {
+      bursts += 1;
+      if (bursts >= 3) {
+        window.clearInterval(soberAlarmTimer);
+        soberAlarmTimer = null;
+        return;
+      }
+      playAlarmSound();
+    }, 1100);
+  }
+
+  // The celebratory counterpart for "Full som ett ägg": a flashing green party
+  // overlay, confetti, and the fanfare, repeated once for extra emphasis. Bounded
+  // and torn down by stopVerdictEffects() on round restart / dialog close.
+  function signalDrunkCelebration(overlayEl) {
+    stopVerdictEffects();
+    drunkPartyEl = overlayEl;
+    overlayEl.classList.add("drunk-celebrate");
+    // The confetti canvas sits below the overlay by default; lift it in front so
+    // the celebration rains over the result card instead of behind its backdrop.
+    confettiCanvas.classList.add("confetti--front");
+    runConfetti(2600);
+    playPartySound();
+    let bursts = 0;
+    drunkPartyTimer = window.setInterval(() => {
+      bursts += 1;
+      if (bursts >= 2) {
+        window.clearInterval(drunkPartyTimer);
+        drunkPartyTimer = null;
+        return;
+      }
+      runConfetti(2000);
+      playPartySound();
+    }, 1300);
+  }
+
+  function stopSoberAlarm() {
+    if (soberAlarmTimer) {
+      window.clearInterval(soberAlarmTimer);
+      soberAlarmTimer = null;
+    }
+    if (soberAlarmEl) {
+      soberAlarmEl.classList.remove("sober-alarm");
+      soberAlarmEl = null;
+    }
+  }
+
+  function stopDrunkCelebration() {
+    if (drunkPartyTimer) {
+      window.clearInterval(drunkPartyTimer);
+      drunkPartyTimer = null;
+    }
+    if (drunkPartyEl) {
+      drunkPartyEl.classList.remove("drunk-celebrate");
+      drunkPartyEl = null;
+      confettiCanvas.classList.remove("confetti--front");
+    }
+  }
+
+  // One call clears whichever verdict effect is currently running (only ever one
+  // per round). Used by signalSoberAlarm/signalDrunkCelebration, the three
+  // round-start helpers, and closeDialog.
+  function stopVerdictEffects() {
+    stopSoberAlarm();
+    stopDrunkCelebration();
   }
 
   // ── Utilities ─────────────────────────────────────────────────────────────

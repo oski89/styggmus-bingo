@@ -1278,6 +1278,12 @@ button:focus-visible {
   pointer-events: none;
 }
 
+/* While a "Full som ett ägg" verdict celebrates, the confetti is lifted above
+   the mini-game overlay (z-index 30) so it rains over the result card. */
+.confetti.confetti--front {
+  z-index: 40;
+}
+
 .hidden {
   display: none;
 }
@@ -1314,6 +1320,115 @@ body.demo-mode .demo-indicator {
 
 .ddko-mode .hero h1 {
   animation: ddko-pulse 620ms ease-in-out 4;
+}
+
+/* "Nykter" (sober — drinking too slowly!) verdict: the whole overlay flashes a
+   red drink-faster warning. Added by signalSoberAlarm() on the overlay element,
+   removed on round restart / dialog close. Paired with a klaxon in script.js. */
+.overlay.sober-alarm {
+  animation: sober-alarm-bg 0.6s steps(1, end) infinite;
+}
+
+.overlay.sober-alarm .overlay-card {
+  border-color: #f7706d;
+  animation: sober-alarm-card 0.6s ease-in-out infinite;
+}
+
+.overlay.sober-alarm .overlay-card::after {
+  content: "⚠ DRICK FORTARE ⚠";
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto 0;
+  padding: 0.3rem 0;
+  background: #f7706d;
+  color: #1a0608;
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-align: center;
+  animation: sober-alarm-banner 0.6s steps(1, end) infinite;
+}
+
+.overlay.sober-alarm .reaktion-level,
+.overlay.sober-alarm .memory-result-headline,
+.overlay.sober-alarm .spy-result-headline {
+  animation: sober-alarm-banner 0.6s steps(1, end) infinite;
+}
+
+@keyframes sober-alarm-bg {
+  0%, 50% { background:
+      linear-gradient(180deg, rgba(60, 6, 10, 0.86), rgba(40, 4, 8, 0.94)),
+      rgba(0, 0, 0, 0.72); }
+  50.01%, 100% { background:
+      linear-gradient(180deg, rgba(4, 6, 10, 0.82), rgba(4, 6, 10, 0.92)),
+      rgba(0, 0, 0, 0.72); }
+}
+
+@keyframes sober-alarm-card {
+  0%, 100% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 0 rgba(247, 112, 109, 0); }
+  50% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 38px 6px rgba(247, 112, 109, 0.85); }
+}
+
+@keyframes sober-alarm-banner {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0.25; }
+}
+
+/* "Full som ett ägg" (properly drunk — the goal!) verdict: the overlay throws a
+   green party. Added by signalDrunkCelebration() on the overlay element, paired
+   with confetti + a fanfare in script.js; removed by stopVerdictEffects(). */
+.overlay.drunk-celebrate {
+  animation: drunk-celebrate-bg 0.7s steps(1, end) infinite;
+}
+
+.overlay.drunk-celebrate .overlay-card {
+  border-color: #3fd99b;
+  animation: drunk-celebrate-card 0.8s ease-in-out infinite;
+}
+
+.overlay.drunk-celebrate .overlay-card::after {
+  content: "🎉 SKÅL! 🎉";
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto 0;
+  padding: 0.3rem 0;
+  background: linear-gradient(90deg, #3fd99b, #ffcf5a);
+  color: #06281c;
+  font-size: 0.9rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-align: center;
+  animation: drunk-celebrate-banner 0.5s ease-in-out infinite;
+}
+
+.overlay.drunk-celebrate .reaktion-level,
+.overlay.drunk-celebrate .memory-result-headline,
+.overlay.drunk-celebrate .spy-result-headline {
+  animation: drunk-celebrate-pop 0.5s ease-in-out infinite;
+}
+
+@keyframes drunk-celebrate-bg {
+  0%, 50% { background:
+      linear-gradient(180deg, rgba(6, 50, 30, 0.86), rgba(4, 34, 22, 0.94)),
+      rgba(0, 0, 0, 0.72); }
+  50.01%, 100% { background:
+      linear-gradient(180deg, rgba(4, 6, 10, 0.82), rgba(4, 6, 10, 0.92)),
+      rgba(0, 0, 0, 0.72); }
+}
+
+@keyframes drunk-celebrate-card {
+  0%, 100% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 0 rgba(63, 217, 155, 0); }
+  50% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 40px 6px rgba(63, 217, 155, 0.85); }
+}
+
+@keyframes drunk-celebrate-banner {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(1px); opacity: 0.82; }
+}
+
+@keyframes drunk-celebrate-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
 }
 
 @keyframes pop-in {
