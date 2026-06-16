@@ -109,11 +109,11 @@ rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
 🐭 one cell per swipe (pointer events on the canvas, `touch-action: none`) or per
 arrow key — arrow keys are routed in `onKeyDown` while that dialog is active. It
 is **timed**: the limit is the shortest-path step count (`mazeDistance`, BFS) ×
-`MAZE_MS_PER_STEP` (400ms), shown as a `#maze-timer` countdown that turns red in
+`MAZE_MS_PER_STEP` (800ms), shown as a `#maze-timer` countdown that turns red in
 the last third. The round ends in the same three-tier verdict as the other
 mini-games, shown inline in the `#maze-result` panel (`showMazeResult`): reaching
 🍺 maps by the share of the clock still left (`mazeLevel`) — `>=
-MAZE_SOBER_MIN_FRACTION` (0.5) → red "Nykter" + `signalSoberAlarm`, below → yellow
+MAZE_SOBER_MIN_FRACTION` (0.35) → red "Nykter" + `signalSoberAlarm`, below → yellow
 "Salongsberusad" — while *running out of time* is the goal of a drinking game, so
 `onMazeTimeout` gives green "Full som ett ägg" + `signalDrunkCelebration`. The
 "Ny labyrint" button restarts (`buildNewMaze`, which clears the verdict effects

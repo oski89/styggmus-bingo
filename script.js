@@ -29,11 +29,16 @@
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
-  const MAZE_MS_PER_STEP = 400;
+  // Time budget per shortest-path step. The whole maze is visible so a sharp
+  // player can plan the route; 800ms/step keeps a median (~30-step) maze ~24s and
+  // makes finishing feasible after the inevitable wrong turns.
+  const MAZE_MS_PER_STEP = 800;
   // Solving the maze maps to a three-tier verdict by the share of the clock still
   // left at the finish: ≥ this fraction → "Nykter" (too sober — alarm), below it →
   // "Salongsberusad". Running out of time → "Full som ett ägg" (drunk — celebrate).
-  const MAZE_SOBER_MIN_FRACTION = 0.5;
+  // 0.35 → Nykter needs solving in <65% of the budget (~520ms/shortest-step),
+  // brisk but humanly reachable; widening this window without inflating the cap.
+  const MAZE_SOBER_MIN_FRACTION = 0.35;
   // Reaktionskollen (reaction test): reaction time (ms) → three-tier verdict.
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
