@@ -212,12 +212,12 @@
           <button id="test-fyllekollen-btn" class="app-tile" type="button">
             <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🐭</div>
             <span class="app-tile-name">Fyllekollen</span>
-            <span class="app-tile-desc">Labyrint på tid</span>
+            <span class="app-tile-desc">Led 🐭 till 🍺</span>
           </button>
           <button id="test-reaktion-btn" class="app-tile" type="button">
             <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">⏱️</div>
             <span class="app-tile-name">Reaktionskollen</span>
-            <span class="app-tile-desc">Tryck när ölen dyker upp</span>
+            <span class="app-tile-desc">Tryck när 🍺 dyker upp</span>
           </button>
           <button id="test-minne-btn" class="app-tile" type="button">
             <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🧠</div>
@@ -227,7 +227,7 @@
           <button id="test-spykollen-btn" class="app-tile" type="button">
             <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🤮</div>
             <span class="app-tile-name">Spykollen</span>
-            <span class="app-tile-desc">Undvik spyorna med soffan</span>
+            <span class="app-tile-desc">Undvik 🤮 med 🛋️ - en hommage till Per</span>
           </button>
         </div>
 
@@ -273,10 +273,11 @@
     <div id="fyllekollen-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="fyllekollen-title">
       <div class="overlay-card fyllekollen-card">
         <h2 id="fyllekollen-title" class="fyllekollen-title">Fyllekollen</h2>
-        <p class="fyllekollen-text">Swipea 🐭 till 🎯 innan tiden tar slut — piltangenterna funkar också.</p>
+        <p class="fyllekollen-text">Swipea 🐭 till 🍺 innan tiden tar slut — piltangenterna funkar också.</p>
         <div id="maze-timer" class="maze-timer" aria-live="off">0.0 s</div>
         <div class="maze-wrap">
           <canvas id="maze-canvas" class="maze-canvas" aria-label="Labyrint, swipea för att flytta"></canvas>
+          <div id="maze-result" class="maze-result hidden"></div>
         </div>
         <div class="confirm-actions maze-controls">
           <button id="maze-restart-btn" class="secondary-btn" type="button">Ny labyrint</button>

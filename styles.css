@@ -858,17 +858,58 @@ button:focus-visible {
   color: #f7706d;
 }
 
-/* Failure tone for the shared prize overlay (e.g. Fyllekollen time-out). */
+/* Failure tone for the shared prize overlay (red-tinted heading). */
 .overlay[data-tone="fail"] .overlay-card h2 {
   color: #f7706d;
   text-shadow: 0 16px 34px rgba(247, 112, 109, 0.24);
 }
 
 .maze-wrap {
+  position: relative;
   margin: 0 auto 1rem;
   width: 100%;
   max-width: 320px;
 }
+
+/* Verdict panel shown over the maze when a round ends (mirrors .spy-result). */
+.maze-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0 1rem;
+  text-align: center;
+  border-radius: 8px;
+  background: rgba(4, 6, 10, 0.78);
+  backdrop-filter: blur(2px);
+}
+
+.maze-result-headline {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.maze-result-detail {
+  font-size: 1.6rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--text);
+}
+
+.maze-result-msg {
+  font-size: 0.9rem;
+  font-weight: 720;
+  color: rgba(255, 248, 232, 0.85);
+}
+
+.maze-result[data-level="green"] .maze-result-headline { color: #3fd99b; }
+.maze-result[data-level="yellow"] .maze-result-headline { color: #ffcf5a; }
+.maze-result[data-level="red"] .maze-result-headline { color: #f7706d; }
 
 .maze-canvas {
   display: block;
@@ -1351,7 +1392,8 @@ body.demo-mode .demo-indicator {
 
 .overlay.sober-alarm .reaktion-level,
 .overlay.sober-alarm .memory-result-headline,
-.overlay.sober-alarm .spy-result-headline {
+.overlay.sober-alarm .spy-result-headline,
+.overlay.sober-alarm .maze-result-headline {
   animation: sober-alarm-banner 0.6s steps(1, end) infinite;
 }
 
@@ -1403,7 +1445,8 @@ body.demo-mode .demo-indicator {
 
 .overlay.drunk-celebrate .reaktion-level,
 .overlay.drunk-celebrate .memory-result-headline,
-.overlay.drunk-celebrate .spy-result-headline {
+.overlay.drunk-celebrate .spy-result-headline,
+.overlay.drunk-celebrate .maze-result-headline {
   animation: drunk-celebrate-pop 0.5s ease-in-out infinite;
 }
 

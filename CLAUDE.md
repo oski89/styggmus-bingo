@@ -110,10 +110,15 @@ rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
 arrow key — arrow keys are routed in `onKeyDown` while that dialog is active. It
 is **timed**: the limit is the shortest-path step count (`mazeDistance`, BFS) ×
 `MAZE_MS_PER_STEP` (400ms), shown as a `#maze-timer` countdown that turns red in
-the last third. Reaching 🎯 in time closes the maze and shows the gold success
-overlay (confetti + sound); running out of time shows the shared overlay in its
-`fail` tone (`showOverlay(…, "fail")` → red heading). The maze timer is cleared
-on solve, time-out, and in `closeDialog`.
+the last third. The round ends in the same three-tier verdict as the other
+mini-games, shown inline in the `#maze-result` panel (`showMazeResult`): reaching
+🍺 maps by the share of the clock still left (`mazeLevel`) — `>=
+MAZE_SOBER_MIN_FRACTION` (0.5) → red "Nykter" + `signalSoberAlarm`, below → yellow
+"Salongsberusad" — while *running out of time* is the goal of a drinking game, so
+`onMazeTimeout` gives green "Full som ett ägg" + `signalDrunkCelebration`. The
+"Ny labyrint" button restarts (`buildNewMaze`, which clears the verdict effects
+and hides the result). The maze timer is cleared on solve, time-out, and in
+`closeDialog`; `stopVerdictEffects` runs on restart and in `closeDialog`.
 
 ### Reaktionskollen (reaction-test mini-game)
 

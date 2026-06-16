@@ -30,6 +30,10 @@
   const MAZE_ROWS = 9;
   const MAZE_SWIPE_THRESHOLD = 18;
   const MAZE_MS_PER_STEP = 400;
+  // Solving the maze maps to a three-tier verdict by the share of the clock still
+  // left at the finish: ≥ this fraction → "Nykter" (too sober — alarm), below it →
+  // "Salongsberusad". Running out of time → "Full som ett ägg" (drunk — celebrate).
+  const MAZE_SOBER_MIN_FRACTION = 0.5;
   // Reaktionskollen (reaction test): reaction time (ms) → three-tier verdict.
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
@@ -300,6 +304,7 @@
   const fyllekollenOverlayEl = document.getElementById("fyllekollen-overlay");
   const mazeCanvas = document.getElementById("maze-canvas");
   const mazeTimerEl = document.getElementById("maze-timer");
+  const mazeResultEl = document.getElementById("maze-result");
   const mazeRestartBtn = document.getElementById("maze-restart-btn");
   const fyllekollenCloseBtn = document.getElementById("fyllekollen-close-btn");
 
@@ -1187,6 +1192,8 @@
   }
 
   function buildNewMaze() {
+    stopVerdictEffects();
+    mazeResultEl.classList.add("hidden");
     mazeState = createMaze(MAZE_COLS, MAZE_ROWS);
     drawMaze();
     startMazeTimer();
@@ -1286,13 +1293,18 @@
     }
   }
 
+  // Time ran out before the goal — the goal of a drinking game. That's the
+  // "Full som ett ägg" (properly drunk) tier, with the green celebration.
   function onMazeTimeout() {
     if (!mazeState || mazeState.solved) return;
     mazeState.solved = true; // lock movement
     clearMazeTimer();
-    closeDialog(fyllekollenOverlayEl);
-    playWinSound(false);
-    showOverlay("Tiden ute!", "För långsam — reflexerna sviker. Fortsätt dricka.", "fail");
+    showMazeResult("Tiden ute!", {
+      cls: "green",
+      label: "Full som ett ägg",
+      message: "För långsam — labyrinten besegrade dig. Ser bra ut. Fortsätt dricka.",
+      celebrate: true,
+    });
   }
 
   function drawMaze() {
@@ -1336,7 +1348,7 @@
     ctx.font = `${glyph}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("🎯", goal.c * cell + cell / 2, goal.r * cell + cell / 2);
+    ctx.fillText("🍺", goal.c * cell + cell / 2, goal.r * cell + cell / 2);
     ctx.fillText("🐭", player.c * cell + cell / 2, player.r * cell + cell / 2);
   }
 
@@ -1359,14 +1371,34 @@
 
   function onMazeSolved() {
     mazeState.solved = true;
+    const remaining = Math.max(0, mazeDeadline - performance.now());
     clearMazeTimer();
-    closeDialog(fyllekollenOverlayEl);
-    playWinSound(true);
-    runConfetti(2600);
-    showOverlay(
-      "Godkänd fyllekoll!",
-      "Stadig på handen — labyrinten besegrad. Du får utse nästa rundas officiella vattenchef."
-    );
+    const fraction = mazeLimitMs > 0 ? remaining / mazeLimitMs : 0;
+    showMazeResult(`${(remaining / 1000).toFixed(1)} s kvar`, mazeLevel(fraction));
+  }
+
+  // Solving maps to a verdict by how much of the clock was left. Sober logic is
+  // inverted (this is a drinking game): finishing with time to spare is the *bad*
+  // result. Running out of time is handled separately in onMazeTimeout (green).
+  function mazeLevel(fraction) {
+    if (fraction >= MAZE_SOBER_MIN_FRACTION) {
+      return { cls: "red", label: "Nykter", message: "Stadig på handen och gott om tid kvar. Du behöver öka takten. Fortsätt dricka.", alarm: true };
+    }
+    return { cls: "yellow", label: "Salongsberusad", message: "Du klarade det på upploppet. Du är på god väg. Fortsätt dricka." };
+  }
+
+  // Shows the verdict panel over the maze and fires the matching effect (alarm /
+  // celebration / neutral chime), mirroring the other mini-games' result screens.
+  function showMazeResult(detailText, level) {
+    mazeResultEl.dataset.level = level.cls;
+    mazeResultEl.innerHTML =
+      `<span class="maze-result-headline">${level.label}</span>` +
+      `<span class="maze-result-detail">${detailText}</span>` +
+      `<span class="maze-result-msg">${level.message}</span>`;
+    mazeResultEl.classList.remove("hidden");
+    if (level.alarm) signalSoberAlarm(fyllekollenOverlayEl);
+    else if (level.celebrate) signalDrunkCelebration(fyllekollenOverlayEl);
+    else playWinSound(false);
   }
 
   function arrowKeyToDir(key) {
