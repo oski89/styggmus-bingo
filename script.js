@@ -70,6 +70,7 @@
   // Minnesluckatestet = MINNE_BASE − total deviation; Spykollen = fixed per tier.
   const KLUNK_REAKTION_BASE_MS = 400;
   const KLUNK_REAKTION_DIV = 10;
+  const KLUNK_REAKTION_MAX = 10; // cap so a very fast reaction can't dwarf the others
   const KLUNK_MINNE_BASE = 7;
   const KLUNK_SPY = { red: 6, yellow: 4, green: 2 }; // Nykter / Salongsberusad / Full
   const KONAMI_SEQUENCE = [
@@ -1488,7 +1489,7 @@
       const ms = Math.round(performance.now() - reaktionShownAt);
       const level = reaktionLevel(ms);
       showReaktionResult(`${ms} ms`, level.message, level.cls, level.label, level.alarm, level.celebrate);
-      recordRewardResult("reaktion", (KLUNK_REAKTION_BASE_MS - ms) / KLUNK_REAKTION_DIV, level.label);
+      recordRewardResult("reaktion", Math.min(KLUNK_REAKTION_MAX, (KLUNK_REAKTION_BASE_MS - ms) / KLUNK_REAKTION_DIV), level.label);
     }
   }
 
