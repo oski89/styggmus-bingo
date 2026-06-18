@@ -59,6 +59,15 @@
   const SPY_GREEN_MIN = 15; // dodged ≥ this → "Nykter"
   const SPY_YELLOW_MIN = 6; // dodged ≥ this → "Salongsberusad"; below → "Full som ett ägg"
   const SPY_MAX_BURST = 3; // most vomits that can drop at once (never all 6)
+  // Bingo rewards: a bingo launches a random mini-game whose result decides how
+  // many "klunkar" (sips) you get to hand out to everyone. A grand win plays all
+  // four in a row and sums them. Results round to nearest, clamped to ≥ 0.
+  // Fyllekollen = seconds left at the goal; Reaktionskollen = (BASE − ms) / DIV;
+  // Minnesluckatestet = MINNE_BASE − total deviation; Spykollen = fixed per tier.
+  const KLUNK_REAKTION_BASE_MS = 400;
+  const KLUNK_REAKTION_DIV = 10;
+  const KLUNK_MINNE_BASE = 7;
+  const KLUNK_SPY = { red: 6, yellow: 4, green: 2 }; // Nykter / Salongsberusad / Full
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -216,38 +225,6 @@
     },
   ];
 
-  const bingoPrizes = [
-    "Du får utse kvällens officiella pommesinspektör. Personen måste leverera en seriös recension av nästa laddning.",
-    "Välj en person som måste hålla ett högtidligt tal till Stygg Mus innan nästa skål.",
-    "Du får dela ut en obligatorisk resorb-ceremoni till valfri deltagare.",
-    "Välj någon som måste argumentera mot AI i 60 sekunder, oavsett egen åsikt.",
-    "Du får bestämma nästa låt, men den måste presenteras som om du vore festivalgeneral.",
-    "Välj en person som måste säga 'det där är faktiskt laktosfritt' vid nästa dryckesbeställning.",
-    "Du får införa en tillfällig regel som gäller tills nästa ruta kryssas.",
-    "Välj någon som måste ge en alldeles för seriös taktisk genomgång av nästa lek.",
-    "Du får begära en hedersskål för Täby, pommes eller Stygg Bitch-sparandet.",
-    "Välj en person som måste leverera kvällens sämsta pappaskämt innan spelet fortsätter.",
-  ];
-
-  const grandPrize =
-    "UTOPISK VINST: Du blir Stygg Mus-kejsare 2026. Du får först tjing på bästa sovplats, slipper nästa tråkiga syssla och alla måste skåla för din historiskt välkryssade bricka.";
-
-  const demoBingoPrizes = [
-    "Demo-pris 1: Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    "Demo-pris 2: Sed do eiusmod tempor incididunt ut labore et dolore magna.",
-    "Demo-pris 3: Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
-    "Demo-pris 4: Duis aute irure dolor in reprehenderit in voluptate velit.",
-    "Demo-pris 5: Excepteur sint occaecat cupidatat non proident, sunt in culpa.",
-    "Demo-pris 6: Sed ut perspiciatis unde omnis iste natus error sit voluptatem.",
-    "Demo-pris 7: Nemo enim ipsam voluptatem quia voluptas sit aspernatur.",
-    "Demo-pris 8: Neque porro quisquam est qui dolorem ipsum quia dolor sit.",
-    "Demo-pris 9: At vero eos et accusamus et iusto odio dignissimos ducimus.",
-    "Demo-pris 10: Et harum quidem rerum facilis est et expedita distinctio.",
-  ];
-
-  const demoGrandPrize =
-    "DEMO GRAND-PRIS: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Du har testat hela brickan i beta-läget.";
-
   // ── DOM-refs ──────────────────────────────────────────────────────────────
 
   const appEl = document.getElementById("app");
@@ -345,6 +322,11 @@
   const spyCloseBtn = document.getElementById("spy-close-btn");
   const testSpykollenBtn = document.getElementById("test-spykollen-btn");
 
+  const rewardOverlayEl = document.getElementById("reward-overlay");
+  const rewardTitleEl = document.getElementById("reward-title");
+  const rewardBodyEl = document.getElementById("reward-body");
+  const rewardActionBtn = document.getElementById("reward-action-btn");
+
   let state = null;
   let activePlayerId = null;
   let currentMode = null;
@@ -380,6 +362,9 @@
   let soberAlarmEl = null;
   let drunkPartyTimer = null;
   let drunkPartyEl = null;
+  let rewardSession = null;
+  let rewardTransitioning = false;
+  let rewardActionHandler = null;
 
   registerEventListeners();
   renderAccessFlow();
@@ -473,6 +458,13 @@
     window.addEventListener("resize", resizeConfettiCanvas);
     window.addEventListener("resize", () => {
       if (mazeState && activeDialog === fyllekollenOverlayEl) drawMaze();
+    });
+
+    rewardActionBtn.addEventListener("click", () => {
+      if (rewardActionHandler) rewardActionHandler();
+    });
+    rewardOverlayEl.addEventListener("click", (e) => {
+      if (e.target === rewardOverlayEl) closeDialog(rewardOverlayEl);
     });
   }
 
@@ -635,14 +627,6 @@
 
   function getActivePromptGroups() {
     return currentMode === MODE_DEMO ? demoPromptGroups : promptGroups;
-  }
-
-  function getActiveBingoPrizes() {
-    return currentMode === MODE_DEMO ? demoBingoPrizes : bingoPrizes;
-  }
-
-  function getActiveGrandPrize() {
-    return currentMode === MODE_DEMO ? demoGrandPrize : grandPrize;
   }
 
   // Demo mode namespaces every stored key with a ":demo" suffix so live and
@@ -1177,6 +1161,8 @@
 
   function openFyllekollen() {
     openDialog(fyllekollenOverlayEl);
+    fyllekollenCloseBtn.textContent = "Avbryt";
+    mazeRestartBtn.classList.remove("hidden"); // re-show if a reward round hid it
     buildNewMaze();
     playWinSound(false);
   }
@@ -1295,6 +1281,7 @@
       message: "För långsam — labyrinten besegrade dig. Ser bra ut. Fortsätt dricka.",
       celebrate: true,
     });
+    recordRewardResult("fyllekollen", 0, "Tiden ute"); // never reached the goal → 0
   }
 
   function drawMaze() {
@@ -1364,7 +1351,9 @@
     const remaining = Math.max(0, mazeDeadline - performance.now());
     clearMazeTimer();
     const fraction = mazeLimitMs > 0 ? remaining / mazeLimitMs : 0;
-    showMazeResult(`${(remaining / 1000).toFixed(1)} s kvar`, mazeLevel(fraction));
+    const level = mazeLevel(fraction);
+    showMazeResult(`${(remaining / 1000).toFixed(1)} s kvar`, level);
+    recordRewardResult("fyllekollen", remaining / 1000, level.label); // klunkar = sekunder kvar
   }
 
   // Solving maps to a verdict by how much of the clock was left. Sober logic is
@@ -1435,6 +1424,7 @@
   // clock starts → first tap stops it. Tapping during "waiting" is a false start.
   function openReaktionskollen() {
     openDialog(reaktionOverlayEl);
+    reaktionCloseBtn.textContent = "Stäng";
     startReaktionRound();
   }
 
@@ -1489,10 +1479,12 @@
     if (reaktionPhase === "waiting") {
       clearReaktionTimers();
       showReaktionResult("För tidigt!", "Du tryckte innan ölen dök upp. Försök igen.", "early", "");
+      recordRewardResult("reaktion", 0, "Falskstart"); // false start → 0
     } else if (reaktionPhase === "active") {
       const ms = Math.round(performance.now() - reaktionShownAt);
       const level = reaktionLevel(ms);
       showReaktionResult(`${ms} ms`, level.message, level.cls, level.label, level.alarm, level.celebrate);
+      recordRewardResult("reaktion", (KLUNK_REAKTION_BASE_MS - ms) / KLUNK_REAKTION_DIV, level.label);
     }
   }
 
@@ -1555,6 +1547,7 @@
     populateMemoryWheel(memoryWheelBeerEl);
     populateMemoryWheel(memoryWheelMouseEl);
     openDialog(memoryOverlayEl);
+    memoryCloseBtn.textContent = "Stäng";
     startMemoryRound();
   }
 
@@ -1648,6 +1641,9 @@
     if (level.alarm) signalSoberAlarm(memoryOverlayEl);
     else if (level.celebrate) signalDrunkCelebration(memoryOverlayEl);
     else playWinSound(false);
+
+    const deviation = Math.abs(guessBeer - memoryAnswer.beer) + Math.abs(guessMouse - memoryAnswer.mouse);
+    recordRewardResult("minne", KLUNK_MINNE_BASE - deviation, level.label);
   }
 
   function memoryLevel(correctCount) {
@@ -1698,6 +1694,7 @@
   // the 🛋️ couch left/right to dodge. Difficulty ramps; one hit ends the round.
   function openSpykollen() {
     openDialog(spykollenOverlayEl);
+    spyCloseBtn.textContent = "Stäng";
     startSpyRound();
   }
 
@@ -1928,6 +1925,7 @@
     if (level.alarm) signalSoberAlarm(spykollenOverlayEl);
     else if (level.celebrate) signalDrunkCelebration(spykollenOverlayEl);
     else playWinSound(false);
+    recordRewardResult("spy", KLUNK_SPY[level.cls], level.label);
   }
 
   function spyLevel(avoided) {
@@ -1984,18 +1982,22 @@
         state.bingoLinesAwarded = [...state.bingoLinesAwarded, ...newLines];
         saveState();
         recordBingoLines(state.playerId, newLines.length);
-        celebrateBingo();
       }
 
-      if (marked === CELL_COUNT && !state.grandWin) {
+      const justGrandWin = marked === CELL_COUNT && !state.grandWin;
+      if (justGrandWin) {
         state.grandWin = true;
         saveState();
         recordGrandWin(state.playerId);
-        celebrateGrandWin();
       } else if (marked < CELL_COUNT && state.grandWin) {
         state.grandWin = false;
         saveState();
       }
+
+      // A grand win supersedes the single-line reward for the same check: filling
+      // the last cell also completes lines, but we only run one reward flow.
+      if (justGrandWin) startGrandReward();
+      else if (newLines.length > 0) startBingoReward();
     }
   }
 
@@ -2038,24 +2040,122 @@
     return lines;
   }
 
-  // ── Celebrations ──────────────────────────────────────────────────────────
+  // ── Bingo rewards ─────────────────────────────────────────────────────────
 
-  function celebrateBingo() {
+  // A bingo no longer hands out a fixed prize: it launches a mini-game whose
+  // result decides how many "klunkar" (sips) you get to share out to everyone.
+  // A single line plays one random game; a grand win plays all four in a row and
+  // sums them. recordRewardResult is a no-op outside a session, so the beer-
+  // counter rotation and the test menu keep running the games exactly as before.
+  const REWARD_GAMES = {
+    fyllekollen: { open: openFyllekollen, overlay: fyllekollenOverlayEl, retryBtn: mazeRestartBtn, closeBtn: fyllekollenCloseBtn, label: "Fyllekollen" },
+    reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, retryBtn: reaktionRetryBtn, closeBtn: reaktionCloseBtn, label: "Reaktionskollen" },
+    minne: { open: openMinneslucka, overlay: memoryOverlayEl, retryBtn: memoryRetryBtn, closeBtn: memoryCloseBtn, label: "Minnesluckatestet" },
+    spy: { open: openSpykollen, overlay: spykollenOverlayEl, retryBtn: spyRetryBtn, closeBtn: spyCloseBtn, label: "Spykollen" },
+  };
+  const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
+
+  function startBingoReward() {
     playWinSound(false);
     runConfetti(1800);
-    showOverlay("BINGO!", randomItem(getActiveBingoPrizes()));
+    rewardSession = newRewardSession("single", [randomItem(REWARD_GAME_IDS)]);
+    showRewardIntro();
   }
 
-  function celebrateGrandWin() {
+  function startGrandReward() {
     playWinSound(true);
     runConfetti(3400);
     document.body.classList.add("champion");
     setTimeout(() => document.body.classList.remove("champion"), 5600);
-    showOverlay("HELA BRICKAN KLAR!", getActiveGrandPrize());
+    const order = REWARD_GAME_IDS.slice();
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    rewardSession = newRewardSession("grand", order);
+    showRewardIntro();
   }
 
-  // `tone` "fail" red-tints the heading (e.g. Fyllekollen time-out); default is
-  // the celebratory gold.
+  function newRewardSession(mode, queue) {
+    return { mode, queue, idx: 0, total: 0, breakdown: [], currentOverlay: null, resolved: false };
+  }
+
+  function showRewardIntro() {
+    const grand = rewardSession.mode === "grand";
+    rewardTitleEl.textContent = grand ? "HELA BRICKAN KLAR!" : "BINGO!";
+    rewardBodyEl.innerHTML = grand
+      ? `<p class="reward-lead">Spela alla fyra spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
+      : `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`;
+    rewardActionBtn.textContent = grand ? "Kör alla fyra" : "Spela";
+    rewardActionHandler = () => {
+      rewardTransitioning = true;
+      closeDialog(rewardOverlayEl);
+      rewardTransitioning = false;
+      startCurrentRewardGame();
+    };
+    openDialog(rewardOverlayEl);
+  }
+
+  function startCurrentRewardGame() {
+    const g = REWARD_GAMES[rewardSession.queue[rewardSession.idx]];
+    rewardSession.currentOverlay = g.overlay;
+    rewardSession.resolved = false;
+    g.open();
+  }
+
+  // Each mini-game's terminal result calls this; outside a session it no-ops.
+  // Klunkar round to nearest, never below 0. The retry button is hidden (no
+  // re-rolling for more klunkar) and the close button advances the flow.
+  function recordRewardResult(gameId, klunkar, verdict) {
+    if (!rewardSession || rewardSession.resolved) return;
+    rewardSession.resolved = true;
+    const g = REWARD_GAMES[gameId];
+    const amount = Math.max(0, Math.round(klunkar));
+    rewardSession.total += amount;
+    rewardSession.breakdown.push({ label: g.label, verdict, klunkar: amount });
+    g.retryBtn.classList.add("hidden");
+    const last = rewardSession.idx >= rewardSession.queue.length - 1;
+    g.closeBtn.textContent = last ? "Klar" : "Nästa spel";
+  }
+
+  // Closing the current game (button, Escape, or backdrop) moves the flow on;
+  // an unfinished game counts as 0. Called from closeDialog.
+  function advanceRewardAfterGame() {
+    if (!rewardSession.resolved) {
+      const g = REWARD_GAMES[rewardSession.queue[rewardSession.idx]];
+      rewardSession.breakdown.push({ label: g.label, verdict: "Avbrutet", klunkar: 0 });
+    }
+    rewardSession.currentOverlay = null;
+    rewardSession.idx += 1;
+    if (rewardSession.idx < rewardSession.queue.length) startCurrentRewardGame();
+    else showRewardPayout();
+  }
+
+  function showRewardPayout() {
+    const grand = rewardSession.mode === "grand";
+    rewardTitleEl.textContent = grand ? "HELA BRICKAN KLAR!" : "BINGO!";
+    const rows = rewardSession.breakdown
+      .map(
+        (b) =>
+          `<li><span class="reward-row-game">${b.label}</span>` +
+          `<span class="reward-row-verdict">${b.verdict}</span>` +
+          `<span class="reward-row-klunk">${b.klunkar} ${b.klunkar === 1 ? "klunk" : "klunkar"}</span></li>`
+      )
+      .join("");
+    const total = rewardSession.total;
+    rewardBodyEl.innerHTML =
+      `<ul class="reward-breakdown">${rows}</ul>` +
+      `<p class="reward-total">Dela ut <strong>${total}</strong> ${total === 1 ? "klunk" : "klunkar"} till alla i sällskapet!</p>`;
+    rewardActionBtn.textContent = "Klart";
+    rewardActionHandler = () => closeDialog(rewardOverlayEl);
+    runConfetti(2200);
+    playWinSound(true);
+    openDialog(rewardOverlayEl);
+  }
+
+  // ── Celebrations ──────────────────────────────────────────────────────────
+
+  // `tone` "fail" red-tints the heading; default is the celebratory gold.
   function showOverlay(title, text, tone) {
     overlayTitleEl.textContent = title;
     overlayTextEl.textContent = text;
@@ -2105,6 +2205,17 @@
       dialogReturnFocus.focus();
     }
     dialogReturnFocus = null;
+
+    // Bingo reward routing (after teardown so timers/effects are already stopped):
+    // closing the active reward game advances the flow; dismissing the reward
+    // overlay itself (other than an intro→game transition) ends the session.
+    if (rewardSession) {
+      if (dialogEl === rewardSession.currentOverlay) {
+        advanceRewardAfterGame();
+      } else if (dialogEl === rewardOverlayEl && !rewardTransitioning) {
+        rewardSession = null;
+      }
+    }
   }
 
   // Styled stand-in for window.confirm(): shows the confirm overlay and runs

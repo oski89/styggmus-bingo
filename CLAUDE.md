@@ -20,7 +20,7 @@ Push to `main` — the GitHub Actions workflow (`.github/workflows/deploy-pages.
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus three dialog overlays — `#overlay` (bingo/easter-egg prizes), `#scoreboard-overlay`, `#confirm-overlay` (styled `confirm()` replacement) — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
+- `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#scoreboard-overlay`, `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
 - `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
@@ -43,7 +43,7 @@ Three passwords map to three modes (`PASSWORDS` in `script.js`): `AFC` → `live
 (`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`) directly for testing. Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
 clears them and returns to the password gate. **Demo mode** uses placeholder
-lorem-ipsum prompts/prizes and namespaces every persisted key with a `:demo`
+lorem-ipsum prompts and namespaces every persisted key with a `:demo`
 suffix (`modeKey()`), so beta-test data never collides with live data.
 
 ### State model
@@ -68,16 +68,36 @@ Player selection persists under `styggmus-bingo-player-v1`.
 There are 5 players (`players`) and 5 prompt groups (`promptGroups`), one group
 per real-life person × 6 prompts = 30 total. Each player has an `excludedGroup`
 (typically their own) that is removed before the board is built, leaving 24
-prompts; the first 16 of the shuffle fill the 16 cells. Demo mode swaps `promptGroups`/`bingoPrizes`/
-`grandPrize` for the `demo*` equivalents via `getActive*()` helpers.
+prompts; the first 16 of the shuffle fill the 16 cells. Demo mode swaps
+`promptGroups` for the `demoPromptGroups` equivalent via `getActivePromptGroups()`.
 
-### Win detection & celebrations
+### Win detection & bingo rewards
 
 `getWinningLines()` checks 4 rows + 4 columns + 2 diagonals. New bingo lines (not
-already in `bingoLinesAwarded`) trigger `celebrateBingo()` (sound + confetti +
-random prize overlay) and increment the score. Filling all 16 cells triggers
-`celebrateGrandWin()` once. Sound is synthesized with the Web Audio API; confetti
-is canvas-drawn and skipped under `prefers-reduced-motion`.
+already in `bingoLinesAwarded`) increment the score and, instead of a fixed prize,
+launch a **bingo reward** (`startBingoReward`): a random mini-game whose result
+decides how many "klunkar" (sips) you get to hand out to everyone. Filling all 16
+cells triggers `startGrandReward` once — all four games in a random row, klunkar
+summed. A grand win supersedes the single-line reward for the same check (filling
+the last cell also completes lines), so only one flow runs. Sound is synthesized
+with the Web Audio API; confetti is canvas-drawn and skipped under
+`prefers-reduced-motion`.
+
+The reward flow lives in the **Bingo rewards** section. `rewardSession`
+({ mode, queue, idx, total, breakdown, currentOverlay, resolved }) drives it; the
+`REWARD_GAMES` registry maps each game id to its open-fn, overlay, retry/close
+buttons, and label. `showRewardIntro` opens the shared `#reward-overlay`
+(intro → "Spela"/"Kör alla fyra"); `startCurrentRewardGame` opens the next game;
+each game's terminal result calls `recordRewardResult(gameId, klunkar, verdict)`
+(a no-op outside a session, so the beer-counter rotation and test menu are
+unchanged), which rounds klunkar to nearest (≥ 0), hides the retry button (no
+re-rolling), and relabels the close button to "Nästa spel"/"Klar". Closing the
+game (button/Escape/backdrop) runs `advanceRewardAfterGame` via `closeDialog`
+(unfinished = 0); after the last game `showRewardPayout` reveals the breakdown +
+total. Klunkar per game: Fyllekollen = seconds left at the goal (timeout = 0);
+Reaktionskollen = `(KLUNK_REAKTION_BASE_MS − ms) / KLUNK_REAKTION_DIV`
+(false start = 0); Minnesluckatestet = `KLUNK_MINNE_BASE − total deviation`;
+Spykollen = `KLUNK_SPY[cls]` (Nykter 6 / Salongsberusad 4 / Full som ett ägg 2).
 
 ### Dialogs
 

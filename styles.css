@@ -647,6 +647,71 @@ button:focus-visible {
   box-shadow: 0 16px 28px rgba(192, 117, 21, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
 }
 
+/* ── Bingo reward overlay (mini-game intro + klunkar payout) ───────────────── */
+
+.reward-card {
+  width: min(440px, 100%);
+}
+
+.reward-body {
+  margin: 0.2rem 0 0.4rem;
+}
+
+.reward-lead {
+  font-size: 1.02rem;
+}
+
+.reward-breakdown {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reward-breakdown li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0.1rem 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  background: rgba(255, 248, 232, 0.06);
+  border: 1px solid rgba(255, 248, 232, 0.12);
+  text-align: left;
+}
+
+.reward-row-game {
+  font-weight: 850;
+  color: var(--text);
+}
+
+.reward-row-klunk {
+  grid-row: span 2;
+  align-self: center;
+  font-weight: 950;
+  white-space: nowrap;
+  color: var(--accent-strong);
+}
+
+.reward-row-verdict {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255, 248, 232, 0.7);
+}
+
+.reward-total {
+  font-size: 1.18rem;
+  font-weight: 850;
+}
+
+.reward-total strong {
+  font-size: 1.7rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+}
+
 /* ── Scoreboard overlay ───────────────────────────────────────────────────── */
 
 .scoreboard-card {
