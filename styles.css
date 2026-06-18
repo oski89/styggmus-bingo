@@ -496,7 +496,7 @@ button:focus-visible {
 .board {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
@@ -571,17 +571,6 @@ button:focus-visible {
   font-size: 0.86rem;
   font-weight: 950;
   line-height: 1;
-}
-
-.cell.free-cell {
-  cursor: default;
-  background:
-    linear-gradient(135deg, rgba(255, 207, 115, 0.3), rgba(49, 198, 157, 0.3)),
-    linear-gradient(180deg, #174c41, #0c332d);
-}
-
-.cell.free-cell:disabled {
-  opacity: 1;
 }
 
 .cell[data-winning="true"] {

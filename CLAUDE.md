@@ -50,12 +50,12 @@ suffix (`modeKey()`), so beta-test data never collides with live data.
 
 Each player gets their own bingo board stored under
 `styggmus-bingo-board-v2:<playerId>` (`:demo`-suffixed in demo mode) in
-`localStorage`. The board is a 25-element array of prompt strings shuffled from a
-seeded PRNG (mulberry32 + djb2-style hash, seeded `<uuid>-<playerId>`), with the
-fixed free cell at index 12 (`FREE_INDEX`). Checked indexes, awarded bingo lines,
-and grand-win status are persisted alongside the board. Loaded state is validated
-(`isValidState`) and normalized (free cell always checked) — anything invalid is
-discarded for a fresh board.
+`localStorage`. The board is a 16-element array (`BOARD_SIZE` 4 × 4, `CELL_COUNT`
+16) of prompt strings shuffled from a seeded PRNG (mulberry32 + djb2-style hash,
+seeded `<uuid>-<playerId>`) — no free cell, nothing pre-checked. Checked indexes,
+awarded bingo lines, and grand-win status are persisted alongside the board.
+Loaded state is validated (`isValidState`); a stored board whose length or prompts
+no longer match (e.g. an old 5×5 board) is discarded for a fresh one.
 
 Separate `localStorage` maps, keyed by player id:
 - `styggmus-bingo-scores-v1` — `{ bingoLines, grandWins, lastBingoAt }` per player.
@@ -68,14 +68,14 @@ Player selection persists under `styggmus-bingo-player-v1`.
 There are 5 players (`players`) and 5 prompt groups (`promptGroups`), one group
 per real-life person × 6 prompts = 30 total. Each player has an `excludedGroup`
 (typically their own) that is removed before the board is built, leaving 24
-prompts for the 24 non-free cells. Demo mode swaps `promptGroups`/`bingoPrizes`/
+prompts; the first 16 of the shuffle fill the 16 cells. Demo mode swaps `promptGroups`/`bingoPrizes`/
 `grandPrize` for the `demo*` equivalents via `getActive*()` helpers.
 
 ### Win detection & celebrations
 
-`getWinningLines()` checks 5 rows + 5 columns + 2 diagonals. New bingo lines (not
+`getWinningLines()` checks 4 rows + 4 columns + 2 diagonals. New bingo lines (not
 already in `bingoLinesAwarded`) trigger `celebrateBingo()` (sound + confetti +
-random prize overlay) and increment the score. Filling all 25 cells triggers
+random prize overlay) and increment the score. Filling all 16 cells triggers
 `celebrateGrandWin()` once. Sound is synthesized with the Web Audio API; confetti
 is canvas-drawn and skipped under `prefers-reduced-motion`.
 

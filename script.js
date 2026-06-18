@@ -16,10 +16,8 @@
     FLÖTET: MODE_DEMO,
     MGT: MODE_TEST,
   };
-  const BOARD_SIZE = 5;
+  const BOARD_SIZE = 4;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
-  const FREE_INDEX = Math.floor(CELL_COUNT / 2);
-  const FREE_CELL_LABEL = "Stygg Mus 2026 är invigt";
   // The four beer-counter mini-games rotate on a MINIGAME_CYCLE-beer cycle keyed
   // off the running count of beers added (beerAddedTotal): Reaktionskollen on
   // 1+4n, Minnesluckatestet on 2+4n, Fyllekollen on 3+4n, Spykollen on 4+4n.
@@ -682,22 +680,17 @@
 
   function createFreshState(playerId) {
     const seed = generateSeed();
-    const boardItems = shuffleWithSeed(getAvailablePrompts(playerId), `${seed}-${playerId}`).slice(
+    const board = shuffleWithSeed(getAvailablePrompts(playerId), `${seed}-${playerId}`).slice(
       0,
-      CELL_COUNT - 1
+      CELL_COUNT
     );
-    const board = [];
-
-    for (let index = 0; index < CELL_COUNT; index++) {
-      board.push(index === FREE_INDEX ? FREE_CELL_LABEL : boardItems.shift());
-    }
 
     return {
       id: seed,
       playerId,
       createdAt: new Date().toISOString(),
       board,
-      checked: [FREE_INDEX],
+      checked: [],
       bingoLinesAwarded: [],
       grandWin: false,
     };
@@ -709,7 +702,6 @@
       candidate.playerId !== playerId ||
       !Array.isArray(candidate.board) ||
       candidate.board.length !== CELL_COUNT ||
-      candidate.board[FREE_INDEX] !== FREE_CELL_LABEL ||
       !Array.isArray(candidate.checked) ||
       !Array.isArray(candidate.bingoLinesAwarded)
     ) {
@@ -724,7 +716,6 @@
     const checked = new Set(
       candidate.checked.filter((index) => Number.isInteger(index) && index >= 0 && index < CELL_COUNT)
     );
-    checked.add(FREE_INDEX);
 
     return {
       ...candidate,
@@ -826,12 +817,12 @@
   function getCheckedCountForPlayer(playerId) {
     try {
       const raw = safeGet(getBoardStorageKey(playerId));
-      if (!raw) return 1;
+      if (!raw) return 0;
       const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed.checked)) return 1;
-      return Math.max(1, parsed.checked.length);
+      if (!Array.isArray(parsed.checked)) return 0;
+      return parsed.checked.length;
     } catch {
-      return 1;
+      return 0;
     }
   }
 
@@ -845,7 +836,7 @@
   }
 
   // Builds one `.scoreboard-stat` column. `valueHTML` may contain markup (e.g.
-  // the "/25" denominator); `valueModifier` is an optional value-span class.
+  // the "/16" denominator); `valueModifier` is an optional value-span class.
   function makeStat(valueHTML, label, valueModifier) {
     const stat = document.createElement("span");
     stat.className = "scoreboard-stat";
@@ -978,15 +969,11 @@
       button.className = "cell";
       button.dataset.index = String(index);
       button.role = "gridcell";
-      button.ariaLabel = index === FREE_INDEX ? `${label}, förmarkerad` : label;
+      button.ariaLabel = label;
       button.ariaPressed = isChecked ? "true" : "false";
       button.textContent = label;
 
       if (isChecked) button.classList.add("checked");
-      if (index === FREE_INDEX) {
-        button.classList.add("free-cell");
-        button.disabled = true;
-      }
 
       boardEl.appendChild(button);
     });
@@ -999,7 +986,6 @@
     if (!(target instanceof HTMLElement) || !target.classList.contains("cell")) return;
 
     const index = Number(target.dataset.index);
-    if (index === FREE_INDEX) return;
 
     const checkedSet = new Set(state.checked);
     const willCheck = !checkedSet.has(index);
@@ -1010,7 +996,6 @@
       checkedSet.delete(index);
     }
 
-    checkedSet.add(FREE_INDEX);
     state.checked = [...checkedSet].sort((a, b) => a - b);
     saveState();
 
@@ -1046,7 +1031,7 @@
       message: "Nollställa markeringarna på den här brickan? Rutorna ligger kvar.",
       confirmLabel: "Nollställ",
       onConfirm: () => {
-        state.checked = [FREE_INDEX];
+        state.checked = [];
         state.bingoLinesAwarded = [];
         state.grandWin = false;
         saveState();
