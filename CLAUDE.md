@@ -94,7 +94,8 @@ unchanged), which rounds klunkar to nearest (≥ 0), hides the retry button (no
 re-rolling), and relabels the close button to "Nästa spel"/"Klar". Closing the
 game (button/Escape/backdrop) runs `advanceRewardAfterGame` via `closeDialog`
 (unfinished = 0); after the last game `showRewardPayout` reveals the breakdown +
-total. Klunkar per game: Fyllekollen = seconds left at the goal (timeout = 0);
+total. Klunkar per game: Fyllekollen = `MAZE_KLUNK_MAX` × share of the clock left
+at the goal, so max is `MAZE_KLUNK_MAX` (8) and timeout = 0;
 Reaktionskollen = `(KLUNK_REAKTION_BASE_MS − ms) / KLUNK_REAKTION_DIV`
 (false start = 0); Minnesluckatestet = `KLUNK_MINNE_BASE − total deviation`;
 Spykollen = `KLUNK_SPY[cls]` (Nykter 6 / Salongsberusad 4 / Full som ett ägg 2).

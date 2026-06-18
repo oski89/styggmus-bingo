@@ -37,6 +37,10 @@
   // 0.35 → Nykter needs solving in <65% of the budget (~520ms/shortest-step),
   // brisk but humanly reachable; widening this window without inflating the cap.
   const MAZE_SOBER_MIN_FRACTION = 0.35;
+  // Bingo-reward klunkar for Fyllekollen scale with the share of the clock left at
+  // the goal, so the most you can ever hand out is MAZE_KLUNK_MAX (instant solve);
+  // running out of time gives 0. Keeps it in line with the other mini-games.
+  const MAZE_KLUNK_MAX = 8;
   // Reaktionskollen (reaction test): reaction time (ms) → three-tier verdict.
   const REAKTION_GREEN_MAX = 350; // < this → "Nykter"
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
@@ -1353,7 +1357,7 @@
     const fraction = mazeLimitMs > 0 ? remaining / mazeLimitMs : 0;
     const level = mazeLevel(fraction);
     showMazeResult(`${(remaining / 1000).toFixed(1)} s kvar`, level);
-    recordRewardResult("fyllekollen", remaining / 1000, level.label); // klunkar = sekunder kvar
+    recordRewardResult("fyllekollen", fraction * MAZE_KLUNK_MAX, level.label); // scaled so max = MAZE_KLUNK_MAX
   }
 
   // Solving maps to a verdict by how much of the clock was left. Sober logic is
