@@ -116,24 +116,22 @@
 
     <!-- Bingo app -->
     <main id="app" class="app hidden">
-      <header class="hero">
-        <div class="brand-mark hero-mark" aria-hidden="true">
-          <svg viewBox="0 0 96 96" focusable="false"><use href="#sm-mark" /></svg>
+      <header class="bingo-topbar">
+        <h1 id="game-title" class="bingo-topbar-title">Stygg Mus Bingo</h1>
+        <div class="beer-widget" role="group" aria-label="Ölräknare">
+          <button id="beer-widget-minus" class="beer-widget-btn" type="button" aria-label="Ta bort en öl">−</button>
+          <span class="beer-widget-value"><span id="beer-widget-count">0</span> 🍺</span>
+          <button id="beer-widget-plus" class="beer-widget-btn beer-widget-btn--plus" type="button" aria-label="Lägg till en öl">+</button>
         </div>
-        <p class="tag">Sommartraditionen</p>
-        <h1 id="game-title">Stygg Mus Bingo</h1>
-        <p class="demo-indicator" aria-live="polite">Beta-test</p>
-        <p class="subtitle">Helgens officiella stygghetsprotokoll.</p>
       </header>
 
-      <section class="controls" aria-label="Kontroller">
+      <section class="bingo-actions" aria-label="Kontroller">
         <button id="new-board-btn" class="primary-btn" type="button">Ny bricka</button>
-        <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>
-        <button id="change-player-btn" class="secondary-btn" type="button">← Hem</button>
         <button id="scoreboard-btn" class="scoreboard-toggle-btn" type="button" aria-label="Visa poängtavla">
           <svg aria-hidden="true"><use href="#icon-scoreboard" /></svg>
           Poängtavla
         </button>
+        <button id="change-player-btn" class="secondary-btn" type="button">← Hem</button>
       </section>
 
       <section class="stats" aria-live="polite">
@@ -154,8 +152,6 @@
       <section class="board-wrap" aria-label="Bingobricka">
         <div id="board" class="board" role="grid" aria-label="Bingobricka 4 gånger 4"></div>
       </section>
-
-      <p class="version-line">Stygg Mus 2026</p>
     </main>
 
     <!-- Beer app -->

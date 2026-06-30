@@ -331,6 +331,93 @@ input {
   font-weight: 650;
 }
 
+/* ── Bingo top bar + beer widget ──────────────────────────────────────────── */
+
+.bingo-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.1rem 0 0;
+}
+
+.bingo-topbar-title {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 12px 28px rgba(245, 184, 75, 0.16);
+}
+
+.beer-widget {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.28rem 0.34rem;
+  border: 1px solid rgba(245, 184, 75, 0.3);
+  border-radius: 999px;
+  background: rgba(12, 17, 27, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 22px rgba(0, 0, 0, 0.24);
+}
+
+.beer-widget-value {
+  min-width: 2.7rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.beer-widget-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(12, 17, 27, 0.85);
+  color: var(--text);
+  font-size: 1.4rem;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.beer-widget-btn:active {
+  border-color: rgba(245, 184, 75, 0.5);
+}
+
+.beer-widget-btn--plus {
+  border-color: rgba(255, 248, 232, 0.3);
+  background: linear-gradient(180deg, #ffd77d, #f5b84b 52%, #c87918);
+  color: #160d02;
+}
+
+/* ── Bingo action row ─────────────────────────────────────────────────────── */
+
+.bingo-actions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.bingo-actions > button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.72rem 0.5rem;
+  font-size: 0.86rem;
+}
+
 /* ── Controls ─────────────────────────────────────────────────────────────── */
 
 .controls {
@@ -466,7 +553,11 @@ button:focus-visible {
   font-size: 1.1rem;
   font-weight: 900;
   line-height: 1.1;
-  overflow-wrap: anywhere;
+  /* Keep each stat to a single line so the three columns stay short — the long
+     player name ellipsises rather than wrapping the row taller. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Board ────────────────────────────────────────────────────────────────── */
@@ -1413,7 +1504,7 @@ body.demo-mode .demo-indicator {
   animation: konami-flash 500ms ease-in-out 4;
 }
 
-.ddko-mode .hero h1 {
+.ddko-mode #game-title {
   animation: ddko-pulse 620ms ease-in-out 4;
 }
 
@@ -1955,12 +2046,22 @@ body.demo-mode .demo-indicator {
     grid-column: 1 / -1;
   }
 
+  /* Keep the three stats as columns of one row (compact) even on phones. */
   .stats {
-    grid-template-columns: 1fr;
+    gap: 0.45rem;
   }
 
   .stat {
     min-height: auto;
+    padding: 0.5rem 0.55rem;
+  }
+
+  .stat-label {
+    font-size: 0.62rem;
+  }
+
+  .stat-value {
+    font-size: 0.92rem;
   }
 
   .board-wrap {

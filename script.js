@@ -261,9 +261,11 @@
   const markedCountEl = document.getElementById("marked-count");
   const bingoCountEl = document.getElementById("bingo-count");
   const newBoardBtn = document.getElementById("new-board-btn");
-  const resetBoardBtn = document.getElementById("reset-board-btn");
   const changePlayerBtn = document.getElementById("change-player-btn");
   const scoreboardBtn = document.getElementById("scoreboard-btn");
+  const beerWidgetCountEl = document.getElementById("beer-widget-count");
+  const beerWidgetPlusBtn = document.getElementById("beer-widget-plus");
+  const beerWidgetMinusBtn = document.getElementById("beer-widget-minus");
 
   const beerBackBtn = document.getElementById("beer-back-btn");
   const beerScoreboardBtn = document.getElementById("beer-scoreboard-btn");
@@ -399,10 +401,11 @@
 
     boardEl.addEventListener("click", onBoardClick);
     newBoardBtn.addEventListener("click", onNewBoard);
-    resetBoardBtn.addEventListener("click", onResetBoard);
     changePlayerBtn.addEventListener("click", showDashboard);
     scoreboardBtn.addEventListener("click", showScoreboard);
     gameTitleEl.addEventListener("click", onGameTitleClick);
+    beerWidgetPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
+    beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
     beerBackBtn.addEventListener("click", showDashboard);
     beerScoreboardBtn.addEventListener("click", showScoreboard);
@@ -498,7 +501,7 @@
     }
 
     activePlayerId = savedPlayerId;
-    showDashboard();
+    startBingoGame();
   }
 
   function showPasswordGate() {
@@ -566,7 +569,7 @@
     if (!isValidPlayerId(playerId)) return;
     activePlayerId = playerId;
     safeSet(getPlayerKey(), playerId);
-    showDashboard();
+    startBingoGame();
   }
 
   function startBingoGame() {
@@ -575,6 +578,7 @@
     hideAllScreens();
     appEl.classList.remove("hidden");
     currentPlayerEl.textContent = getPlayer(activePlayerId).label;
+    renderBeerWidget();
     renderBoard();
     updateStatsAndWinState({ triggerEffects: false });
   }
@@ -779,7 +783,15 @@
     saveBeers(beers);
     renderBeerCounter();
     renderBeerLeaderboard();
+    renderBeerWidget();
     if (delta > 0) countBeerPress();
+  }
+
+  // The compact beer counter in the bingo top bar.
+  function renderBeerWidget() {
+    if (!beerWidgetCountEl) return;
+    const beers = loadBeers();
+    beerWidgetCountEl.textContent = String(beerCountOf(beers, activePlayerId));
   }
 
   // Each added beer launches one of the four mini-games on a rotating
@@ -1005,24 +1017,6 @@
       confirmLabel: "Ny bricka",
       onConfirm: () => {
         state = createFreshState(activePlayerId);
-        saveState();
-        renderBoard();
-        updateStatsAndWinState({ triggerEffects: false });
-      },
-    });
-  }
-
-  function onResetBoard() {
-    if (!state) return;
-
-    showConfirm({
-      title: "Nollställ bricka?",
-      message: "Nollställa markeringarna på den här brickan? Rutorna ligger kvar.",
-      confirmLabel: "Nollställ",
-      onConfirm: () => {
-        state.checked = [];
-        state.bingoLinesAwarded = [];
-        state.grandWin = false;
         saveState();
         renderBoard();
         updateStatsAndWinState({ triggerEffects: false });

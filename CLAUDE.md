@@ -29,11 +29,15 @@ UI language is Swedish.
 ### Screen flow
 
 `renderAccessFlow()` (called once on load) decides the entry point:
-password gate → player gate → dashboard (or straight to `#test-screen` in test mode). From the dashboard the user
-launches the **Bingo** app (`#app`) or the **Ölräknaren** beer counter
-(`#beer-app`). `hideAllScreens()` + `…El.classList.remove("hidden")` is the
-show/hide mechanism throughout — there is no router. The scoreboard is reachable
-as an overlay from the dashboard, bingo, and beer screens.
+password gate → player gate → **bingo** (`#app`) directly (or straight to
+`#test-screen` in test mode). The **dashboard** (`#dashboard`) is now the "home"
+reached from the bingo "← Hem" button (`changePlayerBtn` → `showDashboard`); from
+there the user can switch player, log out, or open the full **Ölräknaren**
+(`#beer-app`). Beer counting also lives inline as a compact −/🍺/+ widget in the
+bingo top bar (`beer-widget-*` → `adjustBeerForPlayer`, so the `+` still drives
+the mini-game rotation). `hideAllScreens()` + `…El.classList.remove("hidden")` is
+the show/hide mechanism throughout — there is no router. The scoreboard is
+reachable as an overlay from the dashboard, bingo, and beer screens.
 
 ### Auth & modes
 
