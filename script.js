@@ -1226,7 +1226,7 @@
     reaktionStageEl.dataset.state = "waiting";
     reaktionCountdownEl.classList.add("hidden");
     reaktionInstructionEl.textContent = "Vänta på ölen…";
-    const delay = 1000 + Math.random() * 4000;
+    const delay = 100 + Math.random() * 4900;
     reaktionAppearTimer = window.setTimeout(showReaktionTarget, delay);
   }
 

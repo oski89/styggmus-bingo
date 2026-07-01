@@ -153,7 +153,7 @@ and hides the result). The maze timer is cleared on solve, time-out, and in
 ### Reaktionskollen (reaction-test mini-game)
 
 **Reaktionskollen** (`#reaktion-overlay`): a 5-second countdown, then a blank
-"waiting" phase for a random 1–5s, then a 🍺 appears and a `performance.now()`
+"waiting" phase for a random 100ms–5s, then a 🍺 appears and a `performance.now()`
 clock starts. The first tap (pointerdown on `#reaktion-stage`, or Space) stops
 it; tapping during "waiting" is a false start. The reaction time in ms maps to a
 three-tier "how drunk are you" verdict (`reaktionLevel`): `< REAKTION_GREEN_MAX`
