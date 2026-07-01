@@ -65,49 +65,10 @@
       </div>
     </section>
 
-    <!-- Dashboard -->
-    <main id="dashboard" class="dashboard hidden">
-      <div class="dashboard-inner">
-        <header class="dashboard-header">
-          <div class="dashboard-greeting">
-            <span class="dashboard-greeting-label">Inloggad som</span>
-            <span id="dashboard-player-name" class="dashboard-greeting-name">-</span>
-          </div>
-          <button id="dashboard-change-player-btn" class="secondary-btn dashboard-change-btn" type="button">Byt spelare</button>
-        </header>
-
-        <div class="dashboard-brand">
-          <div class="brand-mark dashboard-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 96 96" focusable="false"><use href="#sm-mark" /></svg>
-          </div>
-          <h1 class="dashboard-title">Stygg Mus 2026</h1>
-          <p class="demo-indicator" aria-live="polite">Beta-test</p>
-        </div>
-
-        <div class="app-grid" aria-label="Appar">
-          <button id="bingo-tile" class="app-tile" type="button">
-            <div class="app-tile-icon" aria-hidden="true">
-              <svg viewBox="0 0 96 96" focusable="false"><use href="#sm-mark" /></svg>
-            </div>
-            <span class="app-tile-name">Stygg Mus Bingo</span>
-            <span class="app-tile-desc">Helgens officiella stygghetsprotokoll</span>
-          </button>
-          <button id="beer-tile" class="app-tile" type="button">
-            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🍺</div>
-            <span class="app-tile-name">Ölräknaren</span>
-            <span class="app-tile-desc">Håll koll på ölen</span>
-          </button>
-        </div>
-
-        <button class="exit-btn" type="button">Avsluta</button>
-
-        <p class="version-line">Stygg Mus 2026</p>
-      </div>
-    </main>
-
     <!-- Bingo app -->
     <main id="app" class="app hidden">
       <header class="bingo-topbar">
+        <button id="menu-btn" class="menu-btn" type="button" aria-label="Meny">⋮</button>
         <h1 id="game-title" class="bingo-topbar-title">Stygg Mus Bingo</h1>
         <div class="beer-widget" role="group" aria-label="Ölräknare">
           <button id="beer-widget-minus" class="beer-widget-btn" type="button" aria-label="Ta bort en öl">−</button>
@@ -118,7 +79,6 @@
 
       <section class="bingo-actions" aria-label="Kontroller">
         <button id="new-board-btn" class="primary-btn" type="button">Ny bricka</button>
-        <button id="change-player-btn" class="secondary-btn" type="button">← Hem</button>
       </section>
 
       <section class="stats" aria-live="polite">
@@ -139,40 +99,6 @@
       <section class="board-wrap" aria-label="Bingobricka">
         <div id="board" class="board" role="grid" aria-label="Bingobricka 4 gånger 4"></div>
       </section>
-    </main>
-
-    <!-- Beer app -->
-    <main id="beer-app" class="beer-app hidden">
-      <div class="beer-app-inner">
-        <header class="beer-app-header">
-          <button id="beer-back-btn" class="secondary-btn beer-back-btn" type="button">← Hem</button>
-        </header>
-
-        <div class="beer-hero">
-          <div class="beer-hero-icon" aria-hidden="true">🍺</div>
-          <h1 class="beer-hero-title">Ölräknaren</h1>
-          <p class="demo-indicator" aria-live="polite">Beta-test</p>
-        </div>
-
-        <section class="beer-counter-wrap" aria-label="Ölräknare">
-          <p id="beer-player-label" class="beer-player-label">-</p>
-          <div class="beer-counter">
-            <button id="beer-minus-btn" class="beer-btn beer-btn--minus" type="button" aria-label="Ta bort en öl">−</button>
-            <div class="beer-display" aria-live="polite" aria-atomic="true">
-              <span id="beer-count-display" class="beer-count">0</span>
-              <span class="beer-unit" aria-hidden="true">🍺</span>
-            </div>
-            <button id="beer-plus-btn" class="beer-btn beer-btn--plus" type="button" aria-label="Lägg till en öl">+</button>
-          </div>
-        </section>
-
-        <section class="beer-leaderboard" aria-label="Ölliga">
-          <h2 class="beer-leaderboard-title">Ölliga</h2>
-          <div id="beer-leaderboard-body"></div>
-        </section>
-
-        <p class="version-line">Stygg Mus 2026</p>
-      </div>
     </main>
 
     <!-- Test mode (password MGT): launch each mini-game directly -->
@@ -231,6 +157,17 @@
         <h2 id="reward-title">BINGO!</h2>
         <div id="reward-body" class="reward-body"></div>
         <button id="reward-action-btn" class="primary-btn" type="button">Spela</button>
+      </div>
+    </div>
+
+    <!-- Menu overlay (byt spelare / avsluta) -->
+    <div id="menu-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="menu-title">
+      <div class="overlay-card menu-card">
+        <h2 id="menu-title" class="menu-title">Meny</h2>
+        <div class="menu-actions">
+          <button id="menu-change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
+          <button id="menu-exit-btn" class="exit-btn" type="button">Avsluta</button>
+        </div>
       </div>
     </div>
 

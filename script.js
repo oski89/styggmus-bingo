@@ -233,8 +233,6 @@
 
   const appEl = document.getElementById("app");
   const accessScreenEl = document.getElementById("access-screen");
-  const dashboardEl = document.getElementById("dashboard");
-  const beerAppEl = document.getElementById("beer-app");
   const testScreenEl = document.getElementById("test-screen");
   const testFyllekollenBtn = document.getElementById("test-fyllekollen-btn");
   const testReaktionBtn = document.getElementById("test-reaktion-btn");
@@ -248,28 +246,19 @@
   const resetAllBtn = document.getElementById("reset-all-btn");
   const exitButtons = document.querySelectorAll(".exit-btn");
 
-  const dashboardPlayerNameEl = document.getElementById("dashboard-player-name");
-  const dashboardChangePlayerBtn = document.getElementById("dashboard-change-player-btn");
-  const bingoTileBtn = document.getElementById("bingo-tile");
-  const beerTileBtn = document.getElementById("beer-tile");
-
   const gameTitleEl = document.getElementById("game-title");
   const boardEl = document.getElementById("board");
   const currentPlayerEl = document.getElementById("current-player");
   const markedCountEl = document.getElementById("marked-count");
   const bingoCountEl = document.getElementById("bingo-count");
   const newBoardBtn = document.getElementById("new-board-btn");
-  const changePlayerBtn = document.getElementById("change-player-btn");
+  const menuBtn = document.getElementById("menu-btn");
   const beerWidgetCountEl = document.getElementById("beer-widget-count");
   const beerWidgetPlusBtn = document.getElementById("beer-widget-plus");
   const beerWidgetMinusBtn = document.getElementById("beer-widget-minus");
 
-  const beerBackBtn = document.getElementById("beer-back-btn");
-  const beerMinusBtn = document.getElementById("beer-minus-btn");
-  const beerPlusBtn = document.getElementById("beer-plus-btn");
-  const beerCountDisplay = document.getElementById("beer-count-display");
-  const beerPlayerLabelEl = document.getElementById("beer-player-label");
-  const beerLeaderboardBodyEl = document.getElementById("beer-leaderboard-body");
+  const menuOverlayEl = document.getElementById("menu-overlay");
+  const menuChangePlayerBtn = document.getElementById("menu-change-player-btn");
 
   const overlayEl = document.getElementById("overlay");
   const overlayTitleEl = document.getElementById("overlay-title");
@@ -383,24 +372,24 @@
     resetAllBtn.addEventListener("click", onBackFromPlayerSelect);
     exitButtons.forEach((button) => button.addEventListener("click", onExit));
 
-    dashboardChangePlayerBtn.addEventListener("click", showPlayerGate);
-    bingoTileBtn.addEventListener("click", startBingoGame);
-    beerTileBtn.addEventListener("click", showBeerApp);
-
     testFyllekollenBtn.addEventListener("click", openFyllekollen);
     testReaktionBtn.addEventListener("click", openReaktionskollen);
     testMinneBtn.addEventListener("click", openMinneslucka);
 
     boardEl.addEventListener("click", onBoardClick);
     newBoardBtn.addEventListener("click", onNewBoard);
-    changePlayerBtn.addEventListener("click", showDashboard);
     gameTitleEl.addEventListener("click", onGameTitleClick);
     beerWidgetPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
     beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
-    beerBackBtn.addEventListener("click", showDashboard);
-    beerMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
-    beerPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
+    menuBtn.addEventListener("click", () => openDialog(menuOverlayEl));
+    menuChangePlayerBtn.addEventListener("click", () => {
+      closeDialog(menuOverlayEl);
+      showPlayerGate();
+    });
+    menuOverlayEl.addEventListener("click", (e) => {
+      if (e.target === menuOverlayEl) closeDialog(menuOverlayEl);
+    });
 
     closeOverlayBtn.addEventListener("click", hideOverlay);
 
@@ -506,13 +495,6 @@
     passwordFeedbackEl.textContent = "";
   }
 
-  function showDashboard() {
-    hideAllScreens();
-    dashboardEl.classList.remove("hidden");
-    const player = getPlayer(activePlayerId);
-    dashboardPlayerNameEl.textContent = player ? player.label : "-";
-  }
-
   function showTestScreen() {
     hideAllScreens();
     testScreenEl.classList.remove("hidden");
@@ -520,9 +502,7 @@
 
   function hideAllScreens() {
     accessScreenEl.classList.add("hidden");
-    dashboardEl.classList.add("hidden");
     appEl.classList.add("hidden");
-    beerAppEl.classList.add("hidden");
     testScreenEl.classList.add("hidden");
   }
 
@@ -568,29 +548,22 @@
     updateStatsAndWinState({ triggerEffects: false });
   }
 
-  function showBeerApp() {
-    if (!activePlayerId) return;
-    hideAllScreens();
-    beerAppEl.classList.remove("hidden");
-    const player = getPlayer(activePlayerId);
-    beerPlayerLabelEl.textContent = player ? player.label : "-";
-    renderBeerCounter();
-    renderBeerLeaderboard();
-  }
-
   function onBackFromPlayerSelect() {
-    // Back to the dashboard if a player is already chosen, otherwise to the
+    // Back to the existing board if a player is already chosen, otherwise to the
     // password gate (the player-select screen is the first stop on fresh login).
     if (isValidPlayerId(activePlayerId)) {
-      showDashboard();
+      startBingoGame();
     } else {
       showPasswordGate();
     }
   }
 
-  // Ends the session and returns to the password gate. Saved boards, scores, and
-  // beers stay in localStorage — only the session auth is cleared.
+  // Ends the session and returns to the password gate. Saved boards and beers
+  // stay in localStorage — only the session auth is cleared. Defensively closes
+  // any dialog it might be called from (e.g. the menu overlay) so the confirm
+  // dialog it opens doesn't stack on top of one left showing underneath.
   function onExit() {
+    if (activeDialog) closeDialog(activeDialog);
     showConfirm({
       title: "Avsluta?",
       message: "Avsluta och återgå till lösenordsskärmen?",
@@ -722,8 +695,6 @@
     const beers = loadBeers();
     beers[playerId] = Math.max(0, beerCountOf(beers, playerId) + delta);
     saveBeers(beers);
-    renderBeerCounter();
-    renderBeerLeaderboard();
     renderBeerWidget();
     if (delta > 0) countBeerPress();
   }
@@ -752,51 +723,6 @@
 
   function beerCountOf(beers, playerId) {
     return typeof beers[playerId] === "number" ? beers[playerId] : 0;
-  }
-
-  // ── Beer UI ───────────────────────────────────────────────────────────────
-
-  function makeYouBadge() {
-    const badge = document.createElement("span");
-    badge.className = "you-badge";
-    badge.textContent = "du";
-    return badge;
-  }
-
-  function renderBeerCounter() {
-    const beers = loadBeers();
-    beerCountDisplay.textContent = String(beerCountOf(beers, activePlayerId));
-  }
-
-  function renderBeerLeaderboard() {
-    const beers = loadBeers();
-    const sorted = [...players]
-      .map((p) => ({
-        player: p,
-        count: beerCountOf(beers, p.id),
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    beerLeaderboardBodyEl.innerHTML = "";
-    sorted.forEach((entry) => {
-      const isActive = entry.player.id === activePlayerId;
-
-      const row = document.createElement("div");
-      row.className = "beer-leaderboard-row" + (isActive ? " beer-leaderboard-row--active" : "");
-
-      const nameEl = document.createElement("span");
-      nameEl.className = "beer-leaderboard-name";
-      nameEl.textContent = entry.player.label;
-      if (isActive) nameEl.appendChild(makeYouBadge());
-
-      const countEl = document.createElement("span");
-      countEl.className = "beer-leaderboard-count";
-      countEl.textContent = `${entry.count} 🍺`;
-
-      row.appendChild(nameEl);
-      row.appendChild(countEl);
-      beerLeaderboardBodyEl.appendChild(row);
-    });
   }
 
   // ── Board ─────────────────────────────────────────────────────────────────

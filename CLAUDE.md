@@ -20,7 +20,7 @@ Push to `main` — the GitHub Actions workflow (`.github/workflows/deploy-pages.
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
+- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in live/demo player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
 - `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
@@ -30,13 +30,19 @@ UI language is Swedish.
 
 `renderAccessFlow()` (called once on load) decides the entry point:
 password gate → player gate → **bingo** (`#app`) directly (or straight to
-`#test-screen` in test mode). The **dashboard** (`#dashboard`) is now the "home"
-reached from the bingo "← Hem" button (`changePlayerBtn` → `showDashboard`); from
-there the user can switch player, log out, or open the full **Ölräknaren**
-(`#beer-app`). Beer counting also lives inline as a compact −/🍺/+ widget in the
-bingo top bar (`beer-widget-*` → `adjustBeerForPlayer`, so the `+` still drives
-the mini-game rotation). `hideAllScreens()` + `…El.classList.remove("hidden")` is
-the show/hide mechanism throughout — there is no router.
+`#test-screen` in test mode) — bingo is the only screen a live/demo player ever
+sees; there is no separate dashboard or app launcher. Beer counting lives inline
+as a compact −/🍺/+ widget in the bingo top bar (`beer-widget-*` →
+`adjustBeerForPlayer`, so the `+` still drives the mini-game rotation; there is
+no standalone beer-counter screen or cross-player leaderboard). Switching player
+and logging out both live behind the ⋮ **menu button** in the top bar
+(`menu-btn` → opens `#menu-overlay`): "Byt spelare" closes the menu and calls
+`showPlayerGate()`, "Avsluta" is a plain `.exit-btn` (auto-wired via the generic
+`exitButtons` NodeList, same as `#test-screen`'s) that calls the shared `onExit()`.
+`onExit()` defensively closes whatever dialog is currently open before showing
+the exit confirmation, so it works whether it's invoked from the menu or
+elsewhere. `hideAllScreens()` + `…El.classList.remove("hidden")` is the
+show/hide mechanism for the two top-level screens — there is no router.
 
 ### Auth & modes
 

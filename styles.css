@@ -339,6 +339,10 @@ input {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.1rem 0 0;
+  /* Without this, the grid item's automatic min-width bubbles up from the
+     title's nowrap text and pushes the whole bar wider than its column,
+     overflowing the viewport instead of letting the title ellipsize. */
+  min-width: 0;
 }
 
 .bingo-topbar-title {
@@ -402,6 +406,28 @@ input {
   border-color: rgba(255, 248, 232, 0.3);
   background: linear-gradient(180deg, #ffd77d, #f5b84b 52%, #c87918);
   color: #160d02;
+}
+
+.menu-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(12, 17, 27, 0.85);
+  color: var(--text);
+  font-size: 1.3rem;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.menu-btn:active {
+  border-color: rgba(245, 184, 75, 0.5);
 }
 
 /* ── Bingo action row ─────────────────────────────────────────────────────── */
@@ -808,6 +834,56 @@ button:focus-visible {
 .confirm-actions .secondary-btn:hover,
 .confirm-actions .secondary-btn:focus-visible {
   border-color: rgba(49, 198, 157, 0.46);
+}
+
+/* ── Menu overlay (byt spelare / avsluta) ─────────────────────────────────── */
+
+.menu-card {
+  width: min(360px, 100%);
+}
+
+.overlay-card .menu-title {
+  font-size: 1.5rem;
+}
+
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.menu-actions button {
+  width: 100%;
+}
+
+/* The generic `.overlay-card button` rule paints every overlay button gold;
+   re-assert the neutral/discreet looks here (two classes beat the
+   one-class-one-type selector), matching `.confirm-actions .secondary-btn`. */
+.menu-actions .secondary-btn {
+  border: 1px solid rgba(255, 248, 232, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
+    rgba(12, 17, 27, 0.8);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.menu-actions .secondary-btn:hover,
+.menu-actions .secondary-btn:focus-visible {
+  border-color: rgba(49, 198, 157, 0.46);
+}
+
+.menu-actions .exit-btn {
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  background: transparent;
+  color: rgba(255, 248, 232, 0.6);
+}
+
+.menu-actions .exit-btn:hover,
+.menu-actions .exit-btn:focus-visible {
+  border-color: rgba(255, 207, 115, 0.5);
+  color: var(--accent-strong);
 }
 
 /* ── Fyllekollen (swipe maze) ─────────────────────────────────────────────── */
@@ -1526,42 +1602,6 @@ body.demo-mode .demo-indicator {
   min-height: calc(100svh - calc(1.25rem + env(safe-area-inset-top)) - calc(1.5rem + env(safe-area-inset-bottom)));
 }
 
-.dashboard-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.dashboard-greeting {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.dashboard-greeting-label {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.dashboard-greeting-name {
-  color: var(--text);
-  font-size: 1.15rem;
-  font-weight: 900;
-  line-height: 1.1;
-}
-
-/* Compact header buttons shared by the dashboard and beer-app headers. */
-.dashboard-change-btn,
-.beer-back-btn {
-  flex-shrink: 0;
-  padding: 0.52rem 0.85rem;
-  font-size: 0.82rem;
-}
-
 .dashboard-brand {
   text-align: center;
   padding: 0.5rem 0;
@@ -1665,196 +1705,6 @@ body.demo-mode .demo-indicator {
   line-height: 1.3;
 }
 
-/* ── Beer app ─────────────────────────────────────────────────────────────── */
-
-.beer-app {
-  position: relative;
-  z-index: 1;
-  width: min(560px, 100%);
-  min-height: 100svh;
-  margin: 0 auto;
-  padding: calc(1.25rem + env(safe-area-inset-top)) 1rem calc(1.5rem + env(safe-area-inset-bottom));
-}
-
-.beer-app-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
-}
-
-.beer-app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.beer-hero {
-  text-align: center;
-  padding: 0.25rem 0;
-}
-
-.beer-hero-icon {
-  font-size: 3rem;
-  line-height: 1;
-  margin-bottom: 0.4rem;
-}
-
-.beer-hero-title {
-  margin: 0;
-  color: var(--text);
-  font-size: 2rem;
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
-}
-
-.beer-counter-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 2rem 1rem 1.75rem;
-  border: 1px solid rgba(255, 248, 232, 0.12);
-  border-radius: 12px;
-  background:
-    linear-gradient(145deg, rgba(245, 184, 75, 0.07), rgba(9, 14, 23, 0.72));
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.beer-player-label {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.beer-counter {
-  display: flex;
-  align-items: center;
-  gap: 1.75rem;
-}
-
-.beer-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-  min-width: 80px;
-}
-
-.beer-count {
-  color: var(--text);
-  font-size: 4.5rem;
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 4px 16px rgba(245, 184, 75, 0.18);
-}
-
-.beer-unit {
-  font-size: 1.6rem;
-  line-height: 1;
-}
-
-.beer-btn {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  font-size: 2.2rem;
-  font-weight: 900;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.beer-btn--plus {
-  border: 1px solid rgba(255, 248, 232, 0.3);
-  background: linear-gradient(180deg, #ffd77d 0%, #f5b84b 46%, #c87918 100%);
-  color: #160d02;
-  box-shadow: 0 14px 28px rgba(192, 117, 21, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.46);
-}
-
-.beer-btn--plus:hover,
-.beer-btn--plus:focus-visible {
-  box-shadow: 0 18px 34px rgba(245, 184, 75, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.beer-btn--minus {
-  border: 1px solid rgba(255, 248, 232, 0.14);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.8);
-  color: var(--text);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.beer-btn--minus:hover,
-.beer-btn--minus:focus-visible {
-  border-color: rgba(49, 198, 157, 0.46);
-}
-
-.beer-leaderboard-title {
-  margin: 0 0 0.75rem;
-  color: var(--accent-strong);
-  font-size: 1.05rem;
-  font-weight: 900;
-}
-
-.beer-leaderboard-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid rgba(255, 248, 232, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  margin-bottom: 0.5rem;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-
-.beer-leaderboard-row--active {
-  border-color: rgba(245, 184, 75, 0.38);
-  background: rgba(245, 184, 75, 0.07);
-}
-
-.beer-leaderboard-name {
-  flex: 1;
-  min-width: 0;
-  color: var(--text);
-  font-size: 0.9rem;
-  font-weight: 850;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.beer-leaderboard-count {
-  color: var(--text);
-  font-size: 1.05rem;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-/* "du"-badge next to the current player's name in the Ölliga leaderboard. */
-.you-badge {
-  display: inline-block;
-  padding: 0.12rem 0.45rem;
-  border-radius: 999px;
-  background: rgba(245, 184, 75, 0.18);
-  border: 1px solid rgba(245, 184, 75, 0.32);
-  color: var(--accent-strong);
-  font-size: 0.68rem;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 680px) {
@@ -1919,16 +1769,6 @@ body.demo-mode .demo-indicator {
 
   .app-grid {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .beer-count {
-    font-size: 3.8rem;
-  }
-
-  .beer-btn {
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
   }
 }
 
