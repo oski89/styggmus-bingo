@@ -24,10 +24,6 @@
         <path style="fill: none; stroke: rgba(255, 248, 232, 0.34); stroke-linecap: round; stroke-width: 2" d="M31 30h34M28 62h40" />
         <text x="48" y="57" text-anchor="middle" style="fill: var(--mark-text-color, var(--accent-strong)); font-family: var(--font-main); font-size: 24px; font-weight: 900">SM</text>
       </symbol>
-      <symbol id="icon-scoreboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <path d="M3 9h18M9 21V9" />
-      </symbol>
     </svg>
 
     <!-- Access screen: password + player select -->
@@ -103,11 +99,6 @@
           </button>
         </div>
 
-        <button id="dashboard-scoreboard-btn" class="scoreboard-toggle-btn" type="button" aria-label="Visa poängtavla">
-          <svg aria-hidden="true"><use href="#icon-scoreboard" /></svg>
-          Poängtavla
-        </button>
-
         <button class="exit-btn" type="button">Avsluta</button>
 
         <p class="version-line">Stygg Mus 2026</p>
@@ -127,10 +118,6 @@
 
       <section class="bingo-actions" aria-label="Kontroller">
         <button id="new-board-btn" class="primary-btn" type="button">Ny bricka</button>
-        <button id="scoreboard-btn" class="scoreboard-toggle-btn" type="button" aria-label="Visa poängtavla">
-          <svg aria-hidden="true"><use href="#icon-scoreboard" /></svg>
-          Poängtavla
-        </button>
         <button id="change-player-btn" class="secondary-btn" type="button">← Hem</button>
       </section>
 
@@ -159,10 +146,6 @@
       <div class="beer-app-inner">
         <header class="beer-app-header">
           <button id="beer-back-btn" class="secondary-btn beer-back-btn" type="button">← Hem</button>
-          <button id="beer-scoreboard-btn" class="scoreboard-toggle-btn beer-scoreboard-btn" type="button" aria-label="Visa poängtavla">
-            <svg aria-hidden="true"><use href="#icon-scoreboard" /></svg>
-            Poängtavla
-          </button>
         </header>
 
         <div class="beer-hero">
@@ -248,17 +231,6 @@
         <h2 id="reward-title">BINGO!</h2>
         <div id="reward-body" class="reward-body"></div>
         <button id="reward-action-btn" class="primary-btn" type="button">Spela</button>
-      </div>
-    </div>
-
-    <!-- Scoreboard overlay -->
-    <div id="scoreboard-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Poängtavla">
-      <div class="overlay-card scoreboard-card">
-        <h2 class="scoreboard-title">Poängtavla</h2>
-        <div id="scoreboard-body" class="scoreboard-body"></div>
-        <div class="scoreboard-footer">
-          <button id="close-scoreboard-btn" class="primary-btn scoreboard-close-btn" type="button">Stäng</button>
-        </div>
       </div>
     </div>
 

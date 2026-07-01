@@ -20,9 +20,9 @@ Push to `main` — the GitHub Actions workflow (`.github/workflows/deploy-pages.
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#scoreboard-overlay`, `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
+- `index.html` — all static markup. One `#access-screen` (password + player select) and three `<main>` "screens": `#dashboard` (app launcher), `#app` (bingo board), and `#beer-app` (beer counter). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Scoreboard state, Beer state, Scoreboard UI, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
 UI language is Swedish.
 
@@ -36,8 +36,7 @@ there the user can switch player, log out, or open the full **Ölräknaren**
 (`#beer-app`). Beer counting also lives inline as a compact −/🍺/+ widget in the
 bingo top bar (`beer-widget-*` → `adjustBeerForPlayer`, so the `+` still drives
 the mini-game rotation). `hideAllScreens()` + `…El.classList.remove("hidden")` is
-the show/hide mechanism throughout — there is no router. The scoreboard is
-reachable as an overlay from the dashboard, bingo, and beer screens.
+the show/hide mechanism throughout — there is no router.
 
 ### Auth & modes
 
@@ -61,9 +60,8 @@ awarded bingo lines, and grand-win status are persisted alongside the board.
 Loaded state is validated (`isValidState`); a stored board whose length or prompts
 no longer match (e.g. an old 5×5 board) is discarded for a fresh one.
 
-Separate `localStorage` maps, keyed by player id:
-- `styggmus-bingo-scores-v1` — `{ bingoLines, grandWins, lastBingoAt }` per player.
-- `styggmus-bingo-beers-v1` — beer count per player (never below 0).
+Beer counts are a separate `localStorage` map, keyed by player id:
+`styggmus-bingo-beers-v1` (never below 0).
 
 Player selection persists under `styggmus-bingo-player-v1`.
 
@@ -78,8 +76,8 @@ prompts; the first 16 of the shuffle fill the 16 cells. Demo mode swaps
 ### Win detection & bingo rewards
 
 `getWinningLines()` checks 4 rows + 4 columns + 2 diagonals. New bingo lines (not
-already in `bingoLinesAwarded`) increment the score and, instead of a fixed prize,
-launch a **bingo reward** (`startBingoReward`): a random mini-game whose result
+already in `bingoLinesAwarded`), instead of a fixed prize, launch a
+**bingo reward** (`startBingoReward`): a random mini-game whose result
 decides how many "klunkar" (sips) you get to hand out to everyone. Filling all 16
 cells triggers `startGrandReward` once — all four games in a random row, klunkar
 summed. A grand win supersedes the single-line reward for the same check (filling

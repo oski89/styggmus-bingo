@@ -5,7 +5,6 @@
   const MODE_KEY = "styggmus-bingo-mode-v1";
   const PLAYER_KEY = "styggmus-bingo-player-v1";
   const BOARD_STORAGE_PREFIX = "styggmus-bingo-board-v2";
-  const SCORES_KEY = "styggmus-bingo-scores-v1";
   const BEERS_KEY = "styggmus-bingo-beers-v1";
   const MODE_LIVE = "live";
   const MODE_DEMO = "demo";
@@ -253,7 +252,6 @@
   const dashboardChangePlayerBtn = document.getElementById("dashboard-change-player-btn");
   const bingoTileBtn = document.getElementById("bingo-tile");
   const beerTileBtn = document.getElementById("beer-tile");
-  const dashboardScoreboardBtn = document.getElementById("dashboard-scoreboard-btn");
 
   const gameTitleEl = document.getElementById("game-title");
   const boardEl = document.getElementById("board");
@@ -262,13 +260,11 @@
   const bingoCountEl = document.getElementById("bingo-count");
   const newBoardBtn = document.getElementById("new-board-btn");
   const changePlayerBtn = document.getElementById("change-player-btn");
-  const scoreboardBtn = document.getElementById("scoreboard-btn");
   const beerWidgetCountEl = document.getElementById("beer-widget-count");
   const beerWidgetPlusBtn = document.getElementById("beer-widget-plus");
   const beerWidgetMinusBtn = document.getElementById("beer-widget-minus");
 
   const beerBackBtn = document.getElementById("beer-back-btn");
-  const beerScoreboardBtn = document.getElementById("beer-scoreboard-btn");
   const beerMinusBtn = document.getElementById("beer-minus-btn");
   const beerPlusBtn = document.getElementById("beer-plus-btn");
   const beerCountDisplay = document.getElementById("beer-count-display");
@@ -279,9 +275,6 @@
   const overlayTitleEl = document.getElementById("overlay-title");
   const overlayTextEl = document.getElementById("overlay-text");
   const closeOverlayBtn = document.getElementById("close-overlay-btn");
-  const scoreboardOverlayEl = document.getElementById("scoreboard-overlay");
-  const scoreboardBodyEl = document.getElementById("scoreboard-body");
-  const closeScoreboardBtn = document.getElementById("close-scoreboard-btn");
   const confirmOverlayEl = document.getElementById("confirm-overlay");
   const confirmTitleEl = document.getElementById("confirm-title");
   const confirmTextEl = document.getElementById("confirm-text");
@@ -391,7 +384,6 @@
     exitButtons.forEach((button) => button.addEventListener("click", onExit));
 
     dashboardChangePlayerBtn.addEventListener("click", showPlayerGate);
-    dashboardScoreboardBtn.addEventListener("click", showScoreboard);
     bingoTileBtn.addEventListener("click", startBingoGame);
     beerTileBtn.addEventListener("click", showBeerApp);
 
@@ -402,22 +394,15 @@
     boardEl.addEventListener("click", onBoardClick);
     newBoardBtn.addEventListener("click", onNewBoard);
     changePlayerBtn.addEventListener("click", showDashboard);
-    scoreboardBtn.addEventListener("click", showScoreboard);
     gameTitleEl.addEventListener("click", onGameTitleClick);
     beerWidgetPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
     beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
     beerBackBtn.addEventListener("click", showDashboard);
-    beerScoreboardBtn.addEventListener("click", showScoreboard);
     beerMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
     beerPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
 
     closeOverlayBtn.addEventListener("click", hideOverlay);
-    closeScoreboardBtn.addEventListener("click", hideScoreboard);
-
-    scoreboardOverlayEl.addEventListener("click", (e) => {
-      if (e.target === scoreboardOverlayEl) hideScoreboard();
-    });
 
     overlayEl.addEventListener("click", (e) => {
       if (e.target === overlayEl) hideOverlay();
@@ -648,10 +633,6 @@
     return modeKey(PLAYER_KEY);
   }
 
-  function getScoresKey() {
-    return modeKey(SCORES_KEY);
-  }
-
   function getBeerKey() {
     return modeKey(BEERS_KEY);
   }
@@ -722,46 +703,6 @@
     safeSet(getBoardStorageKey(state.playerId), JSON.stringify(state));
   }
 
-  // ── Scoreboard state ──────────────────────────────────────────────────────
-
-  function loadScores() {
-    return loadJSON(getScoresKey(), createEmptyScores, isPlainObject);
-  }
-
-  function createEmptyScores() {
-    return buildPlayerMap(emptyScoreEntry);
-  }
-
-  function emptyScoreEntry() {
-    return { bingoLines: 0, grandWins: 0, lastBingoAt: null };
-  }
-
-  function saveScores(scores) {
-    safeSet(getScoresKey(), JSON.stringify(scores));
-  }
-
-  // Loads the score map, applies `mutate` to the player's entry (creating it if
-  // missing), stamps the time, and persists.
-  function updatePlayerScore(playerId, mutate) {
-    const scores = loadScores();
-    const entry = scores[playerId] || (scores[playerId] = emptyScoreEntry());
-    mutate(entry);
-    entry.lastBingoAt = new Date().toISOString();
-    saveScores(scores);
-  }
-
-  function recordBingoLines(playerId, newLinesCount) {
-    updatePlayerScore(playerId, (entry) => {
-      entry.bingoLines += newLinesCount;
-    });
-  }
-
-  function recordGrandWin(playerId) {
-    updatePlayerScore(playerId, (entry) => {
-      entry.grandWins += 1;
-    });
-  }
-
   // ── Beer state ────────────────────────────────────────────────────────────
 
   function loadBeers() {
@@ -813,112 +754,14 @@
     return typeof beers[playerId] === "number" ? beers[playerId] : 0;
   }
 
-  // ── Scoreboard UI ─────────────────────────────────────────────────────────
-
-  function getCheckedCountForPlayer(playerId) {
-    try {
-      const raw = safeGet(getBoardStorageKey(playerId));
-      if (!raw) return 0;
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed.checked)) return 0;
-      return parsed.checked.length;
-    } catch {
-      return 0;
-    }
-  }
-
-  function showScoreboard() {
-    renderScoreboardBody();
-    openDialog(scoreboardOverlayEl);
-  }
-
-  function hideScoreboard() {
-    closeDialog(scoreboardOverlayEl);
-  }
-
-  // Builds one `.scoreboard-stat` column. `valueHTML` may contain markup (e.g.
-  // the "/16" denominator); `valueModifier` is an optional value-span class.
-  function makeStat(valueHTML, label, valueModifier) {
-    const stat = document.createElement("span");
-    stat.className = "scoreboard-stat";
-    const modifier = valueModifier ? ` ${valueModifier}` : "";
-    stat.innerHTML =
-      `<span class="scoreboard-stat-value${modifier}">${valueHTML}</span>` +
-      `<span class="scoreboard-stat-label">${label}</span>`;
-    return stat;
-  }
+  // ── Beer UI ───────────────────────────────────────────────────────────────
 
   function makeYouBadge() {
     const badge = document.createElement("span");
-    badge.className = "scoreboard-you";
+    badge.className = "you-badge";
     badge.textContent = "du";
     return badge;
   }
-
-  function renderScoreboardBody() {
-    const scores = loadScores();
-    const beers = loadBeers();
-
-    const ranked = players
-      .map((p) => {
-        const checkedCount = getCheckedCountForPlayer(p.id);
-        return {
-          player: p,
-          bingoLines: scores[p.id]?.bingoLines ?? 0,
-          grandWins: scores[p.id]?.grandWins ?? 0,
-          lastBingoAt: scores[p.id]?.lastBingoAt ?? null,
-          checkedCount,
-          beerCount: beerCountOf(beers, p.id),
-        };
-      })
-      .sort((a, b) => {
-        if (b.grandWins !== a.grandWins) return b.grandWins - a.grandWins;
-        return b.bingoLines - a.bingoLines;
-      });
-
-    const medals = ["🥇", "🥈", "🥉"];
-    const hasAnyScore = ranked.some((r) => r.bingoLines > 0 || r.grandWins > 0);
-
-    scoreboardBodyEl.innerHTML = "";
-
-    ranked.forEach((entry, index) => {
-      const isCurrentPlayer = entry.player.id === activePlayerId;
-      const rank = index + 1;
-      const medalOrRank = medals[index] ?? `${rank}.`;
-
-      const row = document.createElement("div");
-      row.className = "scoreboard-row" + (isCurrentPlayer ? " scoreboard-row--active" : "");
-
-      const rankEl = document.createElement("span");
-      rankEl.className = "scoreboard-rank";
-      rankEl.textContent = hasAnyScore ? medalOrRank : `${rank}.`;
-
-      const nameEl = document.createElement("span");
-      nameEl.className = "scoreboard-name";
-      nameEl.textContent = entry.player.label;
-      if (isCurrentPlayer) nameEl.appendChild(makeYouBadge());
-
-      const statsEl = document.createElement("span");
-      statsEl.className = "scoreboard-stats";
-      statsEl.appendChild(
-        makeStat(
-          `${entry.checkedCount}<span class="scoreboard-stat-denom">/${CELL_COUNT}</span>`,
-          "fält",
-          "scoreboard-stat-value--checked"
-        )
-      );
-      statsEl.appendChild(makeStat(entry.bingoLines, "bingo"));
-      statsEl.appendChild(makeStat(entry.grandWins, "full", "scoreboard-stat-value--grand"));
-      statsEl.appendChild(makeStat(entry.beerCount, "🍺 öl", "scoreboard-stat-value--beer"));
-
-      row.appendChild(rankEl);
-      row.appendChild(nameEl);
-      row.appendChild(statsEl);
-      scoreboardBodyEl.appendChild(row);
-    });
-  }
-
-  // ── Beer UI ───────────────────────────────────────────────────────────────
 
   function renderBeerCounter() {
     const beers = loadBeers();
@@ -1980,14 +1823,12 @@
       if (newLines.length > 0) {
         state.bingoLinesAwarded = [...state.bingoLinesAwarded, ...newLines];
         saveState();
-        recordBingoLines(state.playerId, newLines.length);
       }
 
       const justGrandWin = marked === CELL_COUNT && !state.grandWin;
       if (justGrandWin) {
         state.grandWin = true;
         saveState();
-        recordGrandWin(state.playerId);
       } else if (marked < CELL_COUNT && state.grandWin) {
         state.grandWin = false;
         saveState();

@@ -426,38 +426,6 @@ input {
   gap: 0.65rem;
 }
 
-/* Poängtavla-knapp tar hela bredden på sin rad */
-.scoreboard-toggle-btn {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 1px solid rgba(245, 184, 75, 0.28);
-  background:
-    linear-gradient(180deg, rgba(245, 184, 75, 0.12), rgba(245, 184, 75, 0.05)),
-    rgba(12, 17, 27, 0.8);
-  color: var(--accent-strong);
-  font-size: 0.94rem;
-  font-weight: 850;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 207, 115, 0.1);
-}
-
-.scoreboard-toggle-btn svg {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  opacity: 0.88;
-}
-
-.scoreboard-toggle-btn:hover,
-.scoreboard-toggle-btn:focus-visible {
-  border-color: rgba(245, 184, 75, 0.56);
-  background:
-    linear-gradient(180deg, rgba(245, 184, 75, 0.2), rgba(245, 184, 75, 0.08)),
-    rgba(12, 17, 27, 0.88);
-}
-
 button {
   min-width: 0;
   border: 0;
@@ -801,139 +769,6 @@ button:focus-visible {
   font-size: 1.7rem;
   font-weight: 950;
   color: var(--accent-strong);
-}
-
-/* ── Scoreboard overlay ───────────────────────────────────────────────────── */
-
-.scoreboard-card {
-  width: min(520px, 100%);
-  text-align: left;
-  padding: 1.35rem;
-}
-
-.scoreboard-title {
-  margin: 0 0 1rem;
-  color: var(--accent-strong);
-  font-size: 1.4rem;
-  font-weight: 950;
-  line-height: 1;
-  text-shadow: 0 8px 24px rgba(245, 184, 75, 0.2);
-}
-
-.scoreboard-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.1rem;
-}
-
-.scoreboard-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid rgba(255, 248, 232, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  transition: background 120ms ease, border-color 120ms ease;
-}
-
-.scoreboard-row--active {
-  border-color: rgba(245, 184, 75, 0.38);
-  background: rgba(245, 184, 75, 0.07);
-}
-
-.scoreboard-rank {
-  font-size: 1.15rem;
-  line-height: 1;
-  min-width: 1.8rem;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.scoreboard-name {
-  flex: 1;
-  min-width: 0;
-  color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 850;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.scoreboard-you {
-  display: inline-block;
-  padding: 0.12rem 0.45rem;
-  border-radius: 999px;
-  background: rgba(245, 184, 75, 0.18);
-  border: 1px solid rgba(245, 184, 75, 0.32);
-  color: var(--accent-strong);
-  font-size: 0.68rem;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-.scoreboard-stats {
-  display: flex;
-  gap: 0.65rem;
-  flex-shrink: 0;
-}
-
-.scoreboard-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.12rem;
-  min-width: 38px;
-}
-
-.scoreboard-stat-value {
-  color: var(--text);
-  font-size: 1.15rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.scoreboard-stat-value--grand {
-  color: var(--accent-strong);
-}
-
-.scoreboard-stat-value--checked {
-  color: var(--checked-light);
-}
-
-.scoreboard-stat-value--beer {
-  color: #f0b97a;
-}
-
-.scoreboard-stat-denom {
-  font-size: 0.72em;
-  opacity: 0.55;
-  font-weight: 700;
-}
-
-.scoreboard-stat-label {
-  color: rgba(255, 248, 232, 0.44);
-  font-size: 0.65rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.scoreboard-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid rgba(255, 248, 232, 0.1);
-}
-
-.scoreboard-close-btn {
-  padding: 0.7rem 1.4rem;
 }
 
 /* ── Confirm dialog ───────────────────────────────────────────────────────── */
@@ -1721,8 +1556,7 @@ body.demo-mode .demo-indicator {
 
 /* Compact header buttons shared by the dashboard and beer-app headers. */
 .dashboard-change-btn,
-.beer-back-btn,
-.beer-scoreboard-btn {
+.beer-back-btn {
   flex-shrink: 0;
   padding: 0.52rem 0.85rem;
   font-size: 0.82rem;
@@ -1853,11 +1687,6 @@ body.demo-mode .demo-indicator {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-}
-
-.beer-scoreboard-btn svg {
-  width: 15px;
-  height: 15px;
 }
 
 .beer-hero {
@@ -2013,6 +1842,19 @@ body.demo-mode .demo-indicator {
   flex-shrink: 0;
 }
 
+/* "du"-badge next to the current player's name in the Ölliga leaderboard. */
+.you-badge {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(245, 184, 75, 0.18);
+  border: 1px solid rgba(245, 184, 75, 0.32);
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 680px) {
@@ -2039,10 +1881,6 @@ body.demo-mode .demo-indicator {
 
   /* Ny bricka tar hela första raden, de andra delar andra raden */
   #new-board-btn {
-    grid-column: 1 / -1;
-  }
-
-  .scoreboard-toggle-btn {
     grid-column: 1 / -1;
   }
 
@@ -2077,26 +1915,6 @@ body.demo-mode .demo-indicator {
     padding: 0.48rem;
     font-size: 0.68rem;
     line-height: 1.08;
-  }
-
-  .scoreboard-stats {
-    gap: 0.32rem;
-  }
-
-  .scoreboard-stat {
-    min-width: 26px;
-  }
-
-  .scoreboard-stat-value {
-    font-size: 0.88rem;
-  }
-
-  .scoreboard-stat-label {
-    font-size: 0.58rem;
-  }
-
-  .scoreboard-name {
-    font-size: 0.82rem;
   }
 
   .app-grid {
@@ -2139,39 +1957,6 @@ body.demo-mode .demo-indicator {
     font-size: 0.62rem;
   }
 
-  .scoreboard-card {
-    padding: 1rem 0.85rem;
-  }
-
-  .scoreboard-row {
-    gap: 0.5rem;
-    padding: 0.6rem 0.65rem;
-  }
-
-  .scoreboard-rank {
-    min-width: 1.4rem;
-    font-size: 1rem;
-  }
-
-  .scoreboard-name {
-    font-size: 0.78rem;
-  }
-
-  .scoreboard-stats {
-    gap: 0.22rem;
-  }
-
-  .scoreboard-stat {
-    min-width: 0;
-  }
-
-  .scoreboard-stat-value {
-    font-size: 0.82rem;
-  }
-
-  .scoreboard-stat-label {
-    font-size: 0.54rem;
-  }
 }
 
 /* ── Reduced motion ───────────────────────────────────────────────────────── */
