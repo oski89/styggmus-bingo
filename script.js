@@ -17,6 +17,9 @@
   };
   const BOARD_SIZE = 4;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
+  // Rows + columns + the 2 diagonals — the max number of winning lines a board
+  // can ever have (matches getWinningLines()).
+  const LINE_COUNT = BOARD_SIZE * 2 + 2;
   // The four beer-counter mini-games rotate on a MINIGAME_CYCLE-beer cycle keyed
   // off the running count of beers added (beerAddedTotal): Reaktionskollen on
   // 1+4n, Minnesluckatestet on 2+4n, Fyllekollen on 3+4n, Spykollen on 4+4n.
@@ -1743,7 +1746,7 @@
     const lineKeys = lines.map((line) => line.join("-"));
 
     markedCountEl.textContent = `${marked}/${CELL_COUNT}`;
-    bingoCountEl.textContent = String(lineKeys.length);
+    bingoCountEl.textContent = `${lineKeys.length}/${LINE_COUNT}`;
     highlightWinningCells(lines);
 
     if (triggerEffects) {
