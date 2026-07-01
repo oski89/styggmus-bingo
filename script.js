@@ -274,7 +274,6 @@
   const mazeCanvas = document.getElementById("maze-canvas");
   const mazeTimerEl = document.getElementById("maze-timer");
   const mazeResultEl = document.getElementById("maze-result");
-  const mazeRestartBtn = document.getElementById("maze-restart-btn");
   const fyllekollenCloseBtn = document.getElementById("fyllekollen-close-btn");
 
   const reaktionOverlayEl = document.getElementById("reaktion-overlay");
@@ -283,7 +282,6 @@
   const reaktionCountdownEl = document.getElementById("reaktion-countdown");
   const reaktionTargetEl = document.getElementById("reaktion-target");
   const reaktionResultEl = document.getElementById("reaktion-result");
-  const reaktionRetryBtn = document.getElementById("reaktion-retry-btn");
   const reaktionCloseBtn = document.getElementById("reaktion-close-btn");
 
   const memoryOverlayEl = document.getElementById("memory-overlay");
@@ -296,7 +294,6 @@
   const memoryWheelMouseEl = document.getElementById("memory-wheel-mouse");
   const memorySubmitBtn = document.getElementById("memory-submit-btn");
   const memoryResultEl = document.getElementById("memory-result");
-  const memoryRetryBtn = document.getElementById("memory-retry-btn");
   const memoryCloseBtn = document.getElementById("memory-close-btn");
 
   const spykollenOverlayEl = document.getElementById("spykollen-overlay");
@@ -307,7 +304,6 @@
   const spyScoreEl = document.getElementById("spy-score");
   const spyLeftBtn = document.getElementById("spy-left-btn");
   const spyRightBtn = document.getElementById("spy-right-btn");
-  const spyRetryBtn = document.getElementById("spy-retry-btn");
   const spyCloseBtn = document.getElementById("spy-close-btn");
   const testSpykollenBtn = document.getElementById("test-spykollen-btn");
 
@@ -403,7 +399,6 @@
       if (e.target === confirmOverlayEl) closeDialog(confirmOverlayEl);
     });
 
-    mazeRestartBtn.addEventListener("click", buildNewMaze);
     fyllekollenCloseBtn.addEventListener("click", () => closeDialog(fyllekollenOverlayEl));
     fyllekollenOverlayEl.addEventListener("click", (e) => {
       if (e.target === fyllekollenOverlayEl) closeDialog(fyllekollenOverlayEl);
@@ -412,21 +407,18 @@
     mazeCanvas.addEventListener("pointerup", onMazePointerUp);
 
     reaktionStageEl.addEventListener("pointerdown", onReaktionTap);
-    reaktionRetryBtn.addEventListener("click", startReaktionRound);
     reaktionCloseBtn.addEventListener("click", () => closeDialog(reaktionOverlayEl));
     reaktionOverlayEl.addEventListener("click", (e) => {
       if (e.target === reaktionOverlayEl) closeDialog(reaktionOverlayEl);
     });
 
     memorySubmitBtn.addEventListener("click", submitMemoryAnswer);
-    memoryRetryBtn.addEventListener("click", startMemoryRound);
     memoryCloseBtn.addEventListener("click", () => closeDialog(memoryOverlayEl));
     memoryOverlayEl.addEventListener("click", (e) => {
       if (e.target === memoryOverlayEl) closeDialog(memoryOverlayEl);
     });
 
     testSpykollenBtn.addEventListener("click", openSpykollen);
-    spyRetryBtn.addEventListener("click", startSpyRound);
     spyCloseBtn.addEventListener("click", () => closeDialog(spykollenOverlayEl));
     spykollenOverlayEl.addEventListener("click", (e) => {
       if (e.target === spykollenOverlayEl) closeDialog(spykollenOverlayEl);
@@ -930,7 +922,6 @@
   function openFyllekollen() {
     openDialog(fyllekollenOverlayEl);
     fyllekollenCloseBtn.textContent = "Avbryt";
-    mazeRestartBtn.classList.remove("hidden"); // re-show if a reward round hid it
     buildNewMaze();
     playWinSound(false);
   }
@@ -1203,7 +1194,6 @@
     reaktionStageEl.dataset.state = "countdown";
     reaktionTargetEl.classList.add("hidden");
     reaktionResultEl.classList.add("hidden");
-    reaktionRetryBtn.classList.add("hidden");
     reaktionCountdownEl.classList.remove("hidden");
     reaktionInstructionEl.textContent = "Gör dig redo…";
 
@@ -1284,7 +1274,6 @@
       (label ? `<span class="reaktion-level">${label}</span>` : "") +
       `<span class="reaktion-msg">${message}</span>`;
     reaktionResultEl.classList.remove("hidden");
-    reaktionRetryBtn.classList.remove("hidden");
 
     if (alarm) {
       signalSoberAlarm(reaktionOverlayEl);
@@ -1327,7 +1316,6 @@
     memoryFlashEl.classList.add("hidden");
     memoryAnswerEl.classList.add("hidden");
     memoryResultEl.classList.add("hidden");
-    memoryRetryBtn.classList.add("hidden");
     memoryCountdownEl.classList.remove("hidden");
     memoryInstructionEl.textContent = "Gör dig redo…";
 
@@ -1405,7 +1393,6 @@
       `<span class="memory-facit">Rätt: ${memoryAnswer.beer} 🍺 · ${memoryAnswer.mouse} 🐭</span>` +
       `<span class="memory-msg">Du gissade ${guessBeer} 🍺 · ${guessMouse} 🐭. ${level.message}</span>`;
     memoryResultEl.classList.remove("hidden");
-    memoryRetryBtn.classList.remove("hidden");
     if (level.alarm) signalSoberAlarm(memoryOverlayEl);
     else if (level.celebrate) signalDrunkCelebration(memoryOverlayEl);
     else playWinSound(false);
@@ -1470,7 +1457,6 @@
     stopSpyGame();
     stopVerdictEffects();
     spyResultEl.classList.add("hidden");
-    spyRetryBtn.classList.add("hidden");
     spyCountdownEl.classList.remove("hidden");
     spyScoreEl.textContent = "0";
     spykollenInstructionEl.textContent = "Gör dig redo…";
@@ -1689,7 +1675,6 @@
       `<span class="spy-result-score">${avoided} undvikna</span>` +
       `<span class="spy-result-msg">${level.message}</span>`;
     spyResultEl.classList.remove("hidden");
-    spyRetryBtn.classList.remove("hidden");
     if (level.alarm) signalSoberAlarm(spykollenOverlayEl);
     else if (level.celebrate) signalDrunkCelebration(spykollenOverlayEl);
     else playWinSound(false);
@@ -1814,10 +1799,10 @@
   // sums them. recordRewardResult is a no-op outside a session, so the beer-
   // counter rotation and the test menu keep running the games exactly as before.
   const REWARD_GAMES = {
-    fyllekollen: { open: openFyllekollen, overlay: fyllekollenOverlayEl, retryBtn: mazeRestartBtn, closeBtn: fyllekollenCloseBtn, label: "Fyllekollen" },
-    reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, retryBtn: reaktionRetryBtn, closeBtn: reaktionCloseBtn, label: "Reaktionskollen" },
-    minne: { open: openMinneslucka, overlay: memoryOverlayEl, retryBtn: memoryRetryBtn, closeBtn: memoryCloseBtn, label: "Minnesluckatestet" },
-    spy: { open: openSpykollen, overlay: spykollenOverlayEl, retryBtn: spyRetryBtn, closeBtn: spyCloseBtn, label: "Spykollen" },
+    fyllekollen: { open: openFyllekollen, overlay: fyllekollenOverlayEl, closeBtn: fyllekollenCloseBtn, label: "Fyllekollen" },
+    reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, closeBtn: reaktionCloseBtn, label: "Reaktionskollen" },
+    minne: { open: openMinneslucka, overlay: memoryOverlayEl, closeBtn: memoryCloseBtn, label: "Minnesluckatestet" },
+    spy: { open: openSpykollen, overlay: spykollenOverlayEl, closeBtn: spyCloseBtn, label: "Spykollen" },
   };
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
@@ -1870,8 +1855,7 @@
   }
 
   // Each mini-game's terminal result calls this; outside a session it no-ops.
-  // Klunkar round to nearest, never below 0. The retry button is hidden (no
-  // re-rolling for more klunkar) and the close button advances the flow.
+  // Klunkar round to nearest, never below 0. The close button advances the flow.
   function recordRewardResult(gameId, klunkar, verdict) {
     if (!rewardSession || rewardSession.resolved) return;
     rewardSession.resolved = true;
@@ -1879,7 +1863,6 @@
     const amount = Math.max(0, Math.round(klunkar));
     rewardSession.total += amount;
     rewardSession.breakdown.push({ label: g.label, verdict, klunkar: amount });
-    g.retryBtn.classList.add("hidden");
     const last = rewardSession.idx >= rewardSession.queue.length - 1;
     g.closeBtn.textContent = last ? "Klar" : "Nästa spel";
   }

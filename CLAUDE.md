@@ -93,13 +93,15 @@ with the Web Audio API; confetti is canvas-drawn and skipped under
 
 The reward flow lives in the **Bingo rewards** section. `rewardSession`
 ({ mode, queue, idx, total, breakdown, currentOverlay, resolved }) drives it; the
-`REWARD_GAMES` registry maps each game id to its open-fn, overlay, retry/close
-buttons, and label. `showRewardIntro` opens the shared `#reward-overlay`
+`REWARD_GAMES` registry maps each game id to its open-fn, overlay, close
+button, and label. `showRewardIntro` opens the shared `#reward-overlay`
 (intro → "Spela"/"Kör alla fyra"); `startCurrentRewardGame` opens the next game;
 each game's terminal result calls `recordRewardResult(gameId, klunkar, verdict)`
 (a no-op outside a session, so the beer-counter rotation and test menu are
-unchanged), which rounds klunkar to nearest (≥ 0), hides the retry button (no
-re-rolling), and relabels the close button to "Nästa spel"/"Klar". Closing the
+unchanged), which rounds klunkar to nearest (≥ 0) and relabels the close button
+to "Nästa spel"/"Klar". None of the four mini-games has a retry/"play again"
+button (removed — closing and reopening is the only way to run another round).
+Closing the
 game (button/Escape/backdrop) runs `advanceRewardAfterGame` via `closeDialog`
 (unfinished = 0); after the last game `showRewardPayout` reveals the breakdown +
 total. Klunkar per game: Fyllekollen = `MAZE_KLUNK_MAX` × share of the clock left
@@ -145,10 +147,11 @@ mini-games, shown inline in the `#maze-result` panel (`showMazeResult`): reachin
 🍺 maps by the share of the clock still left (`mazeLevel`) — `>=
 MAZE_SOBER_MIN_FRACTION` (0.35) → red "Nykter" + `signalSoberAlarm`, below → yellow
 "Salongsberusad" — while *running out of time* is the goal of a drinking game, so
-`onMazeTimeout` gives green "Full som ett ägg" + `signalDrunkCelebration`. The
-"Ny labyrint" button restarts (`buildNewMaze`, which clears the verdict effects
-and hides the result). The maze timer is cleared on solve, time-out, and in
-`closeDialog`; `stopVerdictEffects` runs on restart and in `closeDialog`.
+`onMazeTimeout` gives green "Full som ett ägg" + `signalDrunkCelebration`. A
+fresh maze is built each time the dialog opens (`buildNewMaze`, which clears the
+verdict effects and hides the result) — there is no in-dialog restart button.
+The maze timer is cleared on solve, time-out, and in `closeDialog`;
+`stopVerdictEffects` runs on restart and in `closeDialog`.
 
 ### Reaktionskollen (reaction-test mini-game)
 
