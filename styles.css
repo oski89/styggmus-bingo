@@ -430,20 +430,6 @@ input {
   border-color: rgba(245, 184, 75, 0.5);
 }
 
-/* ── Bingo action row ─────────────────────────────────────────────────────── */
-
-.bingo-actions {
-  display: flex;
-  gap: 0.55rem;
-}
-
-.bingo-actions > button {
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 0.72rem 0.5rem;
-  font-size: 0.86rem;
-}
-
 /* ── Controls ─────────────────────────────────────────────────────────────── */
 
 .controls {

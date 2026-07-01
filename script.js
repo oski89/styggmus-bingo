@@ -244,7 +244,9 @@
   const playerSelectEl = document.getElementById("player-select");
   const playerButtons = document.querySelectorAll("[data-player-id]");
   const resetAllBtn = document.getElementById("reset-all-btn");
-  const exitButtons = document.querySelectorAll(".exit-btn");
+  // Excludes the menu's own Avsluta button — that one skips the confirm step
+  // (wired separately below) so `.exit-btn` styling can still be shared.
+  const exitButtons = document.querySelectorAll(".exit-btn:not(#menu-exit-btn)");
 
   const gameTitleEl = document.getElementById("game-title");
   const boardEl = document.getElementById("board");
@@ -259,6 +261,7 @@
 
   const menuOverlayEl = document.getElementById("menu-overlay");
   const menuChangePlayerBtn = document.getElementById("menu-change-player-btn");
+  const menuExitBtn = document.getElementById("menu-exit-btn");
 
   const overlayEl = document.getElementById("overlay");
   const overlayTitleEl = document.getElementById("overlay-title");
@@ -373,15 +376,24 @@
     testMinneBtn.addEventListener("click", openMinneslucka);
 
     boardEl.addEventListener("click", onBoardClick);
-    newBoardBtn.addEventListener("click", onNewBoard);
     gameTitleEl.addEventListener("click", onGameTitleClick);
     beerWidgetPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
     beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
     menuBtn.addEventListener("click", () => openDialog(menuOverlayEl));
+    newBoardBtn.addEventListener("click", () => {
+      closeDialog(menuOverlayEl);
+      onNewBoard();
+    });
     menuChangePlayerBtn.addEventListener("click", () => {
       closeDialog(menuOverlayEl);
       showPlayerGate();
+    });
+    // Avsluta from the menu exits immediately — no confirm step (unlike the
+    // generic .exit-btn wiring above, which still confirms for e.g. test mode).
+    menuExitBtn.addEventListener("click", () => {
+      closeDialog(menuOverlayEl);
+      performExit();
     });
     menuOverlayEl.addEventListener("click", (e) => {
       if (e.target === menuOverlayEl) closeDialog(menuOverlayEl);
@@ -550,25 +562,30 @@
     }
   }
 
-  // Ends the session and returns to the password gate. Saved boards and beers
-  // stay in localStorage — only the session auth is cleared. Defensively closes
-  // any dialog it might be called from (e.g. the menu overlay) so the confirm
-  // dialog it opens doesn't stack on top of one left showing underneath.
+  // Clears the session and returns to the password gate. Saved boards and beers
+  // stay in localStorage — only the session auth is cleared.
+  function performExit() {
+    safeRemoveSession(AUTH_KEY);
+    safeRemoveSession(MODE_KEY);
+    currentMode = null;
+    state = null;
+    applyModeToUI();
+    passwordInput.value = "";
+    showPasswordGate();
+  }
+
+  // Confirms before exiting. Used by the generic `.exit-btn` wiring (e.g. test
+  // mode's Avsluta button); the menu's own Avsluta skips the confirm step and
+  // calls performExit() directly. Defensively closes any dialog it might be
+  // called from so the confirm dialog it opens doesn't stack on top of one left
+  // showing underneath.
   function onExit() {
     if (activeDialog) closeDialog(activeDialog);
     showConfirm({
       title: "Avsluta?",
       message: "Avsluta och återgå till lösenordsskärmen?",
       confirmLabel: "Avsluta",
-      onConfirm: () => {
-        safeRemoveSession(AUTH_KEY);
-        safeRemoveSession(MODE_KEY);
-        currentMode = null;
-        state = null;
-        applyModeToUI();
-        passwordInput.value = "";
-        showPasswordGate();
-      },
+      onConfirm: performExit,
     });
   }
 

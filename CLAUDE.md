@@ -34,15 +34,20 @@ password gate → player gate → **bingo** (`#app`) directly (or straight to
 sees; there is no separate dashboard or app launcher. Beer counting lives inline
 as a compact −/🍺/+ widget in the bingo top bar (`beer-widget-*` →
 `adjustBeerForPlayer`, so the `+` still drives the mini-game rotation; there is
-no standalone beer-counter screen or cross-player leaderboard). Switching player
-and logging out both live behind the ⋮ **menu button** in the top bar
-(`menu-btn` → opens `#menu-overlay`): "Byt spelare" closes the menu and calls
-`showPlayerGate()`, "Avsluta" is a plain `.exit-btn` (auto-wired via the generic
-`exitButtons` NodeList, same as `#test-screen`'s) that calls the shared `onExit()`.
+no standalone beer-counter screen or cross-player leaderboard). "Ny bricka",
+switching player, and logging out all live behind the ⋮ **menu button** in the
+top bar (`menu-btn` → opens `#menu-overlay`, `.menu-actions` in that order):
+"Ny bricka" closes the menu and calls `onNewBoard()` (still confirms — it wipes
+the current marks); "Byt spelare" closes the menu and calls `showPlayerGate()`.
+"Avsluta" in the menu (`menuExitBtn`) exits **immediately, no confirm** —
+`performExit()` directly, closing the menu first. Elsewhere (currently only
+`#test-screen`'s own Avsluta button) `.exit-btn` is auto-wired via the generic
+`exitButtons` NodeList to `onExit()`, which still confirms before calling
+`performExit()`; that NodeList explicitly excludes `#menu-exit-btn`
+(`.exit-btn:not(#menu-exit-btn)`) so the two Avsluta buttons don't double-bind.
 `onExit()` defensively closes whatever dialog is currently open before showing
-the exit confirmation, so it works whether it's invoked from the menu or
-elsewhere. `hideAllScreens()` + `…El.classList.remove("hidden")` is the
-show/hide mechanism for the two top-level screens — there is no router.
+the exit confirmation. `hideAllScreens()` + `…El.classList.remove("hidden")` is
+the show/hide mechanism for the two top-level screens — there is no router.
 
 ### Auth & modes
 
