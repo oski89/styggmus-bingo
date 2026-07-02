@@ -851,8 +851,9 @@ button:focus-visible {
 }
 
 /* The generic `.overlay-card button` rule paints every overlay button gold;
-   re-assert the neutral/discreet looks here (two classes beat the
-   one-class-one-type selector), matching `.confirm-actions .secondary-btn`. */
+   re-assert the neutral look here (two classes beat the one-class-one-type
+   selector) so all four menu actions share one theme, matching
+   `.confirm-actions .secondary-btn`. */
 .menu-actions .secondary-btn {
   border: 1px solid rgba(255, 248, 232, 0.14);
   background:
@@ -865,18 +866,6 @@ button:focus-visible {
 .menu-actions .secondary-btn:hover,
 .menu-actions .secondary-btn:focus-visible {
   border-color: rgba(49, 198, 157, 0.46);
-}
-
-.menu-actions .exit-btn {
-  border: 1px solid rgba(255, 248, 232, 0.18);
-  background: transparent;
-  color: rgba(255, 248, 232, 0.6);
-}
-
-.menu-actions .exit-btn:hover,
-.menu-actions .exit-btn:focus-visible {
-  border-color: rgba(255, 207, 115, 0.5);
-  color: var(--accent-strong);
 }
 
 /* ── Fyllekollen (swipe maze) ─────────────────────────────────────────────── */

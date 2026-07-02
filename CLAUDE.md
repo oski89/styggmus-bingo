@@ -39,18 +39,24 @@ still computes them internally (for win/reward detection) but doesn't render
 them anywhere. Beer counting lives inline in that widget (`beer-widget-*` →
 `adjustBeerForPlayer`, so the `+` still drives the mini-game rotation; there is
 no standalone beer-counter screen or cross-player leaderboard). "Ny bricka",
-switching player, and logging out all live behind the ⋮ **menu button** in the
+"Nollställ bricka", switching player, and logging out all live behind the ⋮
+**menu button** in the
 top bar (`menu-btn` → opens `#menu-overlay`, `.menu-actions` in that order):
 "Ny bricka" closes the menu and calls `onNewBoard()` (still confirms — it wipes
-the current marks); "Byt spelare" closes the menu and calls `showPlayerGate()`.
-"Avsluta" in the menu (`menuExitBtn`) exits **immediately, no confirm** —
-`performExit()` directly, closing the menu first. Elsewhere (currently only
-`#test-screen`'s own Avsluta button) `.exit-btn` is auto-wired via the generic
-`exitButtons` NodeList to `onExit()`, which still confirms before calling
-`performExit()`; that NodeList explicitly excludes `#menu-exit-btn`
-(`.exit-btn:not(#menu-exit-btn)`) so the two Avsluta buttons don't double-bind.
-`onExit()` defensively closes whatever dialog is currently open before showing
-the exit confirmation. `hideAllScreens()` + `…El.classList.remove("hidden")` is
+the current marks and reshuffles a new board); "Nollställ bricka" closes the
+menu and calls `onResetBoard()` (confirms, then clears `state.checked` /
+`bingoLinesAwarded` / `grandWin` on the *same* board — prompts don't change);
+"Byt spelare" closes the menu and calls `showPlayerGate()`. "Avsluta" in the
+menu (`menuExitBtn`) is wired straight to `onExit()`, same as `#test-screen`'s
+own Avsluta button (auto-wired via the generic `exitButtons` NodeList,
+selector `.exit-btn` — the menu's Avsluta isn't styled `.exit-btn` itself, so
+it needs its own explicit listener but shares the same confirm-then-
+`performExit()` flow). All four menu buttons share plain `.secondary-btn`
+styling (`.menu-actions .secondary-btn` re-asserts it over the generic
+`.overlay-card button` gold default) — no more `.primary-btn`/`.exit-btn`
+visual distinction between them. `onExit()` defensively closes whatever
+dialog is currently open before showing the exit confirmation.
+`hideAllScreens()` + `…El.classList.remove("hidden")` is
 the show/hide mechanism for the two top-level screens — there is no router.
 
 ### Auth & modes

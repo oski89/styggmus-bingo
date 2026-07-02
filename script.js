@@ -244,14 +244,15 @@
   const playerSelectEl = document.getElementById("player-select");
   const playerButtons = document.querySelectorAll("[data-player-id]");
   const resetAllBtn = document.getElementById("reset-all-btn");
-  // Excludes the menu's own Avsluta button — that one skips the confirm step
-  // (wired separately below) so `.exit-btn` styling can still be shared.
-  const exitButtons = document.querySelectorAll(".exit-btn:not(#menu-exit-btn)");
+  // Currently just #test-screen's own Avsluta button — the menu's Avsluta is
+  // wired to onExit() directly below instead, since it isn't styled .exit-btn.
+  const exitButtons = document.querySelectorAll(".exit-btn");
 
   const gameTitleEl = document.getElementById("game-title");
   const boardEl = document.getElementById("board");
   const currentPlayerEl = document.getElementById("current-player");
   const newBoardBtn = document.getElementById("new-board-btn");
+  const resetBoardBtn = document.getElementById("reset-board-btn");
   const menuBtn = document.getElementById("menu-btn");
   const beerWidgetCountEl = document.getElementById("beer-widget-count");
   const beerWidgetPlusBtn = document.getElementById("beer-widget-plus");
@@ -383,16 +384,17 @@
       closeDialog(menuOverlayEl);
       onNewBoard();
     });
+    resetBoardBtn.addEventListener("click", () => {
+      closeDialog(menuOverlayEl);
+      onResetBoard();
+    });
     menuChangePlayerBtn.addEventListener("click", () => {
       closeDialog(menuOverlayEl);
       showPlayerGate();
     });
-    // Avsluta from the menu exits immediately — no confirm step (unlike the
-    // generic .exit-btn wiring above, which still confirms for e.g. test mode).
-    menuExitBtn.addEventListener("click", () => {
-      closeDialog(menuOverlayEl);
-      performExit();
-    });
+    // onExit() closes the menu itself (it defensively closes whatever dialog
+    // is open) before showing the exit confirmation.
+    menuExitBtn.addEventListener("click", onExit);
     menuOverlayEl.addEventListener("click", (e) => {
       if (e.target === menuOverlayEl) closeDialog(menuOverlayEl);
     });
@@ -572,11 +574,10 @@
     showPasswordGate();
   }
 
-  // Confirms before exiting. Used by the generic `.exit-btn` wiring (e.g. test
-  // mode's Avsluta button); the menu's own Avsluta skips the confirm step and
-  // calls performExit() directly. Defensively closes any dialog it might be
-  // called from so the confirm dialog it opens doesn't stack on top of one left
-  // showing underneath.
+  // Confirms before exiting. Used by both the generic `.exit-btn` wiring (e.g.
+  // test mode's Avsluta button) and the menu's Avsluta. Defensively closes any
+  // dialog it might be called from (e.g. the menu overlay) so the confirm
+  // dialog it opens doesn't stack on top of one left showing underneath.
   function onExit() {
     if (activeDialog) closeDialog(activeDialog);
     showConfirm({
@@ -793,6 +794,26 @@
       confirmLabel: "Ny bricka",
       onConfirm: () => {
         state = createFreshState(activePlayerId);
+        saveState();
+        renderBoard();
+        updateStatsAndWinState({ triggerEffects: false });
+      },
+    });
+  }
+
+  // Clears the marks on the current board (same prompts, same board) instead
+  // of generating a new one.
+  function onResetBoard() {
+    if (!state) return;
+
+    showConfirm({
+      title: "Nollställ bricka?",
+      message: "Nollställa markeringarna på den här brickan? Rutorna ligger kvar.",
+      confirmLabel: "Nollställ",
+      onConfirm: () => {
+        state.checked = [];
+        state.bingoLinesAwarded = [];
+        state.grandWin = false;
         saveState();
         renderBoard();
         updateStatsAndWinState({ triggerEffects: false });
