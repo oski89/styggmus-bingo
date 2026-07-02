@@ -1,13 +1,13 @@
 # Stygg Mus Bingo
 
-Mobilvänlig 4x4-bingoapp med ölräknare och minigames för Stygg Mus-helgen.
+Mobilvänlig 4x4-bingoapp med inline ölräknare och minigames för Stygg Mus-helgen.
 
 ## Funktioner
 
 - Unik 4x4-bingobricka per användare.
 - Lösenordsskydd med spelarval innan brickan visas.
 - Rollspecifika brickor som filtrerar bort rätt personfält.
-- Dashboard med Bingo, Ölräknaren och poängtavla.
+- Förenklad bingo-vy med toppmeny och inline ölräknare.
 - Nollställning av aktuell brickas markeringar utan att byta rutor.
 - Tre gömda easter eggs.
 - Diskret årsrad för Stygg Mus 2026.
@@ -17,6 +17,7 @@ Mobilvänlig 4x4-bingoapp med ölräknare och minigames för Stygg Mus-helgen.
 - Bingo-reward via ett slumpat minigame som avgör hur många klunkar vinnaren får dela ut.
 - Grand-win vid 16/16 rutor med alla fyra minigames i följd.
 - Ölräknare per spelare med roterande minigames.
+- Testläge för att starta varje minigame direkt.
 
 ## Kör lokalt
 

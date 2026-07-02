@@ -633,7 +633,7 @@
       const parsed = JSON.parse(raw);
       if (!isValidState(parsed, playerId)) return createFreshState(playerId);
       return normalizeState(parsed, playerId);
-    } catch (error) {
+    } catch {
       return createFreshState(playerId);
     }
   }
@@ -2380,7 +2380,7 @@
   function tryStorage(operation, fallback) {
     try {
       return operation();
-    } catch (error) {
+    } catch {
       return fallback;
     }
   }
@@ -2413,7 +2413,7 @@
       if (!raw) return fallback();
       const parsed = JSON.parse(raw);
       return isValid(parsed) ? parsed : fallback();
-    } catch (error) {
+    } catch {
       return fallback();
     }
   }

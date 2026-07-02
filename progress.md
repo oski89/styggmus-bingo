@@ -26,5 +26,5 @@ Original prompt: Gör en bingo-app för vår årliga tradition med grabbhäng so
 
 ## Senare uppdateringar
 - Brickan är nu 4x4 (`BOARD_SIZE = 4`) med 16 rutor.
-- Appen har dashboard, ölräknare, poängtavla och fyra minigames.
+- Appen har förenklad bingo-vy, inline ölräknare, toppmeny och fyra minigames.
 - Bingo-rewards styrs av minigame-resultat i klunkar; full bricka spelar alla fyra minigames i följd.
