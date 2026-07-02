@@ -2,16 +2,16 @@ Original prompt: Gör en bingo-app för vår årliga tradition med grabbhäng so
 
 ## 2026-05-25
 - Skapade komplett statisk app med:
-  - 5x5 interaktiv bingobricka
+  - Interaktiv bingobricka
   - Unik bricka per användare via seedad shuffle
   - Check/uncheck av rutor
   - Persistens i localStorage (bricka + checkade rutor)
   - Ny-bricka-knapp som nollställer state
   - Bingo-detektering (rader, kolumner, diagonaler)
   - Confetti-animation och vinstljud via Web Audio API
-  - Pris-popup för bingo
-  - Grand-win popup för 25/25 med utopiskt pris
-  - Tema-anpassning (färger + typsnitt) med persistens
+  - Bingo-popup
+  - Grand-win popup för full bricka
+  - Mobilanpassad styling med färger och typsnitt för Stygg Mus-temat
 - Appen designad mobil-först med stora touchytor och safe-area-stöd.
 - Lade till GitHub Pages workflow i `.github/workflows/deploy-pages.yml`.
 - Uppdaterade README med lokalkörning och publiceringssteg.
@@ -24,6 +24,7 @@ Original prompt: Gör en bingo-app för vår årliga tradition med grabbhäng so
     - persistens över refresh
   - Inga JS-konsolfel i testkörning.
 
-TODO / nästa förbättringar:
-- Eventuellt lägga till en redigerbar lista med egna bingo-frågor direkt i UI.
-- Eventuellt lägga till "dela min bricka"-funktion med delbar kod/URL.
+## Senare uppdateringar
+- Brickan är nu 4x4 (`BOARD_SIZE = 4`) med 16 rutor.
+- Appen har dashboard, ölräknare, poängtavla och fyra minigames.
+- Bingo-rewards styrs av minigame-resultat i klunkar; full bricka spelar alla fyra minigames i följd.
