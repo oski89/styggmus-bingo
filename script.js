@@ -11,7 +11,7 @@
   const MODE_TEST = "test";
   const VALID_MODES = [MODE_LIVE, MODE_DEMO, MODE_TEST];
   const PASSWORDS = {
-    AFC: MODE_LIVE,
+    SMB: MODE_LIVE,
     FLÖTET: MODE_DEMO,
     MGT: MODE_TEST,
   };

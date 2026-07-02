@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 python3 -m http.server 4173
 # open http://localhost:4173
-# Password: AFC (live mode) or FLÖTET (demo / beta-test mode)
+# Password: SMB (live mode) or FLÖTET (demo / beta-test mode)
 ```
 
 There is no build, install, lint, or test step — open the served page directly.
@@ -55,7 +55,7 @@ the show/hide mechanism for the two top-level screens — there is no router.
 
 ### Auth & modes
 
-Three passwords map to three modes (`PASSWORDS` in `script.js`): `AFC` → `live`,
+Three passwords map to three modes (`PASSWORDS` in `script.js`): `SMB` → `live`,
 `FLÖTET` → `demo`, `MGT` → `test`. **Test mode** skips the player gate and shows
 `#test-screen`, a menu whose four tiles launch each mini-game
 (`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`) directly for testing. Auth and the active mode are session-only

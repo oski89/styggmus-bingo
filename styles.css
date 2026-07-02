@@ -353,9 +353,10 @@ input {
   font-size: 1.55rem;
   font-weight: 900;
   line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Wrap instead of single-line-ellipsis: with the emoji suffix the title no
+     longer reliably fits one line at every width, and clipping it would hide
+     the emojis entirely instead of just truncating spare text. */
+  overflow-wrap: break-word;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 12px 28px rgba(245, 184, 75, 0.16);
 }
 
