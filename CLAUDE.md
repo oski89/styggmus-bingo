@@ -32,13 +32,13 @@ UI language is Swedish.
 password gate → player gate → **bingo** (`#app`) directly (or straight to
 `#test-screen` in test mode) — bingo is the only screen a live/demo player ever
 sees; there is no separate dashboard or app launcher. The bingo layout, top to
-bottom: `.bingo-topbar` (⋮ menu button + title only), `.stats` (Fält, Rader, and
-the compact −/🍺/+ beer widget as its third item), a full-width `.stat` for
-Spelare (a standalone element, not part of `.stats`, so it spans the whole row
-via `.app`'s single-column grid), then `.board-wrap`. Beer counting lives inline
-in that widget (`beer-widget-*` → `adjustBeerForPlayer`, so the `+`
-still drives the mini-game rotation; there is no standalone beer-counter screen
-or cross-player leaderboard). "Ny bricka",
+bottom: `.bingo-topbar` (⋮ menu button + title only), `.stats` (Spelare and the
+compact −/🍺/+ beer widget as its second item), then `.board-wrap`. There is no
+Fält/Rader marked-count or bingo-line-count display — `updateStatsAndWinState`
+still computes them internally (for win/reward detection) but doesn't render
+them anywhere. Beer counting lives inline in that widget (`beer-widget-*` →
+`adjustBeerForPlayer`, so the `+` still drives the mini-game rotation; there is
+no standalone beer-counter screen or cross-player leaderboard). "Ny bricka",
 switching player, and logging out all live behind the ⋮ **menu button** in the
 top bar (`menu-btn` → opens `#menu-overlay`, `.menu-actions` in that order):
 "Ny bricka" closes the menu and calls `onNewBoard()` (still confirms — it wipes

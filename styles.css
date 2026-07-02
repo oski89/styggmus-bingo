@@ -492,13 +492,13 @@ button:focus-visible {
 
 .stats {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.65rem;
   /* Same fix as .bingo-topbar: without this, the beer widget's fixed-size
      children bubble up an automatic min-width that pushes the whole row (and
-     its .app grid column) wider than the viewport instead of letting Fält /
-     Rader share the leftover space. */
+     its .app grid column) wider than the viewport instead of letting the
+     Spelare card share the leftover space. */
   min-width: 0;
 }
 
