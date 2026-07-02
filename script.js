@@ -320,6 +320,7 @@
   let activeDialog = null;
   let dialogReturnFocus = null;
   let pendingConfirmAction = null;
+  let pendingCancelAction = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
   let titleClickCount = 0;
@@ -368,7 +369,7 @@
     });
 
     resetAllBtn.addEventListener("click", onBackFromPlayerSelect);
-    exitButtons.forEach((button) => button.addEventListener("click", onExit));
+    exitButtons.forEach((button) => button.addEventListener("click", () => onExit()));
 
     testFyllekollenBtn.addEventListener("click", openFyllekollen);
     testReaktionBtn.addEventListener("click", openReaktionskollen);
@@ -393,8 +394,9 @@
       showPlayerGate();
     });
     // onExit() closes the menu itself (it defensively closes whatever dialog
-    // is open) before showing the exit confirmation.
-    menuExitBtn.addEventListener("click", onExit);
+    // is open) before showing the exit confirmation; onCancel reopens the
+    // menu if Avsluta is declined (Avbryt, Escape, or backdrop).
+    menuExitBtn.addEventListener("click", () => onExit(() => openDialog(menuOverlayEl)));
     menuOverlayEl.addEventListener("click", (e) => {
       if (e.target === menuOverlayEl) closeDialog(menuOverlayEl);
     });
@@ -575,16 +577,19 @@
   }
 
   // Confirms before exiting. Used by both the generic `.exit-btn` wiring (e.g.
-  // test mode's Avsluta button) and the menu's Avsluta. Defensively closes any
-  // dialog it might be called from (e.g. the menu overlay) so the confirm
-  // dialog it opens doesn't stack on top of one left showing underneath.
-  function onExit() {
+  // test mode's Avsluta button, no onCancel — there's no menu to return to)
+  // and the menu's Avsluta (passes onCancel to reopen the menu). Defensively
+  // closes any dialog it might be called from (e.g. the menu overlay) so the
+  // confirm dialog it opens doesn't stack on top of one left showing
+  // underneath.
+  function onExit(onCancel) {
     if (activeDialog) closeDialog(activeDialog);
     showConfirm({
       title: "Avsluta?",
       message: "Avsluta och återgå till lösenordsskärmen?",
       confirmLabel: "Avsluta",
       onConfirm: performExit,
+      onCancel,
     });
   }
 
@@ -798,6 +803,7 @@
         renderBoard();
         updateStatsAndWinState({ triggerEffects: false });
       },
+      onCancel: () => openDialog(menuOverlayEl),
     });
   }
 
@@ -818,6 +824,7 @@
         renderBoard();
         updateStatsAndWinState({ triggerEffects: false });
       },
+      onCancel: () => openDialog(menuOverlayEl),
     });
   }
 
@@ -1969,8 +1976,17 @@
     dialogEl.classList.add("hidden");
     if (activeDialog === dialogEl) activeDialog = null;
     // A confirm that's dismissed any way other than its accept button (cancel,
-    // Escape, backdrop) is a "no" — drop the pending action.
-    if (dialogEl === confirmOverlayEl) pendingConfirmAction = null;
+    // Escape, backdrop) is a "no" — drop the pending action and remember its
+    // onCancel (if any) to run once this dialog has fully finished closing.
+    // `pendingConfirmAction` is already null here when onConfirmAccept() was
+    // the caller (it clears it before calling closeDialog), so a still-set
+    // value means this really is a cancel, not an accept.
+    let confirmCancelHandler = null;
+    if (dialogEl === confirmOverlayEl) {
+      if (pendingConfirmAction) confirmCancelHandler = pendingCancelAction;
+      pendingConfirmAction = null;
+      pendingCancelAction = null;
+    }
     // Closing Reaktionskollen any way (button, Escape, backdrop) must stop its
     // pending timers so a queued countdown/appear can't fire into a closed dialog.
     if (dialogEl === fyllekollenOverlayEl) clearMazeTimer();
@@ -1999,15 +2015,22 @@
         rewardSession = null;
       }
     }
+
+    // Run last, once this dialog is fully closed, so e.g. reopening the menu
+    // captures its own fresh focus target instead of racing this one's.
+    if (confirmCancelHandler) confirmCancelHandler();
   }
 
   // Styled stand-in for window.confirm(): shows the confirm overlay and runs
-  // `onConfirm` only if the user presses the accept button.
-  function showConfirm({ title, message, confirmLabel, onConfirm }) {
+  // `onConfirm` only if the user presses the accept button. `onCancel` (if
+  // given) runs instead when the dialog is dismissed any other way — Avbryt,
+  // Escape, or backdrop click.
+  function showConfirm({ title, message, confirmLabel, onConfirm, onCancel }) {
     confirmTitleEl.textContent = title;
     confirmTextEl.textContent = message;
     confirmAcceptBtn.textContent = confirmLabel || "OK";
     pendingConfirmAction = typeof onConfirm === "function" ? onConfirm : null;
+    pendingCancelAction = typeof onCancel === "function" ? onCancel : null;
     openDialog(confirmOverlayEl);
   }
 

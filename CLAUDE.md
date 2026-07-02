@@ -132,7 +132,16 @@ All overlays go through `openDialog()`/`closeDialog()`, which track
 `activeDialog`, move focus into the dialog, trap Tab, close on Escape/backdrop,
 and restore focus on close (`onKeyDown` routes keyboard events while a dialog is
 open). `showConfirm()` is the styled stand-in for `window.confirm()` — its
-`onConfirm` runs only on the accept button.
+`onConfirm` runs only on the accept button; an optional `onCancel` runs instead
+for any other dismissal (Avbryt, Escape, backdrop). `closeDialog()` detects a
+genuine cancel by checking whether `pendingConfirmAction` is still set when it
+runs (`onConfirmAccept()` already nulls it before calling `closeDialog()`, so a
+non-null value there means the accept button wasn't the trigger), and invokes
+the saved `pendingCancelAction` only as the very last step — after this
+dialog's own teardown/focus-restore — so a cancel handler that opens another
+dialog (e.g. the menu's Ny bricka/Nollställ bricka/Avsluta confirms all pass
+`onCancel: () => openDialog(menuOverlayEl)`, returning you to the menu instead
+of the bare board) gets a clean, uncontested focus capture.
 
 ### Easter eggs
 
