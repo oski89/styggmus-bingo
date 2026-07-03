@@ -200,6 +200,7 @@
   const beerWidgetMinusBtn = document.getElementById("beer-widget-minus");
 
   const menuOverlayEl = document.getElementById("menu-overlay");
+  const menuBackBtn = document.getElementById("menu-back-btn");
   const menuChangePlayerBtn = document.getElementById("menu-change-player-btn");
   const menuExitBtn = document.getElementById("menu-exit-btn");
 
@@ -322,6 +323,8 @@
     beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
     menuBtn.addEventListener("click", () => openDialog(menuOverlayEl));
+    // Same as backdrop/Escape — just closes the menu, no confirm.
+    menuBackBtn.addEventListener("click", () => closeDialog(menuOverlayEl));
     // Quick-access shortcut to "Byt spelare" — same action as the menu entry,
     // no confirm (switching player was never a confirmed action).
     topbarBackBtn.addEventListener("click", showPlayerGate);

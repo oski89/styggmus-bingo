@@ -147,7 +147,10 @@
     <!-- Menu overlay (byt spelare / avsluta) -->
     <div id="menu-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="menu-title">
       <div class="overlay-card menu-card">
-        <h2 id="menu-title" class="menu-title">Meny</h2>
+        <div class="menu-header">
+          <button id="menu-back-btn" class="back-btn" type="button" aria-label="Stäng meny">←</button>
+          <h2 id="menu-title" class="menu-title">Meny</h2>
+        </div>
         <div class="menu-actions">
           <button id="new-board-btn" class="secondary-btn" type="button">Ny bricka</button>
           <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>

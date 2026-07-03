@@ -64,8 +64,13 @@ it needs its own explicit listener but shares the same confirm-then-
 `performExit()` flow). All four menu buttons share plain `.secondary-btn`
 styling (`.menu-actions .secondary-btn` re-asserts it over the generic
 `.overlay-card button` gold default) — no more `.primary-btn`/`.exit-btn`
-visual distinction between them. `onExit()` defensively closes whatever
-dialog is currently open before showing the exit confirmation.
+visual distinction between them. The menu header (`.menu-header`) also has a
+← `back-btn` next to the "Meny" title (`menu-back-btn` → `closeDialog`, no
+confirm — identical to backdrop/Escape, just a visible way to do it); its own
+`.menu-header .back-btn` rule re-asserts the neutral circular look over the
+same gold `.overlay-card button` default for the same reason. `onExit()`
+defensively closes whatever dialog is currently open before showing the exit
+confirmation.
 `hideAllScreens()` + `…El.classList.remove("hidden")` is
 the show/hide mechanism for the two top-level screens — there is no router.
 

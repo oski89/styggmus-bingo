@@ -883,7 +883,28 @@ button:focus-visible {
   width: min(360px, 100%);
 }
 
+.menu-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* The generic `.overlay-card button` rule paints every overlay button gold
+   (same issue `.menu-actions .secondary-btn` re-asserts against below) —
+   re-assert `.back-btn`'s own neutral look here so it still reads as a
+   nav control, not an action button. */
+.menu-header .back-btn {
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(12, 17, 27, 0.85);
+  color: var(--text);
+  box-shadow: none;
+}
+
 .overlay-card .menu-title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 1.5rem;
 }
 
