@@ -531,11 +531,13 @@ button:focus-visible {
 
 .stat {
   position: relative;
-  min-height: 74px;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
   overflow: hidden;
   border: 1px solid rgba(255, 248, 232, 0.12);
   border-radius: 8px;
-  padding: 0.72rem 0.78rem;
+  padding: 0.5rem 0.78rem;
   background:
     linear-gradient(150deg, rgba(255, 255, 255, 0.075), transparent 62%),
     rgba(9, 14, 23, 0.72);
@@ -553,15 +555,9 @@ button:focus-visible {
   opacity: 0.75;
 }
 
-.stat-label {
-  color: rgba(255, 248, 232, 0.54);
-  font-size: 0.72rem;
-  font-weight: 850;
-}
-
 .stat-value {
   display: block;
-  margin-top: 0.12rem;
+  min-width: 0;
   color: var(--text);
   font-size: 1.1rem;
   font-weight: 900;
@@ -1750,10 +1746,6 @@ body.demo-mode .demo-indicator {
   .stat {
     min-height: auto;
     padding: 0.5rem 0.55rem;
-  }
-
-  .stat-label {
-    font-size: 0.62rem;
   }
 
   .stat-value {

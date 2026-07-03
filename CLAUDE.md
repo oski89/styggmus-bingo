@@ -34,8 +34,9 @@ password gate → player gate → **bingo** (`#app`) directly (or straight to
 sees; there is no separate dashboard or app launcher. The bingo layout, top to
 bottom: `.bingo-topbar` (a flat 3-item flex row — the ← back button, then the
 title, then the ⋮ menu button at the opposite end, no longer grouped/stacked
-together), `.stats` (Spelare and the compact −/🍺/+ beer widget as its second
-item), then `.board-wrap`. The ← button (`topbar-back-btn`) is a no-confirm
+together), `.stats` (the player name box — no visible "Spelare" label, just
+`aria-label="Spelare"` on the `.stat` div for screen readers — and the compact
+−/🍺/+ beer widget as its second item), then `.board-wrap`. The ← button (`topbar-back-btn`) is a no-confirm
 shortcut straight to `showPlayerGate()` — the same action as the menu's "Byt
 spelare", just one tap instead of opening the menu first; the title is sized
 (`font-size: 0.82rem`) to reliably fit one line even at the narrowest
