@@ -7,12 +7,10 @@
   const BOARD_STORAGE_PREFIX = "styggmus-bingo-board-v2";
   const BEERS_KEY = "styggmus-bingo-beers-v1";
   const MODE_LIVE = "live";
-  const MODE_DEMO = "demo";
   const MODE_TEST = "test";
-  const VALID_MODES = [MODE_LIVE, MODE_DEMO, MODE_TEST];
+  const VALID_MODES = [MODE_LIVE, MODE_TEST];
   const PASSWORDS = {
     SMB: MODE_LIVE,
-    FLÖTET: MODE_DEMO,
     MGT: MODE_TEST,
   };
   const BOARD_SIZE = 4;
@@ -168,64 +166,6 @@
       id: "prospect",
       label: "🌱 Prospect",
       excludedGroup: "per",
-    },
-  ];
-
-  const demoPromptGroups = [
-    {
-      id: "lagget",
-      prompts: [
-        "Lorem ipsum dolor sit amet",
-        "Consectetur adipiscing elit",
-        "Sed do eiusmod tempor incididunt",
-        "Ut labore et dolore magna",
-        "Aliqua ut enim ad minim",
-        "Veniam quis nostrud exercitation",
-      ],
-    },
-    {
-      id: "ks",
-      prompts: [
-        "Ullamco laboris nisi ut aliquip",
-        "Ex ea commodo consequat",
-        "Duis aute irure dolor",
-        "Reprehenderit in voluptate velit",
-        "Esse cillum dolore eu fugiat",
-        "Nulla pariatur excepteur sint",
-      ],
-    },
-    {
-      id: "marcus",
-      prompts: [
-        "Occaecat cupidatat non proident",
-        "Sunt in culpa qui officia",
-        "Deserunt mollit anim id est",
-        "Laborum sed ut perspiciatis",
-        "Unde omnis iste natus error",
-        "Sit voluptatem accusantium doloremque",
-      ],
-    },
-    {
-      id: "oski",
-      prompts: [
-        "Laudantium totam rem aperiam",
-        "Eaque ipsa quae ab illo",
-        "Inventore veritatis et quasi",
-        "Architecto beatae vitae dicta sunt",
-        "Explicabo nemo enim ipsam",
-        "Voluptatem quia voluptas sit",
-      ],
-    },
-    {
-      id: "per",
-      prompts: [
-        "Aspernatur aut odit aut fugit",
-        "Sed quia consequuntur magni",
-        "Dolores eos qui ratione",
-        "Voluptatem sequi nesciunt",
-        "Neque porro quisquam est qui",
-        "Dolorem ipsum quia dolor",
-      ],
     },
   ];
 
@@ -465,20 +405,18 @@
   function renderAccessFlow() {
     if (!isAuthenticated()) {
       currentMode = null;
-      applyModeToUI();
       showPasswordGate();
       return;
     }
 
     currentMode = safeGetSession(MODE_KEY);
-    applyModeToUI();
 
     if (currentMode === MODE_TEST) {
       showTestScreen();
       return;
     }
 
-    const savedPlayerId = safeGet(getPlayerKey());
+    const savedPlayerId = safeGet(PLAYER_KEY);
     if (!isValidPlayerId(savedPlayerId)) {
       showPlayerGate();
       return;
@@ -531,7 +469,6 @@
     currentMode = mode;
     safeSetSession(AUTH_KEY, "true");
     safeSetSession(MODE_KEY, mode);
-    applyModeToUI();
 
     if (mode === MODE_TEST) {
       showTestScreen();
@@ -543,7 +480,7 @@
   function onChoosePlayer(playerId) {
     if (!isValidPlayerId(playerId)) return;
     activePlayerId = playerId;
-    safeSet(getPlayerKey(), playerId);
+    safeSet(PLAYER_KEY, playerId);
     startBingoGame();
   }
 
@@ -575,7 +512,6 @@
     safeRemoveSession(MODE_KEY);
     currentMode = null;
     state = null;
-    applyModeToUI();
     passwordInput.value = "";
     showPasswordGate();
   }
@@ -604,28 +540,6 @@
     );
   }
 
-  function applyModeToUI() {
-    const isDemo = currentMode === MODE_DEMO;
-    document.body.classList.toggle("demo-mode", isDemo);
-  }
-
-  function getActivePromptGroups() {
-    return currentMode === MODE_DEMO ? demoPromptGroups : promptGroups;
-  }
-
-  // Demo mode namespaces every stored key with a ":demo" suffix so live and
-  // beta-test data never collide.
-  function modeKey(baseKey) {
-    return currentMode === MODE_DEMO ? `${baseKey}:demo` : baseKey;
-  }
-
-  function getPlayerKey() {
-    return modeKey(PLAYER_KEY);
-  }
-
-  function getBeerKey() {
-    return modeKey(BEERS_KEY);
-  }
 
   // ── State ─────────────────────────────────────────────────────────────────
 
@@ -696,7 +610,7 @@
   // ── Beer state ────────────────────────────────────────────────────────────
 
   function loadBeers() {
-    return loadJSON(getBeerKey(), createEmptyBeers, isPlainObject);
+    return loadJSON(BEERS_KEY, createEmptyBeers, isPlainObject);
   }
 
   function createEmptyBeers() {
@@ -704,7 +618,7 @@
   }
 
   function saveBeers(beers) {
-    safeSet(getBeerKey(), JSON.stringify(beers));
+    safeSet(BEERS_KEY, JSON.stringify(beers));
   }
 
   function adjustBeerForPlayer(playerId, delta) {
@@ -836,14 +750,14 @@
 
   function getAvailablePrompts(playerId) {
     const player = getPlayer(playerId);
-    return getActivePromptGroups()
+    return promptGroups
       .filter((group) => group.id !== player.excludedGroup)
       .flatMap((group) => group.prompts);
   }
 
   function getExcludedPrompts(playerId) {
     const player = getPlayer(playerId);
-    const group = getActivePromptGroups().find((item) => item.id === player.excludedGroup);
+    const group = promptGroups.find((item) => item.id === player.excludedGroup);
     return group ? group.prompts : [];
   }
 
@@ -856,7 +770,7 @@
   }
 
   function getBoardStorageKey(playerId) {
-    return `${modeKey(BOARD_STORAGE_PREFIX)}:${playerId}`;
+    return `${BOARD_STORAGE_PREFIX}:${playerId}`;
   }
 
   // ── Easter eggs ───────────────────────────────────────────────────────────
@@ -1844,10 +1758,10 @@
   // sums them. recordRewardResult is a no-op outside a session, so the beer-
   // counter rotation and the test menu keep running the games exactly as before.
   const REWARD_GAMES = {
-    fyllekollen: { open: openFyllekollen, overlay: fyllekollenOverlayEl, closeBtn: fyllekollenCloseBtn, label: "Fyllekollen" },
-    reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, closeBtn: reaktionCloseBtn, label: "Reaktionskollen" },
-    minne: { open: openMinneslucka, overlay: memoryOverlayEl, closeBtn: memoryCloseBtn, label: "Minnesluckatestet" },
-    spy: { open: openSpykollen, overlay: spykollenOverlayEl, closeBtn: spyCloseBtn, label: "Spykollen" },
+    fyllekollen: { open: openFyllekollen, overlay: fyllekollenOverlayEl, closeBtn: fyllekollenCloseBtn, label: "Fyllekollen", blurb: "Led 🐭 till 🍺" },
+    reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, closeBtn: reaktionCloseBtn, label: "Reaktionskollen", blurb: "Tryck när 🍺 dyker upp" },
+    minne: { open: openMinneslucka, overlay: memoryOverlayEl, closeBtn: memoryCloseBtn, label: "Minnesluckatestet", blurb: "Räkna 🍺 och 🐭" },
+    spy: { open: openSpykollen, overlay: spykollenOverlayEl, closeBtn: spyCloseBtn, label: "Spykollen", blurb: "Undvik 🤮 med 🛋️ - en hommage till Per" },
   };
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
@@ -1879,9 +1793,19 @@
   function showRewardIntro() {
     const grand = rewardSession.mode === "grand";
     rewardTitleEl.textContent = grand ? "HELA BRICKAN KLAR!" : "BINGO!";
-    rewardBodyEl.innerHTML = grand
-      ? `<p class="reward-lead">Spela alla fyra spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
-      : `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`;
+    const preview = grand
+      ? `<ul class="reward-game-list">${rewardSession.queue
+          .map((id) => {
+            const g = REWARD_GAMES[id];
+            return `<li><strong>${g.label}</strong> — ${g.blurb}</li>`;
+          })
+          .join("")}</ul>`
+      : `<p class="reward-game-preview"><strong>${REWARD_GAMES[rewardSession.queue[0]].label}</strong> — ${REWARD_GAMES[rewardSession.queue[0]].blurb}</p>`;
+    rewardBodyEl.innerHTML =
+      (grand
+        ? `<p class="reward-lead">Spela alla fyra spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
+        : `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`) +
+      preview;
     rewardActionBtn.textContent = grand ? "Kör alla fyra" : "Spela";
     rewardActionHandler = () => {
       rewardTransitioning = true;

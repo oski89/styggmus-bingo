@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 python3 -m http.server 4173
 # open http://localhost:4173
-# Password: SMB (live mode) or FLÖTET (demo / beta-test mode)
+# Password: SMB (live mode) or MGT (test mode)
 ```
 
 There is no build, install, lint, or test step — open the served page directly.
@@ -20,8 +20,8 @@ Push to `main` — the GitHub Actions workflow (`.github/workflows/deploy-pages.
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in live/demo player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox).
-- `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support. A `body.demo-mode` class re-themes the UI for beta-test mode; `@media (prefers-reduced-motion: reduce)` disables animations.
+- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server.
+- `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support; `@media (prefers-reduced-motion: reduce)` disables animations.
 - `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 
 UI language is Swedish.
@@ -30,7 +30,7 @@ UI language is Swedish.
 
 `renderAccessFlow()` (called once on load) decides the entry point:
 password gate → player gate → **bingo** (`#app`) directly (or straight to
-`#test-screen` in test mode) — bingo is the only screen a live/demo player ever
+`#test-screen` in test mode) — bingo is the only screen a live player ever
 sees; there is no separate dashboard or app launcher. The bingo layout, top to
 bottom: `.bingo-topbar` (a flat 3-item flex row — the ← back button, then the
 title, then the ⋮ menu button at the opposite end, no longer grouped/stacked
@@ -71,20 +71,19 @@ the show/hide mechanism for the two top-level screens — there is no router.
 
 ### Auth & modes
 
-Three passwords map to three modes (`PASSWORDS` in `script.js`): `SMB` → `live`,
-`FLÖTET` → `demo`, `MGT` → `test`. **Test mode** skips the player gate and shows
+Two passwords map to two modes (`PASSWORDS` in `script.js`): `SMB` → `live`,
+`MGT` → `test`. **Test mode** skips the player gate and shows
 `#test-screen`, a menu whose four tiles launch each mini-game
-(`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`) directly for testing. Auth and the active mode are session-only
+(`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`) directly for testing, with no descriptive text under each tile — just icon
+and name (see Win detection & bingo rewards for where the emoji descriptions
+now live). Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
-clears them and returns to the password gate. **Demo mode** uses placeholder
-lorem-ipsum prompts and namespaces every persisted key with a `:demo`
-suffix (`modeKey()`), so beta-test data never collides with live data.
+clears them and returns to the password gate.
 
 ### State model
 
 Each player gets their own bingo board stored under
-`styggmus-bingo-board-v2:<playerId>` (`:demo`-suffixed in demo mode) in
-`localStorage`. The board is a 16-element array (`BOARD_SIZE` 4 × 4, `CELL_COUNT`
+`styggmus-bingo-board-v2:<playerId>` in `localStorage`. The board is a 16-element array (`BOARD_SIZE` 4 × 4, `CELL_COUNT`
 16) of prompt strings shuffled from a seeded PRNG (mulberry32 + djb2-style hash,
 seeded `<uuid>-<playerId>`) — no free cell, nothing pre-checked. Checked indexes,
 awarded bingo lines, and grand-win status are persisted alongside the board.
@@ -101,8 +100,7 @@ Player selection persists under `styggmus-bingo-player-v1`.
 There are 5 players (`players`) and 5 prompt groups (`promptGroups`), one group
 per real-life person × 6 prompts = 30 total. Each player has an `excludedGroup`
 (typically their own) that is removed before the board is built, leaving 24
-prompts; the first 16 of the shuffle fill the 16 cells. Demo mode swaps
-`promptGroups` for the `demoPromptGroups` equivalent via `getActivePromptGroups()`.
+prompts; the first 16 of the shuffle fill the 16 cells.
 
 ### Win detection & bingo rewards
 
@@ -119,8 +117,14 @@ with the Web Audio API; confetti is canvas-drawn and skipped under
 The reward flow lives in the **Bingo rewards** section. `rewardSession`
 ({ mode, queue, idx, total, breakdown, currentOverlay, resolved }) drives it; the
 `REWARD_GAMES` registry maps each game id to its open-fn, overlay, close
-button, and label. `showRewardIntro` opens the shared `#reward-overlay`
-(intro → "Spela"/"Kör alla fyra"); `startCurrentRewardGame` opens the next game;
+button, label, and a short `blurb` (a one-line emoji description, e.g.
+"Led 🐭 till 🍺" — this used to live only on the test-screen tiles as
+`.app-tile-desc`; it's now the live-mode player's preview instead). `showRewardIntro`
+opens the shared `#reward-overlay` and renders that preview before the player
+commits: for a single line it names the one game they're about to get
+(`.reward-game-preview`); for a grand win it lists all four, in the session's
+actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fyra");
+`startCurrentRewardGame` opens the next game;
 each game's terminal result calls `recordRewardResult(gameId, klunkar, verdict)`
 (a no-op outside a session, so the beer-counter rotation and test menu are
 unchanged), which rounds klunkar to nearest (≥ 0) and relabels the close button
@@ -247,6 +251,6 @@ these helpers rather than touching `localStorage`/`sessionStorage` directly.
 - Plain ES (no modules/transpiler) inside one IIFE; keep the `── section ──`
   banner organization when adding code.
 - Reference DOM nodes through the cached refs in the DOM-refs section.
-- Persist through the storage helpers and `modeKey()` so live/demo stay isolated.
+- Persist through the storage helpers (`safeGet`/`safeSet`/`loadJSON`, etc.).
 - Match the existing accessibility patterns (ARIA roles/labels, focus management)
   when adding interactive UI.
