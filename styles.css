@@ -345,17 +345,29 @@ input {
   min-width: 0;
 }
 
+/* ⋮ menu button stacked above the ← back button; centering this taller stack
+   against the title (shorter, single line) is what nudges ⋮ upward compared
+   to when it was the row's only left-hand item. */
+.bingo-topbar-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
 .bingo-topbar-title {
   margin: 0;
   min-width: 0;
   flex: 1 1 auto;
   color: var(--text);
-  font-size: 1.55rem;
+  font-size: 1.05rem;
   font-weight: 900;
   line-height: 1.1;
-  /* Wrap instead of single-line-ellipsis: with the emoji suffix the title no
-     longer reliably fits one line at every width, and clipping it would hide
-     the emojis entirely instead of just truncating spare text. */
+  /* Sized to reliably fit one line even on the narrowest supported widths;
+     wrapping stays allowed (not nowrap+ellipsis) purely as a graceful
+     fallback for extreme edge cases (e.g. OS-level text scaling) instead of
+     silently clipping the trailing emoji off-screen. */
   overflow-wrap: break-word;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 12px 28px rgba(245, 184, 75, 0.16);
 }
@@ -428,6 +440,30 @@ input {
 }
 
 .menu-btn:active {
+  border-color: rgba(245, 184, 75, 0.5);
+}
+
+/* Quick-access shortcut to "Byt spelare" (same action as the menu entry),
+   pinned right under the ⋮ button instead of needing the full menu open. */
+.back-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(12, 17, 27, 0.85);
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.back-btn:active {
   border-color: rgba(245, 184, 75, 0.5);
 }
 

@@ -254,6 +254,7 @@
   const newBoardBtn = document.getElementById("new-board-btn");
   const resetBoardBtn = document.getElementById("reset-board-btn");
   const menuBtn = document.getElementById("menu-btn");
+  const topbarBackBtn = document.getElementById("topbar-back-btn");
   const beerWidgetCountEl = document.getElementById("beer-widget-count");
   const beerWidgetPlusBtn = document.getElementById("beer-widget-plus");
   const beerWidgetMinusBtn = document.getElementById("beer-widget-minus");
@@ -381,6 +382,9 @@
     beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
     menuBtn.addEventListener("click", () => openDialog(menuOverlayEl));
+    // Quick-access shortcut to "Byt spelare" — same action as the menu entry,
+    // no confirm (switching player was never a confirmed action).
+    topbarBackBtn.addEventListener("click", showPlayerGate);
     newBoardBtn.addEventListener("click", () => {
       closeDialog(menuOverlayEl);
       onNewBoard();
