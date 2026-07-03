@@ -345,23 +345,12 @@ input {
   min-width: 0;
 }
 
-/* ⋮ menu button stacked above the ← back button; centering this taller stack
-   against the title (shorter, single line) is what nudges ⋮ upward compared
-   to when it was the row's only left-hand item. */
-.bingo-topbar-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-}
-
 .bingo-topbar-title {
   margin: 0;
   min-width: 0;
   flex: 1 1 auto;
   color: var(--text);
-  font-size: 1.05rem;
+  font-size: 0.82rem;
   font-weight: 900;
   line-height: 1.1;
   /* Sized to reliably fit one line even on the narrowest supported widths;
@@ -444,7 +433,8 @@ input {
 }
 
 /* Quick-access shortcut to "Byt spelare" (same action as the menu entry),
-   pinned right under the ⋮ button instead of needing the full menu open. */
+   at the opposite end of the top bar from the ⋮ menu button, so switching
+   player doesn't require opening the full menu. */
 .back-btn {
   width: 38px;
   height: 38px;

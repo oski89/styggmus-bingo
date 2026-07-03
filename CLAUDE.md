@@ -32,14 +32,16 @@ UI language is Swedish.
 password gate → player gate → **bingo** (`#app`) directly (or straight to
 `#test-screen` in test mode) — bingo is the only screen a live/demo player ever
 sees; there is no separate dashboard or app launcher. The bingo layout, top to
-bottom: `.bingo-topbar` (a `.bingo-topbar-nav` stack of the ⋮ menu button above
-a ← back button, plus the title), `.stats` (Spelare and the compact −/🍺/+ beer
-widget as its second item), then `.board-wrap`. The ← button (`topbar-back-btn`)
-is a no-confirm shortcut straight to `showPlayerGate()` — the same action as
-the menu's "Byt spelare", just one tap instead of opening the menu first; the
-title is sized (`font-size: 1.05rem`) to reliably fit one line even at the
-narrowest supported width, with wrapping still allowed (not nowrap+ellipsis) as
-a fallback for extreme cases like OS text-scaling, so it degrades to two lines
+bottom: `.bingo-topbar` (a flat 3-item flex row — the ← back button, then the
+title, then the ⋮ menu button at the opposite end, no longer grouped/stacked
+together), `.stats` (Spelare and the compact −/🍺/+ beer widget as its second
+item), then `.board-wrap`. The ← button (`topbar-back-btn`) is a no-confirm
+shortcut straight to `showPlayerGate()` — the same action as the menu's "Byt
+spelare", just one tap instead of opening the menu first; the title is sized
+(`font-size: 0.82rem`) to reliably fit one line even at the narrowest
+supported width now that it's flanked by two separate 38px buttons instead of
+one stacked pair, with wrapping still allowed (not nowrap+ellipsis) as a
+fallback for extreme cases like OS text-scaling, so it degrades to two lines
 instead of clipping the trailing emoji off-screen. There is no Fält/Rader
 marked-count or bingo-line-count display — `updateStatsAndWinState` still
 computes them internally (for win/reward detection) but doesn't render them
