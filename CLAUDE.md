@@ -123,8 +123,13 @@ button, label, and a short `blurb` (a one-line emoji description, e.g.
 opens the shared `#reward-overlay` and renders that preview before the player
 commits: for a single line it names the one game they're about to get
 (`.reward-game-preview`); for a grand win it lists all four, in the session's
-actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fyra");
-`startCurrentRewardGame` opens the next game;
+actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fyra"). The
+same blurb text also sits as a permanent, always-visible line inside each
+mini-game's own overlay (`.minigame-blurb`, shared by Reaktionskollen/
+Minnesluckatestet/Spykollen; Fyllekollen already has an equivalent standing
+line via `.fyllekollen-text`), so it's visible no matter how the game was
+opened — reward flow, beer-counter cadence, or the test menu — not just from
+the reward intro. `startCurrentRewardGame` opens the next game;
 each game's terminal result calls `recordRewardResult(gameId, klunkar, verdict)`
 (a no-op outside a session, so the beer-counter rotation and test menu are
 unchanged), which rounds klunkar to nearest (≥ 0) and relabels the close button
