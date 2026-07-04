@@ -295,9 +295,18 @@
   let rewardSession = null;
   let rewardTransitioning = false;
   let rewardActionHandler = null;
+  let wakeLock = null;
 
   registerEventListeners();
   renderAccessFlow();
+
+  // PWA: register the app-shell service worker (relative path so it works under
+  // the GitHub Pages subpath). Guarded — file:// and old browsers just skip it.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
 
   // ── Event listeners ───────────────────────────────────────────────────────
 
@@ -393,6 +402,11 @@
     window.addEventListener("resize", resizeConfettiCanvas);
     window.addEventListener("resize", () => {
       if (mazeState && activeDialog === fyllekollenOverlayEl) drawMaze();
+    });
+    // The browser force-releases the screen wake lock when the tab is hidden;
+    // grab it back if a mini-game/dialog is still up when the player returns.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && activeDialog) acquireWakeLock();
     });
 
     rewardActionBtn.addEventListener("click", () => {
@@ -707,6 +721,7 @@
     // board — a full re-render would drop keyboard focus back to page start.
     target.classList.toggle("checked", willCheck);
     target.ariaPressed = willCheck ? "true" : "false";
+    vibrate(willCheck ? 18 : 8);
 
     updateStatsAndWinState({ triggerEffects: true });
   }
@@ -1193,6 +1208,7 @@
     reaktionTargetEl.style.left = `${15 + Math.random() * 70}%`;
     reaktionTargetEl.style.top = `${20 + Math.random() * 60}%`;
     reaktionTargetEl.classList.remove("hidden");
+    vibrate(35);
   }
 
   // Handles a tap/Space on the stage. A false start during "waiting", a timed
@@ -1632,6 +1648,9 @@
     }
     const avoided = spyGame ? spyGame.avoided : 0;
     const level = spyLevel(avoided);
+    // The physical "you got hit" jolt; the red/green verdict signals right
+    // below replace it with their own stronger patterns, yellow keeps it.
+    vibrate(90);
     spykollenInstructionEl.textContent = "";
     spyResultEl.dataset.level = level.cls;
     spyResultEl.innerHTML =
@@ -1771,6 +1790,7 @@
   function startBingoReward() {
     playWinSound(false);
     runConfetti(1800);
+    vibrate([60, 50, 60]);
     rewardSession = newRewardSession("single", [randomItem(REWARD_GAME_IDS)]);
     showRewardIntro();
   }
@@ -1778,6 +1798,7 @@
   function startGrandReward() {
     playWinSound(true);
     runConfetti(3400);
+    vibrate([80, 60, 80, 60, 80, 60, 300]);
     document.body.classList.add("champion");
     setTimeout(() => document.body.classList.remove("champion"), 5600);
     const order = REWARD_GAME_IDS.slice();
@@ -1899,8 +1920,32 @@
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     activeDialog = dialogEl;
     dialogEl.classList.remove("hidden");
+    acquireWakeLock();
     const focusable = getFocusable(dialogEl);
     if (focusable.length) focusable[0].focus();
+  }
+
+  // Keeps the screen awake while a dialog is open — a phone dimming mid-round
+  // would kill a mini-game. Fire-and-forget: unsupported browsers just skip it.
+  // The browser force-releases the lock whenever the tab is hidden, so a
+  // visibilitychange listener re-acquires it if a dialog is still up.
+  function acquireWakeLock() {
+    if (!navigator.wakeLock || wakeLock) return;
+    navigator.wakeLock.request("screen").then(
+      (lock) => {
+        wakeLock = lock;
+        lock.addEventListener("release", () => {
+          if (wakeLock === lock) wakeLock = null;
+        });
+      },
+      () => {}
+    );
+  }
+
+  function releaseWakeLock() {
+    if (!wakeLock) return;
+    wakeLock.release().catch(() => {});
+    wakeLock = null;
   }
 
   function closeDialog(dialogEl) {
@@ -1950,6 +1995,10 @@
     // Run last, once this dialog is fully closed, so e.g. reopening the menu
     // captures its own fresh focus target instead of racing this one's.
     if (confirmCancelHandler) confirmCancelHandler();
+
+    // Let the screen sleep again once no dialog remains open (reward routing or
+    // a cancel handler above may already have opened the next one).
+    if (!activeDialog) releaseWakeLock();
   }
 
   // Styled stand-in for window.confirm(): shows the confirm overlay and runs
@@ -2122,6 +2171,25 @@
     });
   }
 
+  // Shouts the verdict with a Swedish voice on top of the klaxon/fanfare. If no
+  // sv voice is installed the default voice still gets Swedish pronunciation
+  // hints via `lang`. Cancelled by stopVerdictEffects so a closed dialog can't
+  // keep talking. (iOS may drop timer-triggered speech — e.g. the maze timeout
+  // — since it requires a user gesture in the chain; tap-driven verdicts work.)
+  function speakVerdict(text) {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "sv-SE";
+    const voice = window.speechSynthesis
+      .getVoices()
+      .find((v) => v.lang && v.lang.toLowerCase().startsWith("sv"));
+    if (voice) utterance.voice = voice;
+    utterance.rate = 0.95;
+    utterance.pitch = 1.15;
+    window.speechSynthesis.speak(utterance);
+  }
+
   // A triumphant rising fanfare for the "Full som ett ägg" (proper drunk — the
   // goal!) verdict, capped with a shimmering high chord.
   function playPartySound() {
@@ -2173,6 +2241,8 @@
     soberAlarmEl = overlayEl;
     overlayEl.classList.add("sober-alarm");
     playAlarmSound();
+    vibrate([160, 80, 160, 80, 260]);
+    speakVerdict("Nykter!");
     let bursts = 0;
     soberAlarmTimer = window.setInterval(() => {
       bursts += 1;
@@ -2197,6 +2267,8 @@
     confettiCanvas.classList.add("confetti--front");
     runConfetti(2600);
     playPartySound();
+    vibrate([35, 45, 35, 45, 35, 45, 120]);
+    speakVerdict("Full som ett ägg!");
     let bursts = 0;
     drunkPartyTimer = window.setInterval(() => {
       bursts += 1;
@@ -2239,6 +2311,7 @@
   function stopVerdictEffects() {
     stopSoberAlarm();
     stopDrunkCelebration();
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   }
 
   // ── Utilities ─────────────────────────────────────────────────────────────
@@ -2273,6 +2346,13 @@
 
   function randomItem(list) {
     return list[Math.floor(Math.random() * list.length)];
+  }
+
+  // Haptic feedback where the hardware supports it (mostly Android — iOS
+  // Safari has no vibration API and just no-ops). A new call replaces any
+  // pattern still running.
+  function vibrate(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
   }
 
   function prefersReducedMotion() {

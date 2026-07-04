@@ -18,11 +18,12 @@ Push to `main` — the GitHub Actions workflow (`.github/workflows/deploy-pages.
 
 ## Architecture
 
-Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus markdown docs:
+Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus PWA assets and markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server.
+- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server, plus the PWA wiring: `theme-color`, the `apple-mobile-web-app-*` metas, `<link rel="manifest">`, and an `apple-touch-icon`.
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support; `@media (prefers-reduced-motion: reduce)` disables animations.
 - `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `manifest.webmanifest`, `sw.js`, `icons/` — the PWA layer (see PWA & device feedback below).
 
 UI language is Swedish.
 
@@ -259,6 +260,36 @@ the verdict (`spyLevel`: ≥`SPY_GREEN_MIN` 15 → red "Nykter" + alarm /
 A `spyPhase` state machine drives it; the rAF + countdown timer are
 cancelled in `stopSpyGame`, called from `closeDialog`. Collisions use a
 crossing test at the couch line to avoid tunnelling at high speeds.
+
+### PWA & device feedback
+
+The app is an installable PWA: `manifest.webmanifest` (standalone, portrait,
+`start_url: "./"` — everything relative so the GitHub Pages subpath works) and
+`sw.js`, an app-shell service worker registered at the end of the IIFE init.
+The worker is **network-first with cache fallback** so a fresh deploy reaches
+players on next load but the app still opens fully offline; it pre-caches the
+shell (HTML/CSS/JS/manifest/icons) on install and runtime-caches successful
+same-origin GETs. Bump `CACHE_NAME` in `sw.js` if the shell file list changes.
+Icons live in `icons/` (192/512 PNG + `apple-touch-icon.png`), generated from a
+canvas drawing of 🐭 on the app background — regenerate at the same sizes if
+rebranding.
+
+Three device-feedback layers, all guarded no-ops where unsupported:
+
+- **Haptics** — the `vibrate(pattern)` helper (Utilities). Call sites: cell
+  mark/unmark (18/8ms) in `onBoardClick`, the 🍺 appearing in
+  `showReaktionTarget` (35ms), the hit jolt in `onSpyHit` (90ms — the red/green
+  verdict signals replace it, yellow keeps it), bingo/grand-win reward starts,
+  and strong patterns in `signalSoberAlarm`/`signalDrunkCelebration`.
+- **Screen wake lock** — `acquireWakeLock()` in `openDialog`,
+  `releaseWakeLock()` at the very end of `closeDialog` (only when no dialog
+  remains — reward routing may already have opened the next one). The browser
+  force-releases on tab hide, so a `visibilitychange` listener re-acquires
+  while a dialog is up.
+- **Speech** — `speakVerdict(text)` (Audio section) shouts "Nykter!" /
+  "Full som ett ägg!" with a `sv-SE` voice from the two verdict signal
+  functions; `stopVerdictEffects()` cancels any ongoing utterance so a closed
+  dialog can't keep talking.
 
 ### Storage safety
 
