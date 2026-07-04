@@ -39,11 +39,10 @@ together), `.stats` (the player name box — no visible "Spelare" label, just
 −/🍺/+ beer widget as its second item), then `.board-wrap`. The ← button (`topbar-back-btn`) is a no-confirm
 shortcut straight to `showPlayerGate()` — the same action as the menu's "Byt
 spelare", just one tap instead of opening the menu first; the title is sized
-(`font-size: 0.82rem`) to reliably fit one line even at the narrowest
-supported width now that it's flanked by two separate 38px buttons instead of
-one stacked pair, with wrapping still allowed (not nowrap+ellipsis) as a
-fallback for extreme cases like OS text-scaling, so it degrades to two lines
-instead of clipping the trailing emoji off-screen. There is no Fält/Rader
+(`font-size: 1.05rem`) to fit one line down to ~375px even flanked by two
+separate 38px buttons, with wrapping still allowed (not nowrap+ellipsis) as a
+fallback at narrower widths (e.g. 320px) instead of clipping the trailing
+emoji off-screen. There is no Fält/Rader
 marked-count or bingo-line-count display — `updateStatsAndWinState` still
 computes them internally (for win/reward detection) but doesn't render them
 anywhere. Beer counting lives inline in that widget (`beer-widget-*` →
@@ -132,9 +131,20 @@ actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fyra"). Th
 same blurb text also sits as a permanent, always-visible line inside each
 mini-game's own overlay (`.minigame-blurb`, shared by Reaktionskollen/
 Minnesluckatestet/Spykollen; Fyllekollen already has an equivalent standing
-line via `.fyllekollen-text`), so it's visible no matter how the game was
-opened — reward flow, beer-counter cadence, or the test menu — not just from
-the reward intro. `startCurrentRewardGame` opens the next game;
+line via `.fyllekollen-text` — `.minigame-blurb` matches its size, both
+inheriting the plain `.overlay-card p` look rather than a small muted
+caption), so it's visible no matter how the game was opened — reward flow,
+beer-counter cadence, or the test menu — not just from the reward intro.
+Each game's `*-instruction` element only carries phase-specific status text
+now ("Vänta på ölen…", "TRYCK!", "Håll koll!", "Undvik spyorna!", …) — the
+redundant lead-in/result captions that used to sit there ("Gör dig redo…",
+"Din reaktionstid", "Facit", "Nedspydd!") were dropped since the blurb and
+the result headline already cover that ground; it goes empty (not removed —
+`min-height` on the element keeps the layout stable) during the countdown and
+on the result screen. Every verdict `message` across all four games line-breaks
+before its trailing "Fortsätt dricka." (via a literal `<br>` in the string,
+rendered through `innerHTML`) so it reads as its own line under the
+verdict-specific sentence. `startCurrentRewardGame` opens the next game;
 each game's terminal result calls `recordRewardResult(gameId, klunkar, verdict)`
 (a no-op outside a session, so the beer-counter rotation and test menu are
 unchanged), which rounds klunkar to nearest (≥ 0) and relabels the close button

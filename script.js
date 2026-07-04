@@ -1001,7 +1001,7 @@
     showMazeResult("Tiden ute!", {
       cls: "green",
       label: "Full som ett ägg",
-      message: "För långsam — labyrinten besegrade dig. Ser bra ut. Fortsätt dricka.",
+      message: "För långsam — labyrinten besegrade dig. Ser bra ut.<br>Fortsätt dricka.",
       celebrate: true,
     });
     recordRewardResult("fyllekollen", 0, "Tiden ute"); // never reached the goal → 0
@@ -1084,9 +1084,9 @@
   // result. Running out of time is handled separately in onMazeTimeout (green).
   function mazeLevel(fraction) {
     if (fraction >= MAZE_SOBER_MIN_FRACTION) {
-      return { cls: "red", label: "Nykter", message: "Stadig på handen och gott om tid kvar. Du behöver öka takten. Fortsätt dricka.", alarm: true };
+      return { cls: "red", label: "Nykter", message: "Stadig på handen och gott om tid kvar. Du behöver öka takten.<br>Fortsätt dricka.", alarm: true };
     }
-    return { cls: "yellow", label: "Salongsberusad", message: "Du klarade det på upploppet. Du är på god väg. Fortsätt dricka." };
+    return { cls: "yellow", label: "Salongsberusad", message: "Du klarade det på upploppet. Du är på god väg.<br>Fortsätt dricka." };
   }
 
   // Shows the verdict panel over the maze and fires the matching effect (alarm /
@@ -1159,7 +1159,7 @@
     reaktionTargetEl.classList.add("hidden");
     reaktionResultEl.classList.add("hidden");
     reaktionCountdownEl.classList.remove("hidden");
-    reaktionInstructionEl.textContent = "Gör dig redo…";
+    reaktionInstructionEl.textContent = "";
 
     let n = 5;
     reaktionCountdownEl.textContent = String(n);
@@ -1217,12 +1217,12 @@
 
   function reaktionLevel(ms) {
     if (ms < REAKTION_GREEN_MAX) {
-      return { cls: "red", label: "Nykter", message: "Du behöver öka takten. Fortsätt dricka.", alarm: true };
+      return { cls: "red", label: "Nykter", message: "Du behöver öka takten.<br>Fortsätt dricka.", alarm: true };
     }
     if (ms <= REAKTION_YELLOW_MAX) {
-      return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg. Fortsätt dricka." };
+      return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg.<br>Fortsätt dricka." };
     }
-    return { cls: "green", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka.", celebrate: true };
+    return { cls: "green", label: "Full som ett ägg", message: "Ser bra ut.<br>Fortsätt dricka.", celebrate: true };
   }
 
   function showReaktionResult(msText, message, cls, label, alarm, celebrate) {
@@ -1230,7 +1230,7 @@
     reaktionStageEl.dataset.state = "done";
     reaktionTargetEl.classList.add("hidden");
     reaktionCountdownEl.classList.add("hidden");
-    reaktionInstructionEl.textContent = cls === "early" ? "Falskstart" : "Din reaktionstid";
+    reaktionInstructionEl.textContent = "";
 
     reaktionResultEl.dataset.level = cls;
     reaktionResultEl.innerHTML =
@@ -1281,7 +1281,7 @@
     memoryAnswerEl.classList.add("hidden");
     memoryResultEl.classList.add("hidden");
     memoryCountdownEl.classList.remove("hidden");
-    memoryInstructionEl.textContent = "Gör dig redo…";
+    memoryInstructionEl.textContent = "";
 
     memoryAnswer = { beer: randomCount(), mouse: randomCount() };
 
@@ -1349,7 +1349,7 @@
     memoryPhase = "done";
     memoryStageEl.dataset.state = "done";
     memoryAnswerEl.classList.add("hidden");
-    memoryInstructionEl.textContent = "Facit";
+    memoryInstructionEl.textContent = "";
 
     memoryResultEl.dataset.level = level.cls;
     memoryResultEl.innerHTML =
@@ -1367,12 +1367,12 @@
 
   function memoryLevel(correctCount) {
     if (correctCount === 2) {
-      return { cls: "red", label: "Nykter", message: "Skärpt blick! Du behöver öka takten. Fortsätt dricka.", alarm: true };
+      return { cls: "red", label: "Nykter", message: "Skärpt blick! Du behöver öka takten.<br>Fortsätt dricka.", alarm: true };
     }
     if (correctCount === 1) {
-      return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg. Fortsätt dricka." };
+      return { cls: "yellow", label: "Salongsberusad", message: "Du är på god väg.<br>Fortsätt dricka." };
     }
-    return { cls: "green", label: "Full som ett ägg", message: "Ser bra ut. Fortsätt dricka.", celebrate: true };
+    return { cls: "green", label: "Full som ett ägg", message: "Ser bra ut.<br>Fortsätt dricka.", celebrate: true };
   }
 
   // The scroll wheels: a padded list of MINNE_MIN..MINNE_MAX with a spacer top and
@@ -1423,7 +1423,7 @@
     spyResultEl.classList.add("hidden");
     spyCountdownEl.classList.remove("hidden");
     spyScoreEl.textContent = "0";
-    spykollenInstructionEl.textContent = "Gör dig redo…";
+    spykollenInstructionEl.textContent = "";
 
     setupSpyGame();
     drawSpy();
@@ -1632,7 +1632,7 @@
     }
     const avoided = spyGame ? spyGame.avoided : 0;
     const level = spyLevel(avoided);
-    spykollenInstructionEl.textContent = "Nedspydd!";
+    spykollenInstructionEl.textContent = "";
     spyResultEl.dataset.level = level.cls;
     spyResultEl.innerHTML =
       `<span class="spy-result-headline">${level.label}</span>` +
@@ -1647,12 +1647,12 @@
 
   function spyLevel(avoided) {
     if (avoided >= SPY_GREEN_MIN) {
-      return { cls: "red", label: "Nykter", message: "Stadig hand och skärpt blick! Du behöver öka takten. Fortsätt dricka.", alarm: true };
+      return { cls: "red", label: "Nykter", message: "Stadig hand och skärpt blick! Du behöver öka takten.<br>Fortsätt dricka.", alarm: true };
     }
     if (avoided >= SPY_YELLOW_MIN) {
-      return { cls: "yellow", label: "Salongsberusad", message: "Hyfsade reflexer. Du är på god väg. Fortsätt dricka." };
+      return { cls: "yellow", label: "Salongsberusad", message: "Hyfsade reflexer. Du är på god väg.<br>Fortsätt dricka." };
     }
-    return { cls: "green", label: "Full som ett ägg", message: "Soffan blev nedspydd direkt. Ser bra ut. Fortsätt dricka.", celebrate: true };
+    return { cls: "green", label: "Full som ett ägg", message: "Soffan blev nedspydd direkt. Ser bra ut.<br>Fortsätt dricka.", celebrate: true };
   }
 
   function horizontalArrowToDir(key) {

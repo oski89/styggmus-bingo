@@ -350,13 +350,13 @@ input {
   min-width: 0;
   flex: 1 1 auto;
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: 1.05rem;
   font-weight: 900;
   line-height: 1.1;
-  /* Sized to reliably fit one line even on the narrowest supported widths;
-     wrapping stays allowed (not nowrap+ellipsis) purely as a graceful
-     fallback for extreme edge cases (e.g. OS-level text scaling) instead of
-     silently clipping the trailing emoji off-screen. */
+  /* Fits one line down to ~375px; narrower widths (e.g. 320px) wrap to a
+     second line instead — wrapping stays allowed (not nowrap+ellipsis) as a
+     graceful fallback rather than silently clipping the trailing emoji
+     off-screen. */
   overflow-wrap: break-word;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 12px 28px rgba(245, 184, 75, 0.16);
 }
@@ -953,13 +953,11 @@ button:focus-visible {
 
 /* Shared by Reaktionskollen/Minnesluckatestet/Spykollen: a short static
    emoji description, always visible regardless of how the game was opened
-   (reward flow, beer-counter cadence, or the test menu) — Fyllekollen
-   already covers this via its own always-visible .fyllekollen-text. */
+   (reward flow, beer-counter cadence, or the test menu) — matches
+   Fyllekollen's own always-visible .fyllekollen-text (same margin, same
+   inherited `.overlay-card p` size/color) instead of a smaller muted caption. */
 .minigame-blurb {
-  margin: 0.7rem 0 0;
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 700;
+  margin: 0.7rem 0 1rem;
 }
 
 .maze-timer {
