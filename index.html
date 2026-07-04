@@ -8,7 +8,7 @@
       name="description"
       content="Stygg Mus 2026 – Bingo och Ölräknare."
     />
-    <meta name="theme-color" content="#07090f" />
+    <meta name="theme-color" content="#0d0219" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -19,7 +19,106 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="page-bg" aria-hidden="true"></div>
+    <div class="page-bg" aria-hidden="true">
+      <!-- Neon wall art: the naughty mouse mid-poker-round. Pure stroke SVG
+           with CSS drop-shadow glows (.np pink / .nc cyan / .ny yellow; .t*
+           are filled text glyphs, .f* plain fills). Anchored to the bottom via
+           preserveAspectRatio so the mouse scene stays below the board. -->
+      <svg class="neon-art" viewBox="0 0 780 1560" preserveAspectRatio="xMidYMax slice" focusable="false">
+        <g class="np">
+          <circle cx="392" cy="1078" r="74" />
+          <circle cx="622" cy="1066" r="74" />
+          <circle cx="392" cy="1078" r="40" opacity=".65" />
+          <circle cx="622" cy="1066" r="40" opacity=".65" />
+          <ellipse cx="508" cy="1224" rx="138" ry="118" />
+          <circle cx="508" cy="1282" r="10" class="fp" />
+          <path d="M352 1252 L288 1236 M354 1274 L292 1276 M356 1294 L300 1312" stroke-width="4" />
+          <path d="M664 1246 L728 1230 M662 1268 L724 1270 M660 1288 L716 1306" stroke-width="4" />
+          <path d="M446 1300 Q 508 1338 574 1296" />
+          <path d="M534 1312 l 10 20 l 12 -16" stroke-width="4" />
+        </g>
+        <g class="nc">
+          <rect x="404" y="1152" width="92" height="62" rx="18" />
+          <rect x="522" y="1148" width="92" height="62" rx="18" />
+          <path d="M496 1180 L522 1178" />
+          <path d="M404 1180 L374 1170 M614 1176 L644 1164" />
+          <path d="M422 1168 L454 1164" stroke-width="4" opacity=".8" />
+          <path d="M540 1164 L572 1160" stroke-width="4" opacity=".8" />
+        </g>
+        <g class="nc">
+          <path d="M478 1372 L450 1352 L450 1394 Z M538 1370 L566 1348 L566 1390 Z" />
+          <rect x="494" y="1358" width="28" height="22" rx="6" />
+        </g>
+        <g transform="translate(196 1350)">
+          <g class="ny" transform="rotate(-22)">
+            <rect x="-55" y="-160" width="110" height="150" rx="12" />
+          </g>
+          <g class="nc" transform="rotate(-2)">
+            <rect x="-55" y="-168" width="110" height="150" rx="12" />
+          </g>
+          <g class="np" transform="rotate(18)">
+            <rect x="-55" y="-160" width="110" height="150" rx="12" />
+            <text x="-32" y="-118" font-size="42" class="fp">A</text>
+            <text x="-38" y="-58" font-size="52" class="fp">♥</text>
+          </g>
+        </g>
+        <g transform="translate(118 1120)">
+          <g class="nc" transform="rotate(12)">
+            <rect x="-40" y="-40" width="80" height="80" rx="14" />
+            <circle cx="-16" cy="-16" r="7" class="fy" />
+            <circle cx="16" cy="16" r="7" class="fy" />
+            <circle cx="16" cy="-16" r="7" class="fy" />
+            <circle cx="-16" cy="16" r="7" class="fy" />
+            <circle cx="0" cy="0" r="7" class="fy" />
+          </g>
+        </g>
+        <g transform="translate(212 1188)">
+          <g class="nc" transform="rotate(-11)">
+            <rect x="-34" y="-34" width="68" height="68" rx="12" />
+            <circle cx="-13" cy="-13" r="6" class="fy" />
+            <circle cx="13" cy="13" r="6" class="fy" />
+            <circle cx="0" cy="0" r="6" class="fy" />
+          </g>
+        </g>
+        <g class="np" transform="translate(96 1332)">
+          <path d="M-58 -4 L-58 44 M58 -4 L58 44" />
+          <ellipse cx="0" cy="44" rx="58" ry="20" />
+          <path d="M-58 20 a 58 20 0 0 0 116 0" />
+          <ellipse cx="0" cy="-4" rx="58" ry="20" />
+          <ellipse cx="0" cy="-4" rx="34" ry="11" stroke-width="3.5" opacity=".8" />
+        </g>
+        <g class="ny flicker" transform="translate(700 1392) rotate(6)">
+          <rect x="-44" y="-64" width="88" height="118" rx="12" />
+          <path d="M44 -34 q 40 4 34 44 q -5 34 -34 30" />
+          <circle cx="-26" cy="-74" r="17" />
+          <circle cx="2" cy="-84" r="21" />
+          <circle cx="30" cy="-72" r="16" />
+          <path d="M-22 -34 L-22 26 M0 -30 L0 30 M22 -34 L22 26" stroke-width="4" opacity=".7" />
+        </g>
+        <text x="42" y="720" font-size="74" class="tc" transform="rotate(-12 42 720)">♠</text>
+        <text x="700" y="640" font-size="66" class="tp flicker2" transform="rotate(10 700 640)">♥</text>
+        <text x="52" y="400" font-size="60" class="ty" transform="rotate(8 52 400)">♦</text>
+        <text x="686" y="330" font-size="64" class="tc" transform="rotate(-9 686 330)">♣</text>
+        <g class="ny flicker2" transform="translate(44 176) rotate(-7)">
+          <rect x="-96" y="-52" width="192" height="100" rx="14" />
+          <text x="-62" y="26" font-size="66" class="ty" font-style="italic">777</text>
+        </g>
+        <g class="nc" opacity=".55" transform="translate(724 118)">
+          <circle cx="0" cy="0" r="86" stroke-dasharray="8 14" />
+          <circle cx="0" cy="0" r="56" />
+          <circle cx="0" cy="0" r="10" class="fc" />
+          <path d="M0 -56 L0 -86 M40 -40 L60 -60 M56 0 L86 0" stroke-width="4" />
+        </g>
+        <g class="ny" stroke-width="4">
+          <path d="M330 560 l 0 26 M317 573 l 26 0" />
+          <path d="M690 900 l 0 22 M679 911 l 22 0" />
+        </g>
+        <g class="np" stroke-width="4">
+          <path d="M92 940 l 0 24 M80 952 l 24 0" />
+          <path d="M420 320 l 0 22 M409 331 l 22 0" />
+        </g>
+      </svg>
+    </div>
 
     <!-- Shared SVG icons, referenced via <use> throughout. Colours live in
          inline styles (with theme vars) so they survive <use> cloning in every
@@ -28,8 +127,8 @@
     <svg class="svg-sprite" aria-hidden="true" focusable="false">
       <symbol id="sm-mark" viewBox="0 0 96 96">
         <path style="fill: rgba(0, 0, 0, 0.34)" d="M48 7 81 20v27c0 22-13 35-33 42C28 82 15 69 15 47V20L48 7Z" />
-        <path style="fill: #111721; stroke: var(--accent-strong); stroke-width: 2.2" d="M48 11 76 22v24c0 19-11 31-28 37-17-6-28-18-28-37V22L48 11Z" />
-        <path style="fill: none; stroke: rgba(255, 248, 232, 0.34); stroke-linecap: round; stroke-width: 2" d="M31 30h34M28 62h40" />
+        <path style="fill: #150724; stroke: var(--accent-strong); stroke-width: 2.2" d="M48 11 76 22v24c0 19-11 31-28 37-17-6-28-18-28-37V22L48 11Z" />
+        <path style="fill: none; stroke: rgba(250, 240, 255, 0.34); stroke-linecap: round; stroke-width: 2" d="M31 30h34M28 62h40" />
         <text x="48" y="57" text-anchor="middle" style="fill: var(--mark-text-color, var(--accent-strong)); font-family: var(--font-main); font-size: 24px; font-weight: 900">SM</text>
       </symbol>
     </svg>

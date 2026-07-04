@@ -1,17 +1,17 @@
 :root {
-  --accent: #f5b84b;
-  --accent-strong: #ffcf73;
-  --bg: #07090f;
-  --bg-elevated: #111721;
-  --card: #172235;
-  --card-deep: #0c111b;
-  --text: #fff8e8;
-  --muted: #aeb8c8;
-  --checked: #08785f;
-  --checked-light: #31c69d;
+  --accent: #ff2d78;
+  --accent-strong: #ff7cab;
+  --bg: #05010c;
+  --bg-elevated: #150724;
+  --card: #1f0b3a;
+  --card-deep: #120522;
+  --text: #fdf3ff;
+  --muted: #bda4d4;
+  --checked: #8a0e4c;
+  --checked-light: #2de2ff;
   --danger: #f26d7d;
-  --edge: rgba(255, 248, 232, 0.16);
-  --edge-strong: rgba(245, 184, 75, 0.64);
+  --edge: rgba(250, 240, 255, 0.16);
+  --edge-strong: rgba(255, 45, 120, 0.64);
   --shadow: rgba(0, 0, 0, 0.42);
   --font-main: "Avenir Next", "Inter", "Segoe UI", system-ui, sans-serif;
 }
@@ -33,7 +33,7 @@ body {
   font-family: var(--font-main);
   color: var(--text);
   background:
-    linear-gradient(142deg, #06070b 0%, #101017 36%, #082723 64%, #2a1220 100%),
+    radial-gradient(circle at 22% 6%, #2a0b3d 0%, #170529 42%, #0a0116 72%, #05010c 100%),
     var(--bg);
   line-height: 1.35;
   -webkit-font-smoothing: antialiased;
@@ -62,7 +62,7 @@ input {
 
 .page-bg::before {
   background:
-    linear-gradient(115deg, rgba(245, 184, 75, 0.18), transparent 28%, rgba(49, 198, 157, 0.12) 58%, transparent 78%),
+    linear-gradient(115deg, rgba(255, 45, 120, 0.18), transparent 28%, rgba(45, 226, 255, 0.12) 58%, transparent 78%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 72px),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 72px);
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.32));
@@ -71,9 +71,58 @@ input {
 .page-bg::after {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%),
-    repeating-linear-gradient(135deg, rgba(245, 184, 75, 0.06) 0 1px, transparent 1px 18px);
+    repeating-linear-gradient(135deg, rgba(255, 45, 120, 0.06) 0 1px, transparent 1px 18px);
   mix-blend-mode: screen;
   opacity: 0.7;
+}
+
+/* ── Neon wall art (the gambling mouse in .page-bg) ──────────────────────────
+   Stroke-only line art glowing via stacked drop-shadows. Kept behind all
+   content at reduced opacity so the board stays legible; the classes are:
+   np/nc/ny = pink/cyan/yellow tubes, t* = filled glyphs, f* = plain fills.
+   The color classes must stay AFTER `.neon-art *` — same specificity, so
+   source order is what lets fills override the blanket `fill: none`. */
+.neon-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+}
+
+.neon-art * {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.neon-art .np { stroke: #ff5c97; filter: drop-shadow(0 0 4px #ff2d78) drop-shadow(0 0 14px rgba(255, 45, 120, 0.6)); }
+.neon-art .nc { stroke: #5beaff; filter: drop-shadow(0 0 4px #2de2ff) drop-shadow(0 0 14px rgba(45, 226, 255, 0.55)); }
+.neon-art .ny { stroke: #fbff6a; filter: drop-shadow(0 0 4px #faff2d) drop-shadow(0 0 13px rgba(250, 255, 45, 0.5)); }
+.neon-art .tp { fill: #ff5c97; stroke: none; filter: drop-shadow(0 0 5px #ff2d78) drop-shadow(0 0 16px rgba(255, 45, 120, 0.6)); }
+.neon-art .tc { fill: #5beaff; stroke: none; filter: drop-shadow(0 0 5px #2de2ff) drop-shadow(0 0 16px rgba(45, 226, 255, 0.55)); }
+.neon-art .ty { fill: #fbff6a; stroke: none; filter: drop-shadow(0 0 5px #faff2d) drop-shadow(0 0 15px rgba(250, 255, 45, 0.5)); }
+.neon-art .fp { fill: #ff5c97; stroke: none; }
+.neon-art .fy { fill: #fbff6a; stroke: none; }
+.neon-art .fc { fill: #5beaff; stroke: none; }
+
+.neon-art text {
+  font-family: var(--font-main);
+  font-weight: 900;
+}
+
+/* Faulty-tube flicker on a couple of signs; parked entirely behind the
+   reduced-motion preference. */
+@media (prefers-reduced-motion: no-preference) {
+  .neon-art .flicker { animation: neon-flicker 7s infinite; }
+  .neon-art .flicker2 { animation: neon-flicker 9.3s infinite 3.1s; }
+}
+
+@keyframes neon-flicker {
+  0%, 40.5%, 43%, 45.6%, 71.5%, 74%, 100% { opacity: 1; }
+  41.5% { opacity: 0.3; }
+  44.5% { opacity: 0.45; }
+  72.6% { opacity: 0.35; }
 }
 
 .app,
@@ -108,8 +157,8 @@ input {
   border: 1px solid transparent;
   border-radius: 8px;
   background:
-    linear-gradient(155deg, rgba(16, 23, 35, 0.94), rgba(9, 13, 21, 0.96)) padding-box,
-    linear-gradient(135deg, rgba(255, 207, 115, 0.7), rgba(49, 198, 157, 0.26), rgba(255, 248, 232, 0.12)) border-box;
+    linear-gradient(155deg, rgba(16, 23, 35, 0.94), rgba(14, 5, 28, 0.96)) padding-box,
+    linear-gradient(135deg, rgba(255, 156, 199, 0.7), rgba(45, 226, 255, 0.26), rgba(250, 240, 255, 0.12)) border-box;
   box-shadow: 0 28px 80px var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(22px);
 }
@@ -156,11 +205,12 @@ input {
 .access-panel h1,
 .hero h1 {
   margin: 0;
-  color: var(--text);
+  color: #fff;
   font-size: 2.55rem;
   font-weight: 900;
   line-height: 0.98;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 18px 40px rgba(245, 184, 75, 0.18);
+  /* The venue's neon sign. */
+  text-shadow: 0 0 8px #ff2d78, 0 0 26px #ff2d78, 0 0 56px rgba(255, 45, 120, 0.65);
 }
 
 .password-form {
@@ -185,10 +235,10 @@ input {
 .password-row input {
   min-width: 0;
   min-height: 50px;
-  border: 1px solid rgba(255, 248, 232, 0.18);
+  border: 1px solid rgba(250, 240, 255, 0.18);
   border-radius: 8px;
   padding: 0 0.9rem;
-  background: rgba(4, 7, 12, 0.66);
+  background: rgba(7, 2, 14, 0.66);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 28px rgba(0, 0, 0, 0.22);
   color: var(--text);
   font-size: 1.05rem;
@@ -199,7 +249,7 @@ input {
 
 .password-row input:focus-visible {
   border-color: var(--accent-strong);
-  box-shadow: 0 0 0 3px rgba(245, 184, 75, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(255, 45, 120, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .feedback {
@@ -233,17 +283,17 @@ input {
 
 .player-buttons button {
   min-height: 52px;
-  border: 1px solid rgba(255, 248, 232, 0.14);
+  border: 1px solid rgba(250, 240, 255, 0.14);
   background:
     linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
-    rgba(15, 22, 34, 0.78);
+    rgba(22, 8, 42, 0.78);
   color: var(--text);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .player-buttons button:hover,
 .player-buttons button:focus-visible {
-  border-color: rgba(255, 207, 115, 0.56);
+  border-color: rgba(255, 156, 199, 0.56);
   transform: translateY(-1px);
 }
 
@@ -251,7 +301,7 @@ input {
   margin-top: 0.8rem;
   padding: 0.45rem 0.65rem;
   background: transparent;
-  color: rgba(255, 248, 232, 0.6);
+  color: rgba(250, 240, 255, 0.6);
   font-size: 0.76rem;
   font-weight: 800;
 }
@@ -270,23 +320,23 @@ input {
   justify-self: center;
   width: auto;
   padding: 0.5rem 1.2rem;
-  border: 1px solid rgba(255, 248, 232, 0.18);
+  border: 1px solid rgba(250, 240, 255, 0.18);
   border-radius: 8px;
   background: transparent;
-  color: rgba(255, 248, 232, 0.6);
+  color: rgba(250, 240, 255, 0.6);
   font-size: 0.8rem;
   font-weight: 800;
 }
 
 .exit-btn:hover,
 .exit-btn:focus-visible {
-  border-color: rgba(255, 207, 115, 0.5);
+  border-color: rgba(255, 156, 199, 0.5);
   color: var(--accent-strong);
 }
 
 .version-line {
   margin: 0;
-  color: rgba(255, 248, 232, 0.48);
+  color: rgba(250, 240, 255, 0.48);
   font-size: 0.76rem;
   font-weight: 750;
   text-align: center;
@@ -314,10 +364,10 @@ input {
   min-height: 28px;
   margin: 0 0 0.5rem;
   padding: 0.25rem 0.72rem;
-  border: 1px solid rgba(245, 184, 75, 0.22);
+  border: 1px solid rgba(255, 45, 120, 0.22);
   border-radius: 999px;
-  background: rgba(6, 9, 15, 0.42);
-  color: rgba(255, 248, 232, 0.68);
+  background: rgba(9, 3, 18, 0.42);
+  color: rgba(250, 240, 255, 0.68);
   font-size: 0.78rem;
   font-weight: 850;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -326,7 +376,7 @@ input {
 .subtitle {
   margin: 0.55rem auto 0;
   max-width: 35rem;
-  color: rgba(255, 248, 232, 0.68);
+  color: rgba(250, 240, 255, 0.68);
   font-size: 0.98rem;
   font-weight: 650;
 }
@@ -358,7 +408,9 @@ input {
      graceful fallback rather than silently clipping the trailing emoji
      off-screen. */
   overflow-wrap: break-word;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 12px 28px rgba(245, 184, 75, 0.16);
+  /* Neon-sign treatment: white tube core with a pink halo. */
+  color: #fff;
+  text-shadow: 0 0 7px #ff2d78, 0 0 20px #ff2d78, 0 0 42px rgba(255, 45, 120, 0.7);
 }
 
 .beer-widget {
@@ -367,10 +419,11 @@ input {
   gap: 0.4rem;
   flex-shrink: 0;
   padding: 0.28rem 0.34rem;
-  border: 1px solid rgba(245, 184, 75, 0.3);
+  /* Acid-yellow neon — the third tube colour, reserved for the beer counter. */
+  border: 1px solid rgba(250, 255, 45, 0.5);
   border-radius: 999px;
-  background: rgba(12, 17, 27, 0.82);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 22px rgba(0, 0, 0, 0.24);
+  background: rgba(18, 6, 36, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 16px rgba(250, 255, 45, 0.18);
 }
 
 .beer-widget-value {
@@ -378,7 +431,8 @@ input {
   text-align: center;
   font-size: 1rem;
   font-weight: 900;
-  color: var(--accent-strong);
+  color: #faff2d;
+  text-shadow: 0 0 10px rgba(250, 255, 45, 0.65);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -390,10 +444,10 @@ input {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(255, 248, 232, 0.18);
+  border: 1px solid rgba(250, 240, 255, 0.18);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.85);
+    rgba(18, 6, 36, 0.85);
   color: var(--text);
   font-size: 1.4rem;
   line-height: 1;
@@ -401,12 +455,12 @@ input {
 }
 
 .beer-widget-btn:active {
-  border-color: rgba(245, 184, 75, 0.5);
+  border-color: rgba(255, 45, 120, 0.5);
 }
 
 .beer-widget-btn--plus {
-  border-color: rgba(255, 248, 232, 0.3);
-  background: linear-gradient(180deg, #ffd77d, #f5b84b 52%, #c87918);
+  border-color: rgba(250, 240, 255, 0.3);
+  background: linear-gradient(180deg, #ff7cab, #ff2d78 52%, #b3134f);
   color: #160d02;
 }
 
@@ -418,10 +472,10 @@ input {
   place-items: center;
   flex-shrink: 0;
   border-radius: 999px;
-  border: 1px solid rgba(255, 248, 232, 0.18);
+  border: 1px solid rgba(250, 240, 255, 0.18);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.85);
+    rgba(18, 6, 36, 0.85);
   color: var(--text);
   font-size: 1.3rem;
   line-height: 1;
@@ -429,7 +483,7 @@ input {
 }
 
 .menu-btn:active {
-  border-color: rgba(245, 184, 75, 0.5);
+  border-color: rgba(255, 45, 120, 0.5);
 }
 
 /* Quick-access shortcut to "Byt spelare" (same action as the menu entry),
@@ -443,10 +497,10 @@ input {
   place-items: center;
   flex-shrink: 0;
   border-radius: 999px;
-  border: 1px solid rgba(255, 248, 232, 0.18);
+  border: 1px solid rgba(250, 240, 255, 0.18);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.85);
+    rgba(18, 6, 36, 0.85);
   color: var(--text);
   font-size: 1.25rem;
   line-height: 1;
@@ -454,7 +508,7 @@ input {
 }
 
 .back-btn:active {
-  border-color: rgba(245, 184, 75, 0.5);
+  border-color: rgba(255, 45, 120, 0.5);
 }
 
 /* ── Controls ─────────────────────────────────────────────────────────────── */
@@ -481,38 +535,38 @@ button:active {
 }
 
 button:focus-visible {
-  outline: 3px solid rgba(255, 207, 115, 0.34);
+  outline: 3px solid rgba(255, 156, 199, 0.34);
   outline-offset: 2px;
 }
 
 .primary-btn {
-  border: 1px solid rgba(255, 248, 232, 0.3);
+  border: 1px solid rgba(250, 240, 255, 0.3);
   background:
-    linear-gradient(180deg, #ffd77d 0%, #f5b84b 46%, #c87918 100%);
+    linear-gradient(180deg, #ff7cab 0%, #ff2d78 46%, #b3134f 100%);
   color: #160d02;
-  box-shadow: 0 16px 28px rgba(192, 117, 21, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
+  box-shadow: 0 16px 28px rgba(179, 19, 79, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
 }
 
 .primary-btn:hover,
 .primary-btn:focus-visible {
-  box-shadow: 0 18px 34px rgba(245, 184, 75, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 18px 34px rgba(255, 45, 120, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .secondary-btn {
-  border: 1px solid rgba(255, 248, 232, 0.14);
+  border: 1px solid rgba(250, 240, 255, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.8);
+    rgba(18, 6, 36, 0.8);
   color: var(--text);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .secondary-btn:hover,
 .secondary-btn:focus-visible {
-  border-color: rgba(49, 198, 157, 0.46);
+  border-color: rgba(45, 226, 255, 0.46);
   background:
-    linear-gradient(180deg, rgba(49, 198, 157, 0.18), rgba(255, 255, 255, 0.045)),
-    rgba(12, 17, 27, 0.88);
+    linear-gradient(180deg, rgba(45, 226, 255, 0.18), rgba(255, 255, 255, 0.045)),
+    rgba(18, 6, 36, 0.88);
 }
 
 /* ── Stats ────────────────────────────────────────────────────────────────── */
@@ -535,12 +589,14 @@ button:focus-visible {
   align-items: center;
   min-height: 48px;
   overflow: hidden;
-  border: 1px solid rgba(255, 248, 232, 0.12);
+  border: 1px solid rgba(250, 240, 255, 0.12);
   border-radius: 8px;
   padding: 0.5rem 0.78rem;
+  /* Near-opaque: the neon wall art behind must stay a faint glow here, not
+     bleed through and read as a stray border. */
   background:
     linear-gradient(150deg, rgba(255, 255, 255, 0.075), transparent 62%),
-    rgba(9, 14, 23, 0.72);
+    rgba(14, 5, 28, 0.94);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -578,8 +634,8 @@ button:focus-visible {
   border-radius: 8px;
   padding: 0.72rem;
   background:
-    linear-gradient(145deg, rgba(5, 21, 19, 0.96), rgba(8, 12, 20, 0.98)) padding-box,
-    linear-gradient(135deg, rgba(255, 207, 115, 0.76), rgba(49, 198, 157, 0.35), rgba(255, 248, 232, 0.12)) border-box;
+    linear-gradient(145deg, rgba(16, 5, 33, 0.96), rgba(12, 4, 24, 0.98)) padding-box,
+    linear-gradient(135deg, rgba(255, 156, 199, 0.76), rgba(45, 226, 255, 0.35), rgba(250, 240, 255, 0.12)) border-box;
   box-shadow: 0 26px 56px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
@@ -604,12 +660,12 @@ button:focus-visible {
   position: relative;
   min-height: 116px;
   overflow: hidden;
-  border: 1px solid rgba(255, 248, 232, 0.15);
+  border: 1px solid rgba(250, 240, 255, 0.15);
   border-radius: 7px;
   padding: 0.66rem;
   background:
     linear-gradient(155deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02)),
-    linear-gradient(180deg, #182437, #101827);
+    linear-gradient(180deg, #1c0a33, #0e0420);
   box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   color: var(--text);
   font-size: 0.8rem;
@@ -628,7 +684,7 @@ button:focus-visible {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(245, 184, 75, 0.14), transparent 42%, rgba(49, 198, 157, 0.1));
+  background: linear-gradient(120deg, rgba(255, 45, 120, 0.14), transparent 42%, rgba(45, 226, 255, 0.1));
   opacity: 0;
   transition: opacity 140ms ease;
   pointer-events: none;
@@ -636,7 +692,7 @@ button:focus-visible {
 
 .cell:hover,
 .cell:focus-visible {
-  border-color: rgba(255, 207, 115, 0.5);
+  border-color: rgba(255, 156, 199, 0.5);
   transform: translateY(-1px);
 }
 
@@ -647,12 +703,14 @@ button:focus-visible {
 
 .cell.checked {
   padding-bottom: 1.55rem;
-  border-color: rgba(255, 207, 115, 0.5);
+  /* Hot-pink fill with a cyan tube rim — the two neon primaries together mark
+     "taken" louder than any checkmark. */
+  border-color: rgba(45, 226, 255, 0.85);
   background:
-    linear-gradient(145deg, rgba(255, 207, 115, 0.18), transparent 50%),
-    linear-gradient(180deg, var(--checked-light), var(--checked));
-  color: #effff8;
-  box-shadow: 0 16px 30px rgba(8, 120, 95, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    linear-gradient(160deg, rgba(45, 226, 255, 0.22), transparent 55%),
+    linear-gradient(180deg, #ff2d78, var(--checked));
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255, 45, 120, 0.55), inset 0 0 14px rgba(255, 255, 255, 0.14);
 }
 
 .cell.checked::after {
@@ -662,22 +720,23 @@ button:focus-visible {
   bottom: 0.38rem;
   width: 1.18rem;
   height: 1.18rem;
-  border: 1px solid rgba(255, 248, 232, 0.56);
+  border: 1px solid rgba(45, 226, 255, 0.8);
   border-radius: 999px;
-  background: rgba(6, 9, 15, 0.34);
-  color: #fff8e8;
+  background: rgba(9, 3, 18, 0.5);
+  color: #2de2ff;
   display: grid;
   place-items: center;
   font-size: 0.86rem;
   font-weight: 950;
   line-height: 1;
+  box-shadow: 0 0 8px rgba(45, 226, 255, 0.7);
 }
 
 .cell[data-winning="true"] {
-  border-color: rgba(255, 207, 115, 0.88);
+  border-color: rgba(255, 156, 199, 0.88);
   box-shadow:
-    0 0 0 2px rgba(255, 207, 115, 0.28) inset,
-    0 0 24px rgba(245, 184, 75, 0.48),
+    0 0 0 2px rgba(255, 156, 199, 0.28) inset,
+    0 0 24px rgba(255, 45, 120, 0.48),
     0 16px 30px rgba(0, 0, 0, 0.28);
 }
 
@@ -691,7 +750,7 @@ button:focus-visible {
   place-items: center;
   padding: 1rem;
   background:
-    linear-gradient(180deg, rgba(4, 6, 10, 0.82), rgba(4, 6, 10, 0.92)),
+    linear-gradient(180deg, rgba(7, 2, 14, 0.82), rgba(7, 2, 14, 0.92)),
     rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(10px);
 }
@@ -705,8 +764,8 @@ button:focus-visible {
   padding: 1.25rem;
   text-align: center;
   background:
-    linear-gradient(155deg, rgba(20, 28, 42, 0.98), rgba(8, 14, 24, 0.98)) padding-box,
-    linear-gradient(135deg, rgba(255, 207, 115, 0.8), rgba(49, 198, 157, 0.36), rgba(255, 248, 232, 0.16)) border-box;
+    linear-gradient(155deg, rgba(20, 28, 42, 0.98), rgba(13, 4, 26, 0.98)) padding-box,
+    linear-gradient(135deg, rgba(255, 156, 199, 0.8), rgba(45, 226, 255, 0.36), rgba(250, 240, 255, 0.16)) border-box;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: pop-in 220ms ease-out;
 }
@@ -730,21 +789,21 @@ button:focus-visible {
   font-size: 2rem;
   font-weight: 950;
   line-height: 1;
-  text-shadow: 0 16px 34px rgba(245, 184, 75, 0.24);
+  text-shadow: 0 16px 34px rgba(255, 45, 120, 0.24);
 }
 
 .overlay-card p {
   margin: 0.9rem 0 1rem;
-  color: rgba(255, 248, 232, 0.88);
+  color: rgba(250, 240, 255, 0.88);
   font-size: 1rem;
   font-weight: 720;
 }
 
 .overlay-card button {
-  border: 1px solid rgba(255, 248, 232, 0.28);
-  background: linear-gradient(180deg, #ffd77d, #f5b84b 52%, #c87918);
+  border: 1px solid rgba(250, 240, 255, 0.28);
+  background: linear-gradient(180deg, #ff7cab, #ff2d78 52%, #b3134f);
   color: #160d02;
-  box-shadow: 0 16px 28px rgba(192, 117, 21, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
+  box-shadow: 0 16px 28px rgba(179, 19, 79, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
 }
 
 /* ── Bingo reward overlay (mini-game intro + klunkar payout) ───────────────── */
@@ -803,8 +862,8 @@ button:focus-visible {
   gap: 0.1rem 0.6rem;
   padding: 0.5rem 0.7rem;
   border-radius: 9px;
-  background: rgba(255, 248, 232, 0.06);
-  border: 1px solid rgba(255, 248, 232, 0.12);
+  background: rgba(250, 240, 255, 0.06);
+  border: 1px solid rgba(250, 240, 255, 0.12);
   text-align: left;
 }
 
@@ -824,7 +883,7 @@ button:focus-visible {
 .reward-row-verdict {
   font-size: 0.82rem;
   font-weight: 700;
-  color: rgba(255, 248, 232, 0.7);
+  color: rgba(250, 240, 255, 0.7);
 }
 
 .reward-total {
@@ -864,17 +923,17 @@ button:focus-visible {
    re-assert the neutral secondary look for the cancel button (two classes beat
    the one-class-one-type selector). */
 .confirm-actions .secondary-btn {
-  border: 1px solid rgba(255, 248, 232, 0.14);
+  border: 1px solid rgba(250, 240, 255, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.8);
+    rgba(18, 6, 36, 0.8);
   color: var(--text);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .confirm-actions .secondary-btn:hover,
 .confirm-actions .secondary-btn:focus-visible {
-  border-color: rgba(49, 198, 157, 0.46);
+  border-color: rgba(45, 226, 255, 0.46);
 }
 
 /* ── Menu overlay (byt spelare / avsluta) ─────────────────────────────────── */
@@ -894,10 +953,10 @@ button:focus-visible {
    re-assert `.back-btn`'s own neutral look here so it still reads as a
    nav control, not an action button. */
 .menu-header .back-btn {
-  border: 1px solid rgba(255, 248, 232, 0.18);
+  border: 1px solid rgba(250, 240, 255, 0.18);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.85);
+    rgba(18, 6, 36, 0.85);
   color: var(--text);
   box-shadow: none;
 }
@@ -924,17 +983,17 @@ button:focus-visible {
    selector) so all four menu actions share one theme, matching
    `.confirm-actions .secondary-btn`. */
 .menu-actions .secondary-btn {
-  border: 1px solid rgba(255, 248, 232, 0.14);
+  border: 1px solid rgba(250, 240, 255, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.8);
+    rgba(18, 6, 36, 0.8);
   color: var(--text);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .menu-actions .secondary-btn:hover,
 .menu-actions .secondary-btn:focus-visible {
-  border-color: rgba(49, 198, 157, 0.46);
+  border-color: rgba(45, 226, 255, 0.46);
 }
 
 /* ── Fyllekollen (swipe maze) ─────────────────────────────────────────────── */
@@ -999,7 +1058,7 @@ button:focus-visible {
   padding: 0 1rem;
   text-align: center;
   border-radius: 8px;
-  background: rgba(4, 6, 10, 0.78);
+  background: rgba(7, 2, 14, 0.78);
   backdrop-filter: blur(2px);
 }
 
@@ -1020,7 +1079,7 @@ button:focus-visible {
 .maze-result-msg {
   font-size: 0.9rem;
   font-weight: 720;
-  color: rgba(255, 248, 232, 0.85);
+  color: rgba(250, 240, 255, 0.85);
 }
 
 .maze-result[data-level="green"] .maze-result-headline { color: #3fd99b; }
@@ -1033,9 +1092,9 @@ button:focus-visible {
      the wrapper width as a safety net. */
   max-width: 100%;
   margin: 0 auto;
-  border: 1px solid rgba(255, 248, 232, 0.16);
+  border: 1px solid rgba(250, 240, 255, 0.16);
   border-radius: 8px;
-  background: rgba(8, 14, 24, 0.85);
+  background: rgba(13, 4, 26, 0.85);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   /* Own the gesture so swiping the maze never scrolls or pans the page. */
   touch-action: none;
@@ -1064,9 +1123,9 @@ button:focus-visible {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 2px solid rgba(255, 248, 232, 0.16);
+  border: 2px solid rgba(250, 240, 255, 0.16);
   border-radius: 10px;
-  background: rgba(8, 14, 24, 0.85);
+  background: rgba(13, 4, 26, 0.85);
   cursor: pointer;
   /* Snappy taps — no double-tap-zoom delay eating into the reaction time. */
   touch-action: manipulation;
@@ -1074,12 +1133,12 @@ button:focus-visible {
 }
 
 .reaktion-stage[data-state="active"] {
-  border-color: rgba(49, 198, 157, 0.6);
+  border-color: rgba(45, 226, 255, 0.6);
   background: rgba(20, 40, 34, 0.85);
 }
 
 .reaktion-stage[data-state="waiting"] {
-  background: rgba(6, 10, 18, 0.95);
+  background: rgba(10, 3, 22, 0.95);
 }
 
 .reaktion-stage:focus-visible {
@@ -1134,7 +1193,7 @@ button:focus-visible {
 .reaktion-msg {
   font-size: 0.92rem;
   font-weight: 720;
-  color: rgba(255, 248, 232, 0.85);
+  color: rgba(250, 240, 255, 0.85);
 }
 
 .reaktion-result[data-level="green"] .reaktion-level { color: #3fd99b; }
@@ -1214,9 +1273,9 @@ button:focus-visible {
   width: 72px;
   height: 120px;
   overflow: hidden;
-  border: 1px solid rgba(255, 248, 232, 0.16);
+  border: 1px solid rgba(250, 240, 255, 0.16);
   border-radius: 10px;
-  background: rgba(8, 14, 24, 0.85);
+  background: rgba(13, 4, 26, 0.85);
 }
 
 /* The scroll column itself: hidden scrollbar, snap each value to the centre. */
@@ -1245,7 +1304,7 @@ button:focus-visible {
   justify-content: center;
   font-size: 1.5rem;
   font-weight: 850;
-  color: rgba(255, 248, 232, 0.5);
+  color: rgba(250, 240, 255, 0.5);
   scroll-snap-align: center;
 }
 
@@ -1257,9 +1316,9 @@ button:focus-visible {
   top: 40px;
   height: 40px;
   pointer-events: none;
-  border-top: 1px solid rgba(245, 184, 75, 0.5);
-  border-bottom: 1px solid rgba(245, 184, 75, 0.5);
-  background: rgba(245, 184, 75, 0.08);
+  border-top: 1px solid rgba(255, 45, 120, 0.5);
+  border-bottom: 1px solid rgba(255, 45, 120, 0.5);
+  background: rgba(255, 45, 120, 0.08);
 }
 
 .memory-wheel-scroll:focus-visible {
@@ -1295,7 +1354,7 @@ button:focus-visible {
 .memory-msg {
   font-size: 0.92rem;
   font-weight: 720;
-  color: rgba(255, 248, 232, 0.85);
+  color: rgba(250, 240, 255, 0.85);
 }
 
 .memory-result[data-level="green"] .memory-result-headline { color: #3fd99b; }
@@ -1328,9 +1387,9 @@ button:focus-visible {
   display: block;
   width: 100%;
   max-width: 100%;
-  border: 1px solid rgba(255, 248, 232, 0.16);
+  border: 1px solid rgba(250, 240, 255, 0.16);
   border-radius: 10px;
-  background: rgba(8, 14, 24, 0.92);
+  background: rgba(13, 4, 26, 0.92);
   /* Own the gesture so dragging on the playfield never scrolls the page. */
   touch-action: none;
 }
@@ -1357,7 +1416,7 @@ button:focus-visible {
   padding: 0 1rem;
   text-align: center;
   border-radius: 10px;
-  background: rgba(4, 6, 10, 0.78);
+  background: rgba(7, 2, 14, 0.78);
   backdrop-filter: blur(2px);
 }
 
@@ -1378,7 +1437,7 @@ button:focus-visible {
 .spy-result-msg {
   font-size: 0.9rem;
   font-weight: 720;
-  color: rgba(255, 248, 232, 0.85);
+  color: rgba(250, 240, 255, 0.85);
 }
 
 .spy-result[data-level="green"] .spy-result-headline { color: #3fd99b; }
@@ -1396,11 +1455,11 @@ button:focus-visible {
 .spy-dir-btn {
   width: 84px;
   min-height: 60px;
-  border: 1px solid rgba(255, 248, 232, 0.18);
+  border: 1px solid rgba(250, 240, 255, 0.18);
   border-radius: 12px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-    rgba(12, 17, 27, 0.85);
+    rgba(18, 6, 36, 0.85);
   color: var(--text);
   font-size: 1.7rem;
   line-height: 1;
@@ -1411,10 +1470,10 @@ button:focus-visible {
 }
 
 .spy-dir-btn:active {
-  border-color: rgba(255, 207, 115, 0.5);
+  border-color: rgba(255, 156, 199, 0.5);
   background:
-    linear-gradient(180deg, rgba(255, 207, 115, 0.22), rgba(255, 207, 115, 0.08)),
-    rgba(12, 17, 27, 0.9);
+    linear-gradient(180deg, rgba(255, 156, 199, 0.22), rgba(255, 156, 199, 0.08)),
+    rgba(18, 6, 36, 0.9);
 }
 
 .spy-score {
@@ -1500,7 +1559,7 @@ button:focus-visible {
       linear-gradient(180deg, rgba(60, 6, 10, 0.86), rgba(40, 4, 8, 0.94)),
       rgba(0, 0, 0, 0.72); }
   50.01%, 100% { background:
-      linear-gradient(180deg, rgba(4, 6, 10, 0.82), rgba(4, 6, 10, 0.92)),
+      linear-gradient(180deg, rgba(7, 2, 14, 0.82), rgba(7, 2, 14, 0.92)),
       rgba(0, 0, 0, 0.72); }
 }
 
@@ -1553,7 +1612,7 @@ button:focus-visible {
       linear-gradient(180deg, rgba(6, 50, 30, 0.86), rgba(4, 34, 22, 0.94)),
       rgba(0, 0, 0, 0.72); }
   50.01%, 100% { background:
-      linear-gradient(180deg, rgba(4, 6, 10, 0.82), rgba(4, 6, 10, 0.92)),
+      linear-gradient(180deg, rgba(7, 2, 14, 0.82), rgba(7, 2, 14, 0.92)),
       rgba(0, 0, 0, 0.72); }
 }
 
@@ -1608,11 +1667,11 @@ button:focus-visible {
 @keyframes konami-flash {
   0%,
   100% {
-    border-color: rgba(255, 248, 232, 0.15);
+    border-color: rgba(250, 240, 255, 0.15);
   }
   50% {
     border-color: var(--accent-strong);
-    box-shadow: 0 0 22px rgba(255, 207, 115, 0.5);
+    box-shadow: 0 0 22px rgba(255, 156, 199, 0.5);
   }
 }
 
@@ -1661,7 +1720,7 @@ button:focus-visible {
   font-size: 2.1rem;
   font-weight: 900;
   line-height: 0.98;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 18px 40px rgba(245, 184, 75, 0.18);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 18px 40px rgba(255, 45, 120, 0.18);
 }
 
 .app-grid {
@@ -1678,7 +1737,7 @@ button:focus-visible {
 
 .test-screen-hint {
   margin: 0 0 0.9rem;
-  color: rgba(255, 248, 232, 0.78);
+  color: rgba(250, 240, 255, 0.78);
   font-weight: 760;
   text-align: center;
 }
@@ -1689,11 +1748,11 @@ button:focus-visible {
   align-items: center;
   gap: 0.65rem;
   padding: 1.5rem 1rem 1.25rem;
-  border: 1px solid rgba(255, 248, 232, 0.14);
+  border: 1px solid rgba(250, 240, 255, 0.14);
   border-radius: 12px;
   background:
     linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025)),
-    rgba(15, 22, 34, 0.78);
+    rgba(22, 8, 42, 0.78);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   text-align: center;
   cursor: pointer;
@@ -1701,10 +1760,10 @@ button:focus-visible {
 
 .app-tile:hover,
 .app-tile:focus-visible {
-  border-color: rgba(255, 207, 115, 0.42);
+  border-color: rgba(255, 156, 199, 0.42);
   background:
     linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
-    rgba(15, 22, 34, 0.88);
+    rgba(22, 8, 42, 0.88);
   transform: translateY(-2px);
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }

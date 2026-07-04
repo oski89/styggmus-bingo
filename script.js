@@ -1041,7 +1041,7 @@
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
 
-    ctx.strokeStyle = "rgba(255, 248, 232, 0.72)";
+    ctx.strokeStyle = "rgba(250, 240, 255, 0.72)";
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
 
@@ -2062,7 +2062,7 @@
 
     if (confettiAnimationFrame) cancelAnimationFrame(confettiAnimationFrame);
 
-    const colors = ["#ff8f00", "#2dba81", "#f7fbff", "#f25f5c", "#66d9ff"];
+    const colors = ["#ff2d78", "#2de2ff", "#faff2d", "#ff9dc0", "#b26bff"];
     const pieces = Array.from({ length: 120 }, () => ({
       x: Math.random() * confettiCanvas.width,
       y: -20 - Math.random() * confettiCanvas.height * 0.4,

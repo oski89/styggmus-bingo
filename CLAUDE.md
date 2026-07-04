@@ -27,6 +27,31 @@ Single-page vanilla JS app with no dependencies, no bundler, and no build step. 
 
 UI language is Swedish.
 
+### Visual identity ("Neonklubben")
+
+The theme is a neon night-club take on the naughty-mouse premise: deep-purple
+grounds (`--bg #05010c` up to `--card #1f0b3a`), **hot pink** `#ff2d78` as the
+primary accent (`--accent`), **electric cyan** `#2de2ff` as the secondary
+(`--checked-light`), and **acid yellow** `#faff2d` reserved for the beer
+counter. Verdict colors (red `#f7706d` / yellow `#ffcf5a` / green `#3fd99b`)
+are semantic and deliberately kept out of the theme palette. Neon-sign
+treatments (white core + colored `text-shadow` halos) sit on the app titles;
+checked cells are pink-filled with a cyan tube rim; confetti uses the neon
+set in `runConfetti`.
+
+`.page-bg` carries the **neon wall art**: an inline SVG scene of the mouse
+mid-poker-round (sunglasses, bowtie, fanned cards, dice, chip stack, beer mug,
+floating card suits, a 777 sign and roulette arcs cropped into the top
+corners). It's stroke-only line art glowing via stacked CSS `drop-shadow`s —
+classes `np`/`nc`/`ny` (pink/cyan/yellow tubes), `t*` (filled glyphs), `f*`
+(plain fills), defined next to `.page-bg` in styles.css. Ordering matters
+there: the color classes must stay after the blanket `.neon-art *` rule, since
+equal specificity means source order lets fills beat `fill: none`. The scene is
+anchored bottom (`preserveAspectRatio="xMidYMax slice"`) so the mouse stays
+below the board; two groups flicker on a keyframe loop, disabled under
+`prefers-reduced-motion`. The `.stat` and `.beer-widget` backgrounds are
+near-opaque on purpose — art must not bleed through and read as stray borders.
+
 ### Screen flow
 
 `renderAccessFlow()` (called once on load) decides the entry point:
@@ -63,12 +88,12 @@ selector `.exit-btn` — the menu's Avsluta isn't styled `.exit-btn` itself, so
 it needs its own explicit listener but shares the same confirm-then-
 `performExit()` flow). All four menu buttons share plain `.secondary-btn`
 styling (`.menu-actions .secondary-btn` re-asserts it over the generic
-`.overlay-card button` gold default) — no more `.primary-btn`/`.exit-btn`
+`.overlay-card button` neon-pink default) — no more `.primary-btn`/`.exit-btn`
 visual distinction between them. The menu header (`.menu-header`) also has a
 ← `back-btn` next to the "Meny" title (`menu-back-btn` → `closeDialog`, no
 confirm — identical to backdrop/Escape, just a visible way to do it); its own
 `.menu-header .back-btn` rule re-asserts the neutral circular look over the
-same gold `.overlay-card button` default for the same reason. `onExit()`
+same neon-pink `.overlay-card button` default for the same reason. `onExit()`
 defensively closes whatever dialog is currently open before showing the exit
 confirmation.
 `hideAllScreens()` + `…El.classList.remove("hidden")` is
@@ -271,8 +296,8 @@ players on next load but the app still opens fully offline; it pre-caches the
 shell (HTML/CSS/JS/manifest/icons) on install and runtime-caches successful
 same-origin GETs. Bump `CACHE_NAME` in `sw.js` if the shell file list changes.
 Icons live in `icons/` (192/512 PNG + `apple-touch-icon.png`), generated from a
-canvas drawing of 🐭 on the app background — regenerate at the same sizes if
-rebranding.
+canvas drawing of 🐭 in a glowing pink neon ring on the purple app background —
+regenerate at the same sizes if rebranding.
 
 Three device-feedback layers, all guarded no-ops where unsupported:
 
