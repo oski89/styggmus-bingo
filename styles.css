@@ -77,52 +77,47 @@ input {
 }
 
 /* ── Neon wall art (the gambling mouse in .page-bg) ──────────────────────────
-   Stroke-only line art glowing via stacked drop-shadows. Kept behind all
-   content at reduced opacity so the board stays legible; the classes are:
-   np/nc/ny = pink/cyan/yellow tubes, t* = filled glyphs, f* = plain fills.
-   The color classes must stay AFTER `.neon-art *` — same specificity, so
-   source order is what lets fills override the blanket `fill: none`. */
-.neon-art {
-  display: block;
+   A full illustration (art/neonklubben-bg.webp): the mouse in cap and leather
+   jacket at the casino table. cover + center keeps the mouse centred when
+   portrait phones crop the wide scene; dimmed and vignetted toward the middle
+   so the board and dialogs stay legible on top. */
+.page-bg-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.6;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.55;
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.55) 62%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.55) 62%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
 }
 
-.neon-art * {
-  fill: none;
-  stroke-width: 5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.neon-art .np { stroke: #ff5c97; filter: drop-shadow(0 0 4px #ff2d78) drop-shadow(0 0 14px rgba(255, 45, 120, 0.6)); }
-.neon-art .nc { stroke: #5beaff; filter: drop-shadow(0 0 4px #2de2ff) drop-shadow(0 0 14px rgba(45, 226, 255, 0.55)); }
-.neon-art .ny { stroke: #fbff6a; filter: drop-shadow(0 0 4px #faff2d) drop-shadow(0 0 13px rgba(250, 255, 45, 0.5)); }
-.neon-art .tp { fill: #ff5c97; stroke: none; filter: drop-shadow(0 0 5px #ff2d78) drop-shadow(0 0 16px rgba(255, 45, 120, 0.6)); }
-.neon-art .tc { fill: #5beaff; stroke: none; filter: drop-shadow(0 0 5px #2de2ff) drop-shadow(0 0 16px rgba(45, 226, 255, 0.55)); }
-.neon-art .ty { fill: #fbff6a; stroke: none; filter: drop-shadow(0 0 5px #faff2d) drop-shadow(0 0 15px rgba(250, 255, 45, 0.5)); }
-.neon-art .fp { fill: #ff5c97; stroke: none; }
-.neon-art .fy { fill: #fbff6a; stroke: none; }
-.neon-art .fc { fill: #5beaff; stroke: none; }
-
-.neon-art text {
-  font-family: var(--font-main);
-  font-weight: 900;
-}
-
-/* Faulty-tube flicker on a couple of signs; parked entirely behind the
-   reduced-motion preference. */
-@media (prefers-reduced-motion: no-preference) {
-  .neon-art .flicker { animation: neon-flicker 7s infinite; }
-  .neon-art .flicker2 { animation: neon-flicker 9.3s infinite 3.1s; }
-}
-
-@keyframes neon-flicker {
-  0%, 40.5%, 43%, 45.6%, 71.5%, 74%, 100% { opacity: 1; }
-  41.5% { opacity: 0.3; }
-  44.5% { opacity: 0.45; }
-  72.6% { opacity: 0.35; }
+/* Portrait phones crop the wide scene so hard that the mouse's face — the
+   whole point of the art — lands exactly behind the board/login panel. Slide
+   the image down so the grin sits in the free band under the board instead,
+   and fade the image's top edge into the page background to hide the seam. */
+@media (max-width: 680px) {
+  .page-bg-img {
+    top: auto;
+    bottom: -42%;
+    height: 112%;
+    opacity: 0.6;
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 22%, rgba(0, 0, 0, 0.9) 100%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 22%, rgba(0, 0, 0, 0.9) 100%);
+  }
 }
 
 .app,

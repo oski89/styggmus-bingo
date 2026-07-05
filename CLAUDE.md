@@ -39,17 +39,17 @@ treatments (white core + colored `text-shadow` halos) sit on the app titles;
 checked cells are pink-filled with a cyan tube rim; confetti uses the neon
 set in `runConfetti`.
 
-`.page-bg` carries the **neon wall art**: an inline SVG scene of the mouse
-mid-poker-round (sunglasses, bowtie, fanned cards, dice, chip stack, beer mug,
-floating card suits, a 777 sign and roulette arcs cropped into the top
-corners). It's stroke-only line art glowing via stacked CSS `drop-shadow`s —
-classes `np`/`nc`/`ny` (pink/cyan/yellow tubes), `t*` (filled glyphs), `f*`
-(plain fills), defined next to `.page-bg` in styles.css. Ordering matters
-there: the color classes must stay after the blanket `.neon-art *` rule, since
-equal specificity means source order lets fills beat `fill: none`. The scene is
-anchored bottom (`preserveAspectRatio="xMidYMax slice"`) so the mouse stays
-below the board; two groups flicker on a keyframe loop, disabled under
-`prefers-reduced-motion`. The `.stat` and `.beer-widget` backgrounds are
+`.page-bg` carries the **neon wall art**: `art/neonklubben-bg.webp`, a full
+illustration of the mouse in cap and leather jacket at the casino table
+(BINGO/SLOTS/STYGG MUSS signs, neon cards, dice, chips). It renders through
+`img.page-bg-img` — `object-fit: cover` center for wide screens, dimmed
+(`opacity` ≈ 0.55) with a vertical vignette `mask-image` so content stays
+legible. On phones (`max-width: 680px`) the wide crop would bury the mouse's
+face behind the board/login panel, so the image is instead bottom-anchored and
+slid down (`bottom: -42%; height: 112%`) to park the grin in the free band
+under the board, with a top-fade mask hiding the image's upper seam. The image
+is part of the service-worker shell (`sw.js` SHELL list — keep in sync, bump
+`CACHE_NAME` when it changes). The `.stat` and `.beer-widget` backgrounds are
 near-opaque on purpose — art must not bleed through and read as stray borders.
 
 ### Screen flow
