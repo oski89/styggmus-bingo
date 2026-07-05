@@ -130,6 +130,10 @@
             <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🤮</div>
             <span class="app-tile-name">Spykollen</span>
           </button>
+          <button id="test-pissepaus-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🚽</div>
+            <span class="app-tile-name">Pissepaus</span>
+          </button>
         </div>
 
         <button class="exit-btn" type="button">Avsluta</button>
@@ -271,6 +275,28 @@
         </div>
         <div class="confirm-actions spykollen-footer">
           <button id="spy-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pissepaus mini-game (tilt-aim the stream at the toilets) -->
+    <div id="pissepaus-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pissepaus-title">
+      <div class="overlay-card pissepaus-card">
+        <h2 id="pissepaus-title" class="pissepaus-title">Pissepaus</h2>
+        <p class="minigame-blurb">Luta mobilen och sikta 🍆-strålen på 🚽</p>
+        <p id="pissepaus-instruction" class="pissepaus-instruction"></p>
+        <div class="piss-stage-wrap">
+          <canvas id="piss-canvas" class="piss-canvas" aria-label="Luta enheten för att sikta strålen på toaletten"></canvas>
+          <span id="piss-countdown" class="piss-countdown hidden" aria-hidden="true">3</span>
+          <button id="piss-start-btn" class="primary-btn piss-start-btn" type="button">Starta</button>
+          <div id="piss-result" class="piss-result hidden"></div>
+        </div>
+        <div class="piss-hud" aria-live="off">
+          <span id="piss-timer" class="piss-timer">10.0 s</span>
+          <span class="piss-score-wrap">🚽 <span id="piss-score" class="piss-score">0</span></span>
+        </div>
+        <div class="confirm-actions pissepaus-footer">
+          <button id="piss-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
     </div>

@@ -20,9 +20,9 @@ Push to `main` — the GitHub Actions workflow (`.github/workflows/deploy-pages.
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus PWA assets and markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the four mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server, plus the PWA wiring: `theme-color`, the `apple-mobile-web-app-*` metas, `<link rel="manifest">`, and an `apple-touch-icon`.
+- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the five mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server, plus the PWA wiring: `theme-color`, the `apple-mobile-web-app-*` metas, `<link rel="manifest">`, and an `apple-touch-icon`.
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Pissepaus (tilt-aiming), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
 - `manifest.webmanifest`, `sw.js`, `icons/` — the PWA layer (see PWA & device feedback below).
 
 UI language is Swedish.
@@ -103,8 +103,9 @@ the show/hide mechanism for the two top-level screens — there is no router.
 
 Two passwords map to two modes (`PASSWORDS` in `script.js`): `SMB` → `live`,
 `MGT` → `test`. **Test mode** skips the player gate and shows
-`#test-screen`, a menu whose four tiles launch each mini-game
-(`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`) directly for testing, with no descriptive text under each tile — just icon
+`#test-screen`, a menu whose five tiles launch each mini-game
+(`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`/
+`openPissepaus`) directly for testing, with no descriptive text under each tile — just icon
 and name (see Win detection & bingo rewards for where the emoji descriptions
 now live). Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
@@ -138,7 +139,7 @@ prompts; the first 16 of the shuffle fill the 16 cells.
 already in `bingoLinesAwarded`), instead of a fixed prize, launch a
 **bingo reward** (`startBingoReward`): a random mini-game whose result
 decides how many "klunkar" (sips) you get to hand out to everyone. Filling all 16
-cells triggers `startGrandReward` once — all four games in a random row, klunkar
+cells triggers `startGrandReward` once — all five games in a random row, klunkar
 summed. A grand win supersedes the single-line reward for the same check (filling
 the last cell also completes lines), so only one flow runs. Sound is synthesized
 with the Web Audio API; confetti is canvas-drawn and skipped under
@@ -152,11 +153,11 @@ button, label, and a short `blurb` (a one-line emoji description, e.g.
 `.app-tile-desc`; it's now the live-mode player's preview instead). `showRewardIntro`
 opens the shared `#reward-overlay` and renders that preview before the player
 commits: for a single line it names the one game they're about to get
-(`.reward-game-preview`); for a grand win it lists all four, in the session's
+(`.reward-game-preview`); for a grand win it lists all five, in the session's
 actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fyra"). The
 same blurb text also sits as a permanent, always-visible line inside each
 mini-game's own overlay (`.minigame-blurb`, shared by Reaktionskollen/
-Minnesluckatestet/Spykollen; Fyllekollen already has an equivalent standing
+Minnesluckatestet/Spykollen/Pissepaus; Fyllekollen already has an equivalent standing
 line via `.fyllekollen-text` — `.minigame-blurb` matches its size, both
 inheriting the plain `.overlay-card p` look rather than a small muted
 caption), so it's visible no matter how the game was opened — reward flow,
@@ -167,14 +168,14 @@ redundant lead-in/result captions that used to sit there ("Gör dig redo…",
 "Din reaktionstid", "Facit", "Nedspydd!") were dropped since the blurb and
 the result headline already cover that ground; it goes empty (not removed —
 `min-height` on the element keeps the layout stable) during the countdown and
-on the result screen. Every verdict `message` across all four games line-breaks
+on the result screen. Every verdict `message` across all the games line-breaks
 before its trailing "Fortsätt dricka." (via a literal `<br>` in the string,
 rendered through `innerHTML`) so it reads as its own line under the
 verdict-specific sentence. `startCurrentRewardGame` opens the next game;
 each game's terminal result calls `recordRewardResult(gameId, klunkar, verdict)`
 (a no-op outside a session, so the beer-counter rotation and test menu are
 unchanged), which rounds klunkar to nearest (≥ 0) and relabels the close button
-to "Nästa spel"/"Klar". None of the four mini-games has a retry/"play again"
+to "Nästa spel"/"Klar". None of the mini-games has a retry/"play again"
 button (removed — closing and reopening is the only way to run another round).
 Closing the
 game (button/Escape/backdrop) runs `advanceRewardAfterGame` via `closeDialog`
@@ -184,7 +185,8 @@ at the goal, so max is `MAZE_KLUNK_MAX` (8) and timeout = 0;
 Reaktionskollen = `(KLUNK_REAKTION_BASE_MS − ms) / KLUNK_REAKTION_DIV` capped at
 `KLUNK_REAKTION_MAX` (10), false start = 0; Minnesluckatestet =
 `KLUNK_MINNE_BASE − total deviation`;
-Spykollen = `KLUNK_SPY[cls]` (Nykter 6 / Salongsberusad 4 / Full som ett ägg 2).
+Spykollen = `KLUNK_SPY[cls]` (Nykter 6 / Salongsberusad 4 / Full som ett ägg 2);
+Pissepaus = toilets hit, capped at `KLUNK_PISS_MAX` (10).
 
 ### Dialogs
 
@@ -212,12 +214,12 @@ Each adds a temporary `body` class, plays a sound, and runs confetti.
 
 ### Fyllekollen (swipe maze mini-game)
 
-The four beer-counter mini-games rotate on a fixed `MINIGAME_CYCLE` (4) beat in
+The five beer-counter mini-games rotate on a fixed `MINIGAME_CYCLE` (5) beat in
 `countBeerPress`, keyed off the running count of beers added (`beerAddedTotal`,
-session-only; only `+` presses count): **Reaktionskollen** on beers `1+4n` (`%4
-=== 1`), **Minnesluckatestet** on `2+4n` (`%4 === 2`), **Fyllekollen** on `3+4n`
-(`%4 === 3`), **Spykollen** on `4+4n` (`%4 === 0`). Exactly one fires per added
-beer, so they never collide; none fires while another dialog is up. All four are
+session-only; only `+` presses count): **Reaktionskollen** on beers `1+5n`,
+**Minnesluckatestet** on `2+5n`, **Fyllekollen** on `3+5n`, **Spykollen** on
+`4+5n`, **Pissepaus** on `5+5n` (`%5 === 0`). Exactly one fires per added
+beer, so they never collide; none fires while another dialog is up. All five are
 also launchable directly from the test-mode menu (`#test-screen`).
 
 **Fyllekollen** is a perfect maze (recursive backtracker, `MAZE_COLS`×`MAZE_ROWS`)
@@ -260,7 +262,7 @@ into a closed dialog.
 
 ### Minnesluckatestet (memory / flash-count mini-game)
 
-**Minnesluckatestet** (`#memory-overlay`), on beers `2+4n`: a 5s countdown, then
+**Minnesluckatestet** (`#memory-overlay`), on beers `2+5n`: a 5s countdown, then
 X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
 `MINNE_FLASH_MS` (4000ms), then the player dials the two counts on iOS-style scroll
 wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
@@ -271,7 +273,7 @@ machine drives it; its countdown/flash timers are cleared in `closeDialog`.
 
 ### Spykollen (dodge mini-game)
 
-**Spykollen** (`#spy-canvas` in `#spykollen-overlay`), on beers `4+4n`: a
+**Spykollen** (`#spy-canvas` in `#spykollen-overlay`), on beers `4+5n`: a
 `requestAnimationFrame` arcade game. A row of 🤢 along the top
 drop 🤮 in bursts of 1–`SPY_MAX_BURST` (3) from distinct columns (never all, so a
 dodge gap always exists); the player steers a canvas-drawn couch (footprint =
@@ -285,6 +287,34 @@ the verdict (`spyLevel`: ≥`SPY_GREEN_MIN` 15 → red "Nykter" + alarm /
 A `spyPhase` state machine drives it; the rAF + countdown timer are
 cancelled in `stopSpyGame`, called from `closeDialog`. Collisions use a
 crossing test at the couch line to avoid tunnelling at high speeds.
+
+### Pissepaus (tilt-aiming mini-game)
+
+**Pissepaus** (`#piss-canvas` in `#pissepaus-overlay`), on beers `5+5n`: aim
+the pee stream from the 🍆 at the bottom onto the 🚽 that spawns one at a time
+(each hit respawns the next — never two at once; `spawnPissToilet` also
+resamples so a fresh toilet never lands right on the stream tip). Steering is
+**device tilt**: `gamma` ±`PISS_TILT_MAX_DEG` (30°) sweeps left/right across
+the full width, `beta` maps device-upright (90°) → shortest stream and
+device-flat (0°) → longest, so the whole stage is reachable. Pointer-drag on
+the canvas and arrow keys (routed in `onKeyDown`) are the sensor-less
+fallbacks. The steered value is a *target*: the tip glides toward it at
+`PISS_AIM_SPEED` (0.8 stage-heights/s) rather than teleporting — this is what
+stops tap-the-toilet cheesing via the pointer fallback and gives each respawn
+a travel-time cooldown (a frame-perfect chaser maxes out around ~17 hits).
+The round is `PISS_ROUND_MS` (10s) with a tenth-second countdown and 🚽
+counter in the `.piss-hud` row. It starts from an explicit **"Starta" button**
+because iOS only grants `deviceorientation` access via
+`DeviceOrientationEvent.requestPermission()` from inside a user gesture
+(`onPissStart`; denied/absent sensors just leave the fallbacks). Hits map to
+the verdict (`pissLevel`: ≥`PISS_NYKTER_MIN` 8 → red "Nykter" + alarm /
+≥`PISS_SALONG_MIN` 4 → yellow / below → green "Full som ett ägg" +
+celebration); reward klunkar = hits capped at `KLUNK_PISS_MAX` (10). A
+`pissPhase` state machine drives it; `stopPissGame` (also called from
+`closeDialog`) cancels the rAF + countdown and removes the `deviceorientation`
+listener. The canvas exposes `data-state` and `data-toilet-x/y` for the
+Playwright suite — one-toilet-at-a-time makes a single coordinate pair the
+full spawn state.
 
 ### PWA & device feedback
 

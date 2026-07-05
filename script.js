@@ -15,11 +15,11 @@
   };
   const BOARD_SIZE = 4;
   const CELL_COUNT = BOARD_SIZE * BOARD_SIZE;
-  // The four beer-counter mini-games rotate on a MINIGAME_CYCLE-beer cycle keyed
+  // The five beer-counter mini-games rotate on a MINIGAME_CYCLE-beer cycle keyed
   // off the running count of beers added (beerAddedTotal): Reaktionskollen on
-  // 1+4n, Minnesluckatestet on 2+4n, Fyllekollen on 3+4n, Spykollen on 4+4n.
-  // Every added beer fires exactly one, so they never collide.
-  const MINIGAME_CYCLE = 4;
+  // 1+5n, Minnesluckatestet on 2+5n, Fyllekollen on 3+5n, Spykollen on 4+5n,
+  // Pissepaus on 5+5n. Every added beer fires exactly one, so they never collide.
+  const MINIGAME_CYCLE = 5;
   // Fyllekollen (swipe maze). Time limit = shortest-path step count × MAZE_MS_PER_STEP.
   const MAZE_COLS = 7;
   const MAZE_ROWS = 9;
@@ -60,16 +60,35 @@
   const SPY_GREEN_MIN = 15; // dodged ≥ this → "Nykter"
   const SPY_YELLOW_MIN = 6; // dodged ≥ this → "Salongsberusad"; below → "Full som ett ägg"
   const SPY_MAX_BURST = 3; // most vomits that can drop at once (never all 6)
+  // Pissepaus (tilt-aiming): steer the pee stream from the 🍆 onto the 🚽 that
+  // spawns one at a time — each hit respawns the next, never two at once.
+  // Steering: device tilt (gamma ±PISS_TILT_MAX_DEG = left/right; beta upright
+  // = shortest stream, flat = longest, so the whole stage is reachable), with
+  // pointer-drag and arrow keys as sensor-less fallbacks.
+  const PISS_ROUND_MS = 10000;
+  const PISS_COUNTDOWN = 3; // "get ready" 3-2-1 before play
+  const PISS_TILT_MAX_DEG = 30;
+  // The stream tip glides toward the steered target at a capped speed (stage
+  // heights per second) instead of teleporting — tilt input is continuous
+  // anyway, and this stops tap-the-toilet cheesing via the pointer fallback
+  // while giving each respawn a natural travel-time cooldown. Together with
+  // the minimum spawn distance in spawnPissToilet this caps a perfect player
+  // at roughly 2 hits/second, so the 8-hit "Nykter" bar takes real aim.
+  const PISS_AIM_SPEED = 0.8;
+  const PISS_NYKTER_MIN = 8; // hits ≥ this → "Nykter"
+  const PISS_SALONG_MIN = 4; // hits ≥ this → "Salongsberusad"; below → "Full som ett ägg"
   // Bingo rewards: a bingo launches a random mini-game whose result decides how
   // many "klunkar" (sips) you get to hand out to everyone. A grand win plays all
-  // four in a row and sums them. Results round to nearest, clamped to ≥ 0.
+  // five in a row and sums them. Results round to nearest, clamped to ≥ 0.
   // Fyllekollen = seconds left at the goal; Reaktionskollen = (BASE − ms) / DIV;
-  // Minnesluckatestet = MINNE_BASE − total deviation; Spykollen = fixed per tier.
+  // Minnesluckatestet = MINNE_BASE − total deviation; Spykollen = fixed per
+  // tier; Pissepaus = toilets hit (capped).
   const KLUNK_REAKTION_BASE_MS = 400;
   const KLUNK_REAKTION_DIV = 10;
   const KLUNK_REAKTION_MAX = 10; // cap so a very fast reaction can't dwarf the others
   const KLUNK_MINNE_BASE = 7;
   const KLUNK_SPY = { red: 6, yellow: 4, green: 2 }; // Nykter / Salongsberusad / Full
+  const KLUNK_PISS_MAX = 10; // klunkar = toilets hit, capped like Reaktionskollen
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -251,6 +270,17 @@
   const spyCloseBtn = document.getElementById("spy-close-btn");
   const testSpykollenBtn = document.getElementById("test-spykollen-btn");
 
+  const pissepausOverlayEl = document.getElementById("pissepaus-overlay");
+  const pissepausInstructionEl = document.getElementById("pissepaus-instruction");
+  const pissCanvas = document.getElementById("piss-canvas");
+  const pissCountdownEl = document.getElementById("piss-countdown");
+  const pissStartBtn = document.getElementById("piss-start-btn");
+  const pissTimerEl = document.getElementById("piss-timer");
+  const pissScoreEl = document.getElementById("piss-score");
+  const pissResultEl = document.getElementById("piss-result");
+  const pissCloseBtn = document.getElementById("piss-close-btn");
+  const testPissepausBtn = document.getElementById("test-pissepaus-btn");
+
   const rewardOverlayEl = document.getElementById("reward-overlay");
   const rewardTitleEl = document.getElementById("reward-title");
   const rewardBodyEl = document.getElementById("reward-body");
@@ -288,6 +318,10 @@
   let spyMoveDir = 0;
   let spyCountdownTimer = null;
   let spyRaf = null;
+  let pissPhase = "idle";
+  let pissGame = null;
+  let pissCountdownTimer = null;
+  let pissRaf = null;
   let soberAlarmTimer = null;
   let soberAlarmEl = null;
   let drunkPartyTimer = null;
@@ -397,6 +431,17 @@
     spyRightBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); spyMoveDir = 1; });
     window.addEventListener("pointerup", () => { spyMoveDir = 0; });
     window.addEventListener("keyup", onSpyKeyUp);
+
+    testPissepausBtn.addEventListener("click", openPissepaus);
+    pissStartBtn.addEventListener("click", onPissStart);
+    pissCloseBtn.addEventListener("click", () => closeDialog(pissepausOverlayEl));
+    pissepausOverlayEl.addEventListener("click", (e) => {
+      if (e.target === pissepausOverlayEl) closeDialog(pissepausOverlayEl);
+    });
+    // Sensor-less steering: dragging (or just moving the mouse) over the stage
+    // aims the stream directly.
+    pissCanvas.addEventListener("pointerdown", onPissPointer);
+    pissCanvas.addEventListener("pointermove", onPissPointer);
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", resizeConfettiCanvas);
@@ -654,11 +699,12 @@
     beerWidgetCountEl.textContent = String(beerCountOf(beers, activePlayerId));
   }
 
-  // Each added beer launches one of the four mini-games on a rotating
-  // MINIGAME_CYCLE-beer cycle: Reaktionskollen on 1+4n, Minnesluckatestet on
-  // 2+4n, Fyllekollen on 3+4n, Spykollen on 4+4n. Exactly one fires per beer,
-  // so they never collide. Only increments count — removing a beer doesn't. The
-  // counter is session-only; nothing fires while a dialog is already open.
+  // Each added beer launches one of the five mini-games on a rotating
+  // MINIGAME_CYCLE-beer cycle: Reaktionskollen on 1+5n, Minnesluckatestet on
+  // 2+5n, Fyllekollen on 3+5n, Spykollen on 4+5n, Pissepaus on 5+5n. Exactly
+  // one fires per beer, so they never collide. Only increments count — removing
+  // a beer doesn't. The counter is session-only; nothing fires while a dialog
+  // is already open.
   function countBeerPress() {
     beerAddedTotal += 1;
     if (activeDialog) return;
@@ -666,7 +712,8 @@
     if (slot === 1) openReaktionskollen();
     else if (slot === 2) openMinneslucka();
     else if (slot === 3) openFyllekollen();
-    else openSpykollen();
+    else if (slot === 4) openSpykollen();
+    else openPissepaus();
   }
 
   function beerCountOf(beers, playerId) {
@@ -825,6 +872,10 @@
         activeDialog === spykollenOverlayEl && spyPhase === "playing"
           ? horizontalArrowToDir(event.key)
           : 0;
+      const pissDir =
+        activeDialog === pissepausOverlayEl && pissPhase === "playing"
+          ? arrowKeyToDir(event.key)
+          : null;
       if (mazeDir) {
         event.preventDefault();
         moveMaze(mazeDir);
@@ -834,6 +885,9 @@
       } else if (spyDir !== 0) {
         event.preventDefault();
         spyMoveDir = spyDir;
+      } else if (pissDir) {
+        event.preventDefault();
+        nudgePissAim(pissDir);
       } else if (event.key === "Escape") {
         event.preventDefault();
         closeDialog(activeDialog);
@@ -1699,6 +1753,302 @@
     spyMoveDir = 0;
   }
 
+  // ── Pissepaus (tilt-aiming mini-game) ─────────────────────────────────────
+
+  // Aim the pee stream from the 🍆 at the bottom onto the 🚽 that spawns one
+  // at a time; each hit respawns the next, never two at once. A 10s round,
+  // hits map to the shared three-tier verdict (steady aim = too sober).
+  // The round starts from an explicit "Starta" button because iOS only grants
+  // tilt-sensor access from inside a user gesture.
+  function openPissepaus() {
+    openDialog(pissepausOverlayEl);
+    pissCloseBtn.textContent = "Stäng";
+    stopPissGame();
+    stopVerdictEffects();
+    pissResultEl.classList.add("hidden");
+    pissCountdownEl.classList.add("hidden");
+    pissStartBtn.classList.remove("hidden");
+    pissepausInstructionEl.textContent = "";
+    setupPissGame();
+    drawPiss();
+    updatePissHud(PISS_ROUND_MS);
+    pissPhase = "ready";
+    pissCanvas.dataset.state = "ready";
+  }
+
+  // Sizes the canvas to the wrapper and lays out the 🍆 origin + first 🚽.
+  function setupPissGame() {
+    const available = (pissCanvas.parentElement && pissCanvas.parentElement.clientWidth) || 300;
+    const w = available;
+    const h = Math.round(w * 1.4);
+    const ratio = window.devicePixelRatio || 1;
+    pissCanvas.width = Math.floor(w * ratio);
+    pissCanvas.height = Math.floor(h * ratio);
+    pissCanvas.style.height = `${h}px`;
+    const ctx = pissCanvas.getContext("2d");
+    if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    pissGame = {
+      w,
+      h,
+      originX: w / 2,
+      originY: h - 26,
+      toiletSize: w * 0.15,
+      toilet: { x: w / 2, y: h * 0.3 },
+      hits: 0,
+      aimX: w / 2,
+      aimY: h * 0.45,
+      targetX: w / 2,
+      targetY: h * 0.45,
+      lastFrame: 0,
+      endAt: 0,
+    };
+    spawnPissToilet();
+  }
+
+  function spawnPissToilet() {
+    const g = pissGame;
+    const m = g.toiletSize * 0.7;
+    // Anywhere on the stage except the 🍆 zone along the bottom — but never
+    // right on the stream tip (a free hit); demand a third of the stage away,
+    // giving up after a bounded number of tries.
+    let x = g.w / 2;
+    let y = g.h * 0.3;
+    for (let i = 0; i < 20; i++) {
+      x = m + Math.random() * (g.w - 2 * m);
+      y = m + Math.random() * (g.h * 0.72 - m);
+      if (Math.hypot(x - g.aimX, y - g.aimY) > g.h * 0.33) break;
+    }
+    g.toilet = { x, y };
+    // Exposed for the Playwright suite: one-toilet-at-a-time is an invariant,
+    // so a single coordinate pair is always the full spawn state.
+    pissCanvas.dataset.toiletX = String(Math.round(g.toilet.x));
+    pissCanvas.dataset.toiletY = String(Math.round(g.toilet.y));
+  }
+
+  function onPissStart() {
+    if (pissPhase !== "ready") return;
+    pissStartBtn.classList.add("hidden");
+    // iOS gates orientation events behind a permission prompt that must be
+    // requested from a user gesture — this click is that gesture. A denied or
+    // absent sensor just leaves the pointer/arrow-key steering.
+    const D = window.DeviceOrientationEvent;
+    const permission =
+      D && typeof D.requestPermission === "function"
+        ? D.requestPermission().catch(() => "denied")
+        : Promise.resolve("granted");
+    const proceed = () => {
+      if (pissPhase !== "ready") return; // dialog closed while the prompt was up
+      window.addEventListener("deviceorientation", onPissOrientation);
+      startPissCountdown();
+    };
+    permission.then(proceed, proceed);
+  }
+
+  function startPissCountdown() {
+    pissPhase = "countdown";
+    pissCanvas.dataset.state = "countdown";
+    pissCountdownEl.classList.remove("hidden");
+    let n = PISS_COUNTDOWN;
+    pissCountdownEl.textContent = String(n);
+    pissCountdownTimer = window.setInterval(() => {
+      n -= 1;
+      if (n > 0) {
+        pissCountdownEl.textContent = String(n);
+      } else {
+        window.clearInterval(pissCountdownTimer);
+        pissCountdownTimer = null;
+        beginPissPlay();
+      }
+    }, 700);
+  }
+
+  function beginPissPlay() {
+    if (!pissGame) return;
+    pissPhase = "playing";
+    pissCanvas.dataset.state = "playing";
+    pissCountdownEl.classList.add("hidden");
+    pissepausInstructionEl.textContent = "Sikta på toaletten!";
+    const now = performance.now();
+    pissGame.lastFrame = now;
+    pissGame.endAt = now + PISS_ROUND_MS;
+    pissRaf = window.requestAnimationFrame(pissLoop);
+  }
+
+  // Tilt steering: gamma (lean left/right, ±PISS_TILT_MAX_DEG) sweeps the aim
+  // across the full width; beta maps device-upright (90°) to the shortest
+  // stream and device-flat (0°) to the longest, so every spot is reachable.
+  function onPissOrientation(event) {
+    if (pissPhase !== "playing" || !pissGame) return;
+    if (typeof event.gamma !== "number" || typeof event.beta !== "number") return;
+    const g = pissGame;
+    const gamma = Math.max(-PISS_TILT_MAX_DEG, Math.min(PISS_TILT_MAX_DEG, event.gamma));
+    const beta = Math.max(0, Math.min(90, event.beta));
+    g.targetX = g.w / 2 + (gamma / PISS_TILT_MAX_DEG) * (g.w / 2 - 8);
+    g.targetY = 12 + (beta / 90) * (g.originY - 60 - 12);
+  }
+
+  function onPissPointer(event) {
+    if (pissPhase !== "playing" || !pissGame) return;
+    event.preventDefault();
+    const rect = pissCanvas.getBoundingClientRect();
+    const g = pissGame;
+    g.targetX = Math.max(0, Math.min(g.w, ((event.clientX - rect.left) / rect.width) * g.w));
+    g.targetY = Math.max(12, Math.min(g.originY - 60, ((event.clientY - rect.top) / rect.height) * g.h));
+  }
+
+  function nudgePissAim(dir) {
+    const g = pissGame;
+    if (!g) return;
+    const step = 22;
+    if (dir === "w") g.targetX -= step;
+    else if (dir === "e") g.targetX += step;
+    else if (dir === "n") g.targetY -= step;
+    else if (dir === "s") g.targetY += step;
+    g.targetX = Math.max(0, Math.min(g.w, g.targetX));
+    g.targetY = Math.max(12, Math.min(g.originY - 60, g.targetY));
+  }
+
+  function pissLoop(now) {
+    if (pissPhase !== "playing" || !pissGame) return;
+    const g = pissGame;
+    const remaining = g.endAt - now;
+    if (remaining <= 0) {
+      endPissRound();
+      return;
+    }
+
+    // Glide the tip toward the steered target at the capped speed.
+    const dt = Math.min(0.05, (now - g.lastFrame) / 1000);
+    g.lastFrame = now;
+    const dxT = g.targetX - g.aimX;
+    const dyT = g.targetY - g.aimY;
+    const dist = Math.hypot(dxT, dyT);
+    const maxStep = PISS_AIM_SPEED * g.h * dt;
+    if (dist <= maxStep) {
+      g.aimX = g.targetX;
+      g.aimY = g.targetY;
+    } else if (dist > 0) {
+      g.aimX += (dxT / dist) * maxStep;
+      g.aimY += (dyT / dist) * maxStep;
+    }
+
+    // The stream tip is the hitbox: close enough to the bowl counts.
+    if (Math.hypot(g.aimX - g.toilet.x, g.aimY - g.toilet.y) < g.toiletSize * 0.55) {
+      g.hits += 1;
+      vibrate(20);
+      spawnPissToilet();
+    }
+
+    updatePissHud(remaining);
+    drawPiss(now);
+    pissRaf = window.requestAnimationFrame(pissLoop);
+  }
+
+  function updatePissHud(remainingMs) {
+    pissTimerEl.textContent = `${(Math.max(0, remainingMs) / 1000).toFixed(1)} s`;
+    pissScoreEl.textContent = String(pissGame ? pissGame.hits : 0);
+  }
+
+  function drawPiss(now = performance.now()) {
+    const g = pissGame;
+    if (!g || !(pissCanvas instanceof HTMLCanvasElement)) return;
+    const ctx = pissCanvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, g.w, g.h);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.font = `${Math.floor(g.toiletSize)}px serif`;
+    ctx.fillText("🚽", g.toilet.x, g.toilet.y);
+
+    // The 🍆 leans toward the aim so it reads as the nozzle.
+    const lean = ((g.aimX - g.w / 2) / (g.w / 2)) * 0.5;
+    ctx.save();
+    ctx.translate(g.originX, g.originY);
+    ctx.rotate(lean);
+    ctx.font = `${Math.floor(g.w * 0.13)}px serif`;
+    ctx.fillText("🍆", 0, 0);
+    ctx.restore();
+
+    if (pissPhase !== "playing") return;
+
+    // The stream: a wobbling arc from the 🍆 tip to the aim point, with a few
+    // splash droplets circling the tip.
+    const t = now / 1000;
+    const sx = g.originX + lean * 20;
+    const sy = g.originY - g.w * 0.08;
+    const cx = (sx + g.aimX) / 2 + Math.sin(t * 9) * 5;
+    const cy = Math.min(sy, g.aimY) - Math.abs(sx - g.aimX) * 0.18 - 24;
+    ctx.strokeStyle = "rgba(250, 224, 45, 0.9)";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.shadowColor = "rgba(250, 224, 45, 0.8)";
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(cx, cy, g.aimX, g.aimY);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(250, 224, 45, 0.85)";
+    for (let i = 0; i < 3; i++) {
+      const a = t * 10 + i * 2.1;
+      ctx.beginPath();
+      ctx.arc(g.aimX + Math.cos(a) * 7, g.aimY + Math.sin(a) * 5, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function endPissRound() {
+    pissPhase = "done";
+    pissCanvas.dataset.state = "done";
+    if (pissRaf) {
+      window.cancelAnimationFrame(pissRaf);
+      pissRaf = null;
+    }
+    const hits = pissGame ? pissGame.hits : 0;
+    const level = pissLevel(hits);
+    updatePissHud(0);
+    pissepausInstructionEl.textContent = "";
+    drawPiss();
+    pissResultEl.dataset.level = level.cls;
+    pissResultEl.innerHTML =
+      `<span class="piss-result-headline">${level.label}</span>` +
+      `<span class="piss-result-score">${hits} 🚽</span>` +
+      `<span class="piss-result-msg">${level.message}</span>`;
+    pissResultEl.classList.remove("hidden");
+    if (level.alarm) signalSoberAlarm(pissepausOverlayEl);
+    else if (level.celebrate) signalDrunkCelebration(pissepausOverlayEl);
+    else playWinSound(false);
+    recordRewardResult("piss", Math.min(KLUNK_PISS_MAX, hits), level.label);
+  }
+
+  function pissLevel(hits) {
+    if (hits >= PISS_NYKTER_MIN) {
+      return { cls: "red", label: "Nykter", message: "Kirurgisk träffsäkerhet. Du behöver öka takten.<br>Fortsätt dricka.", alarm: true };
+    }
+    if (hits >= PISS_SALONG_MIN) {
+      return { cls: "yellow", label: "Salongsberusad", message: "Lite stänk vid sidan om. Du är på god väg.<br>Fortsätt dricka." };
+    }
+    return { cls: "green", label: "Full som ett ägg", message: "Du pissade mest på väggarna. Ser bra ut.<br>Fortsätt dricka.", celebrate: true };
+  }
+
+  // rAF + countdown + the orientation listener are all torn down here; called
+  // on round teardown and from closeDialog so a closed dialog can't keep
+  // listening to the gyroscope.
+  function stopPissGame() {
+    if (pissRaf) {
+      window.cancelAnimationFrame(pissRaf);
+      pissRaf = null;
+    }
+    if (pissCountdownTimer) {
+      window.clearInterval(pissCountdownTimer);
+      pissCountdownTimer = null;
+    }
+    window.removeEventListener("deviceorientation", onPissOrientation);
+    pissPhase = "idle";
+  }
+
   // ── Win detection ─────────────────────────────────────────────────────────
 
   function updateStatsAndWinState({ triggerEffects }) {
@@ -1776,7 +2126,7 @@
 
   // A bingo no longer hands out a fixed prize: it launches a mini-game whose
   // result decides how many "klunkar" (sips) you get to share out to everyone.
-  // A single line plays one random game; a grand win plays all four in a row and
+  // A single line plays one random game; a grand win plays all five in a row and
   // sums them. recordRewardResult is a no-op outside a session, so the beer-
   // counter rotation and the test menu keep running the games exactly as before.
   const REWARD_GAMES = {
@@ -1784,6 +2134,7 @@
     reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, closeBtn: reaktionCloseBtn, label: "Reaktionskollen", blurb: "Tryck när 🍺 dyker upp" },
     minne: { open: openMinneslucka, overlay: memoryOverlayEl, closeBtn: memoryCloseBtn, label: "Minnesluckatestet", blurb: "Räkna 🍺 och 🐭" },
     spy: { open: openSpykollen, overlay: spykollenOverlayEl, closeBtn: spyCloseBtn, label: "Spykollen", blurb: "Undvik 🤮 med 🛋️ - en hommage till Per" },
+    piss: { open: openPissepaus, overlay: pissepausOverlayEl, closeBtn: pissCloseBtn, label: "Pissepaus", blurb: "Luta mobilen och sikta 🍆-strålen på 🚽" },
   };
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
@@ -1827,10 +2178,10 @@
       : `<p class="reward-game-preview"><strong>${REWARD_GAMES[rewardSession.queue[0]].label}</strong> — ${REWARD_GAMES[rewardSession.queue[0]].blurb}</p>`;
     rewardBodyEl.innerHTML =
       (grand
-        ? `<p class="reward-lead">Spela alla fyra spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
+        ? `<p class="reward-lead">Spela alla fem spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
         : `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`) +
       preview;
-    rewardActionBtn.textContent = grand ? "Kör alla fyra" : "Spela";
+    rewardActionBtn.textContent = grand ? "Kör alla fem" : "Spela";
     rewardActionHandler = () => {
       rewardTransitioning = true;
       closeDialog(rewardOverlayEl);
@@ -1975,6 +2326,7 @@
       memoryPhase = "idle";
     }
     if (dialogEl === spykollenOverlayEl) stopSpyGame();
+    if (dialogEl === pissepausOverlayEl) stopPissGame();
     stopVerdictEffects();
     if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
       dialogReturnFocus.focus();
