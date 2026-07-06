@@ -136,6 +136,8 @@
         "Lagget måste lämna rummet p.g.a. fislukt",
         "Lagget fryser",
         "Lagget frågar om det är laktosfritt",
+        "Lagget trummar så fingrarna glöder",
+        "Lagget försöker minnas händelser från tidigare Stygg Mus",
       ],
     },
     {
@@ -147,6 +149,8 @@
         "KS vill sjunga en snapsvisa",
         "KS pratar om det ljuva 70-talet",
         "KS höjer rösten för att någon är trögfattad",
+        "KS blundar och njuter av solen",
+        "KS hör en bra låt och går loss",
       ],
     },
     {
@@ -158,6 +162,8 @@
         "Marcus klankar ner på sossarna",
         "Marcus drar en anekdot om Ludde eller Henke",
         "Marcus blandar en ambitiös cocktail",
+        "Marcus drar en anekdot om folk ur sitt Täby-gäng",
+        "Marcus uttrycker att han är ”genuint glad” över att KS ska bli farsa",
       ],
     },
     {
@@ -169,6 +175,8 @@
         "Oski drar fram resorben",
         "Oski blir övertaggad",
         "Oski drar ett pappaskämt",
+        "Oski uttrycker sig nazistiskt",
+        "Oski är varm och behöver svalka sig",
       ],
     },
     {
@@ -180,6 +188,8 @@
         "Per spontanköper något på fyllan",
         "Per uttrycker sin skepsis mot AI",
         "Per requestar DDKO",
+        "Per går och lägger sig innan kl. 22:00",
+        "Per surrar om RT (Round Table)",
       ],
     },
   ];

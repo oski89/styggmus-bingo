@@ -129,8 +129,8 @@ Player selection persists under `styggmus-bingo-player-v1`.
 ### Players & prompt filtering
 
 There are 5 players (`players`) and 5 prompt groups (`promptGroups`), one group
-per real-life person × 6 prompts = 30 total. Each player has an `excludedGroup`
-(typically their own) that is removed before the board is built, leaving 24
+per real-life person × 8 prompts = 40 total. Each player has an `excludedGroup`
+(typically their own) that is removed before the board is built, leaving 32
 prompts; the first 16 of the shuffle fill the 16 cells.
 
 ### Win detection & bingo rewards
