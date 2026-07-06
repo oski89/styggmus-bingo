@@ -145,7 +145,7 @@
         "KS skrattar och skakar på huvudet för sig själv",
         "KS kommenterar att vi har alldeles för mycket mat",
         "KS vill sjunga en snapsvisa",
-        "KS tar upp Stygg Bitch-sparandet på Avanza",
+        "KS pratar om det ljuva 70-talet",
         "KS höjer rösten för att någon är trögfattad",
       ],
     },
