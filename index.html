@@ -171,8 +171,36 @@
           <button id="new-board-btn" class="secondary-btn" type="button">Ny bricka</button>
           <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>
           <button id="menu-party-btn" class="secondary-btn" type="button">Party-länk</button>
+          <button id="menu-rekord-btn" class="secondary-btn" type="button">Rekord</button>
+          <button id="menu-recap-btn" class="secondary-btn" type="button">Kvällens recap</button>
           <button id="menu-change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
           <button id="menu-exit-btn" class="secondary-btn" type="button">Avsluta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hall of Fame: all-time mini-game records -->
+    <div id="rekord-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rekord-title">
+      <div class="overlay-card rekord-card">
+        <div class="menu-header">
+          <button id="rekord-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
+          <h2 id="rekord-title" class="rekord-title">🏆 Rekord</h2>
+        </div>
+        <ul id="rekord-list" class="rekord-list"></ul>
+        <p class="rekord-hint">Slå ett rekord i ett minispel så exploderar allas mobiler.</p>
+      </div>
+    </div>
+
+    <!-- Kvällens recap: canvas-drawn shareable summary poster -->
+    <div id="recap-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="recap-title">
+      <div class="overlay-card recap-card">
+        <div class="menu-header">
+          <button id="recap-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
+          <h2 id="recap-title" class="recap-title">Kvällens recap</h2>
+        </div>
+        <canvas id="recap-canvas" class="recap-canvas" aria-label="Sammanfattning av kvällen"></canvas>
+        <div class="confirm-actions recap-actions">
+          <button id="recap-share-btn" class="primary-btn" type="button">Dela bilden</button>
         </div>
       </div>
     </div>

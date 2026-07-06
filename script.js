@@ -102,6 +102,17 @@
   const PARTY_FLASH_MS = 6000; // how long an incoming bingo takeover stays up
   const PARTY_SINCE = "45m"; // replay window that warms the roster on connect
   const PARTY_FRESH_MS = 2 * 60 * 1000; // only replayed events newer than this flash
+  // Rekord (Hall of Fame): all-time per-player mini-game records, persisted in
+  // localStorage and converged across phones via party `rekord` events. The
+  // first result in a game seeds silently; only genuine improvements explode.
+  const STATS_KEY = "styggmus-bingo-stats-v1";
+  // Kvällens recap: tonight's bingo/klunkar tallies (own via showRewardPayout,
+  // others via party bingo events). "Tonight" rolls over after inactivity.
+  const NIGHT_KEY = "styggmus-bingo-night-v1";
+  const NIGHT_RESET_MS = 18 * 60 * 60 * 1000;
+  // Kommentatorn: deliberately few, deterministic triggers with a global
+  // cooldown so the voice stays a running gag instead of a nuisance.
+  const KOMMENTATOR_COOLDOWN_MS = 20000;
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -247,6 +258,16 @@
   const partyFlashTitleEl = document.getElementById("party-flash-title");
   const partyFlashTextEl = document.getElementById("party-flash-text");
 
+  const menuRekordBtn = document.getElementById("menu-rekord-btn");
+  const rekordOverlayEl = document.getElementById("rekord-overlay");
+  const rekordBackBtn = document.getElementById("rekord-back-btn");
+  const rekordListEl = document.getElementById("rekord-list");
+  const menuRecapBtn = document.getElementById("menu-recap-btn");
+  const recapOverlayEl = document.getElementById("recap-overlay");
+  const recapBackBtn = document.getElementById("recap-back-btn");
+  const recapCanvas = document.getElementById("recap-canvas");
+  const recapShareBtn = document.getElementById("recap-share-btn");
+
   const overlayEl = document.getElementById("overlay");
   const overlayTitleEl = document.getElementById("overlay-title");
   const overlayTextEl = document.getElementById("overlay-text");
@@ -352,6 +373,7 @@
   let partyBeerTimer = null;
   let partyFlashTimer = null;
   let partyLastHelloAt = 0; // rate-limits the hello ping-pong below
+  let kommentatorLastAt = 0;
   const partyDeviceId = generateSeed(); // session identity; own events are ignored
   let soberAlarmTimer = null;
   let soberAlarmEl = null;
@@ -409,6 +431,26 @@
     });
     partyToggleBtn.addEventListener("click", onPartyToggle);
     partyFlashEl.addEventListener("click", hidePartyFlash);
+
+    menuRekordBtn.addEventListener("click", () => {
+      closeDialog(menuOverlayEl);
+      renderRekordList();
+      openDialog(rekordOverlayEl);
+    });
+    rekordBackBtn.addEventListener("click", () => closeDialog(rekordOverlayEl));
+    rekordOverlayEl.addEventListener("click", (e) => {
+      if (e.target === rekordOverlayEl) closeDialog(rekordOverlayEl);
+    });
+    menuRecapBtn.addEventListener("click", () => {
+      closeDialog(menuOverlayEl);
+      renderRecap();
+      openDialog(recapOverlayEl);
+    });
+    recapBackBtn.addEventListener("click", () => closeDialog(recapOverlayEl));
+    recapOverlayEl.addEventListener("click", (e) => {
+      if (e.target === recapOverlayEl) closeDialog(recapOverlayEl);
+    });
+    recapShareBtn.addEventListener("click", shareRecap);
     // Quick-access shortcut to "Byt spelare" — same action as the menu entry,
     // no confirm (switching player was never a confirmed action).
     topbarBackBtn.addEventListener("click", showPlayerGate);
@@ -751,6 +793,10 @@
   // is already open.
   function countBeerPress() {
     beerAddedTotal += 1;
+    const count = beerCountOf(loadBeers(), activePlayerId);
+    if (count > 0 && count % 5 === 0) {
+      sayCommentary(kommentatorBeerLine(count, spokenName(activePlayerId)));
+    }
     if (activeDialog) return;
     const slot = beerAddedTotal % MINIGAME_CYCLE;
     if (slot === 1) openReaktionskollen();
@@ -1190,6 +1236,7 @@
     const level = mazeLevel(fraction);
     showMazeResult(`${(remaining / 1000).toFixed(1)} s kvar`, level);
     recordRewardResult("fyllekollen", fraction * MAZE_KLUNK_MAX, level.label); // scaled so max = MAZE_KLUNK_MAX
+    recordStat("fylle", Math.round(remaining / 100) / 10);
   }
 
   // Solving maps to a verdict by how much of the clock was left. Sober logic is
@@ -1316,11 +1363,13 @@
       clearReaktionTimers();
       showReaktionResult("För tidigt!", "Du tryckte innan ölen dök upp. Försök igen.", "early", "");
       recordRewardResult("reaktion", 0, "Falskstart"); // false start → 0
+      sayCommentary(randomItem(KOMMENTATOR.falskstart));
     } else if (reaktionPhase === "active") {
       const ms = Math.round(performance.now() - reaktionShownAt);
       const level = reaktionLevel(ms);
       showReaktionResult(`${ms} ms`, level.message, level.cls, level.label, level.alarm, level.celebrate);
       recordRewardResult("reaktion", Math.min(KLUNK_REAKTION_MAX, (KLUNK_REAKTION_BASE_MS - ms) / KLUNK_REAKTION_DIV), level.label);
+      recordStat("reaktion", ms);
     }
   }
 
@@ -1477,6 +1526,7 @@
 
     const deviation = Math.abs(guessBeer - memoryAnswer.beer) + Math.abs(guessMouse - memoryAnswer.mouse);
     recordRewardResult("minne", KLUNK_MINNE_BASE - deviation, level.label);
+    recordStat("minne", correct);
   }
 
   function memoryLevel(correctCount) {
@@ -1760,6 +1810,7 @@
     else if (level.celebrate) signalDrunkCelebration(spykollenOverlayEl);
     else playWinSound(false);
     recordRewardResult("spy", KLUNK_SPY[level.cls], level.label);
+    recordStat("spy", avoided);
   }
 
   function spyLevel(avoided) {
@@ -2065,6 +2116,7 @@
     else if (level.celebrate) signalDrunkCelebration(pissepausOverlayEl);
     else playWinSound(false);
     recordRewardResult("piss", Math.min(KLUNK_PISS_MAX, hits), level.label);
+    recordStat("piss", hits);
   }
 
   function pissLevel(hits) {
@@ -2124,6 +2176,18 @@
       // the last cell also completes lines, but we only run one reward flow.
       if (justGrandWin) startGrandReward();
       else if (newLines.length > 0) startBingoReward();
+      else if (marked === CELL_COUNT - 1) {
+        // Kommentatorn: tension calls when no reward fired this check.
+        sayCommentary(randomItem(KOMMENTATOR.almostGrand));
+      } else {
+        const checkedSet = new Set(state.checked);
+        const almost = getAllBoardLines().some(
+          (line) =>
+            line.filter((i) => checkedSet.has(i)).length === BOARD_SIZE - 1 &&
+            !state.bingoLinesAwarded.includes(line.join("-"))
+        );
+        if (almost) sayCommentary(randomItem(KOMMENTATOR.almost));
+      }
     }
   }
 
@@ -2138,32 +2202,32 @@
     });
   }
 
-  function getWinningLines(checked) {
-    const checkedSet = new Set(checked);
+  // All 10 candidate lines (4 rows + 4 columns + 2 diagonals).
+  function getAllBoardLines() {
     const lines = [];
-
     for (let row = 0; row < BOARD_SIZE; row++) {
       const rowLine = [];
       for (let col = 0; col < BOARD_SIZE; col++) rowLine.push(row * BOARD_SIZE + col);
-      if (rowLine.every((i) => checkedSet.has(i))) lines.push(rowLine);
+      lines.push(rowLine);
     }
-
     for (let col = 0; col < BOARD_SIZE; col++) {
       const colLine = [];
       for (let row = 0; row < BOARD_SIZE; row++) colLine.push(row * BOARD_SIZE + col);
-      if (colLine.every((i) => checkedSet.has(i))) lines.push(colLine);
+      lines.push(colLine);
     }
-
     const diagOne = [];
     const diagTwo = [];
     for (let i = 0; i < BOARD_SIZE; i++) {
       diagOne.push(i * BOARD_SIZE + i);
       diagTwo.push(i * BOARD_SIZE + (BOARD_SIZE - 1 - i));
     }
-    if (diagOne.every((i) => checkedSet.has(i))) lines.push(diagOne);
-    if (diagTwo.every((i) => checkedSet.has(i))) lines.push(diagTwo);
-
+    lines.push(diagOne, diagTwo);
     return lines;
+  }
+
+  function getWinningLines(checked) {
+    const checkedSet = new Set(checked);
+    return getAllBoardLines().filter((line) => line.every((i) => checkedSet.has(i)));
   }
 
   // ── Bingo rewards ─────────────────────────────────────────────────────────
@@ -2288,9 +2352,12 @@
     runConfetti(2200);
     playWinSound(true);
     openDialog(rewardOverlayEl);
-    // Broadcast the finished reward to the party — the payout is the moment
-    // the klunkar total exists.
-    publishParty({ t: "bingo", p: activePlayerId, kind: grand ? "grand" : "single", k: total });
+    // Tally + broadcast the finished reward — the payout is the moment the
+    // klunkar total exists. The shared id keys the recap dedupe, so a `since`
+    // replay of this event (own device id changes on reload) can't double-count.
+    const rewardEventId = generateSeed();
+    bumpNight(activePlayerId, grand ? "grand" : "single", total, rewardEventId);
+    publishParty({ t: "bingo", id: rewardEventId, p: activePlayerId, kind: grand ? "grand" : "single", k: total });
   }
 
   // ── Party-länk (live sync between phones) ─────────────────────────────────
@@ -2339,7 +2406,7 @@
         return;
       }
       if (!evt || evt.d === partyDeviceId) return; // own echo
-      onPartyEvent(evt, (envelope.time || 0) * 1000);
+      onPartyEvent(evt, (envelope.time || 0) * 1000, envelope.id);
     };
   }
 
@@ -2383,7 +2450,7 @@
     }, PARTY_BEER_DEBOUNCE_MS);
   }
 
-  function onPartyEvent(evt, atMs) {
+  function onPartyEvent(evt, atMs, eventId) {
     if (!isValidPlayerId(evt.p)) return;
 
     if (evt.t === "hello" || evt.t === "beer") {
@@ -2403,17 +2470,33 @@
 
     if (evt.t === "bingo") {
       partyPlayers[evt.p] = { count: partyPlayers[evt.p] && partyPlayers[evt.p].count, at: atMs };
+      const klunkar = Math.max(0, Math.round(evt.k || 0));
+      const grand = evt.kind === "grand";
+      // Tally for Kvällens recap, deduped by event id so a `since` replay
+      // after a reload can't double-count.
+      bumpNight(evt.p, evt.kind, klunkar, evt.id || eventId || `${evt.p}:${evt.k}:${atMs}`);
       // Replayed history from `since` must not take over the screen — only
       // genuinely-live bingos flash.
       if (Date.now() - atMs > PARTY_FRESH_MS) return;
       if (evt.p === activePlayerId) return; // it's this player's own win
       const label = getPlayer(evt.p).label;
-      const klunkar = Math.max(0, Math.round(evt.k || 0));
-      const grand = evt.kind === "grand";
       showPartyFlash(
         grand ? "🏆 HELA BRICKAN!" : "🎉 BINGO!",
         `${label} delar ut ${klunkar} ${klunkar === 1 ? "klunk" : "klunkar"} — DRICK!`,
-        `${label.replace(/^\S+\s/, "")} har ${grand ? "hela brickan" : "bingo"}! Drick ${klunkar} klunkar!`
+        `${spokenName(evt.p)} har ${grand ? "hela brickan" : "bingo"}! Drick ${klunkar} klunkar!`
+      );
+      return;
+    }
+
+    if (evt.t === "rekord") {
+      const news = applyRemoteRecord(evt.p, evt.g, evt.v);
+      if (activeDialog === rekordOverlayEl) renderRekordList();
+      if (!news || Date.now() - atMs > PARTY_FRESH_MS) return;
+      const meta = REKORD_META[evt.g];
+      showPartyFlash(
+        "🏆 NYTT REKORD!",
+        `${getPlayer(evt.p).label}: ${meta.label} — ${meta.fmt(evt.v)}`,
+        `Nytt rekord! ${spokenName(evt.p)}: ${meta.speech(evt.v)}`
       );
     }
   }
@@ -2498,6 +2581,352 @@
       li.append(name, beers);
       partyRosterEl.appendChild(li);
     });
+  }
+
+  // ── Rekord (Hall of Fame) ─────────────────────────────────────────────────
+
+  // Per-player all-time records, keyed stats[playerId][gameId] = { v, at }.
+  // Every mini-game's terminal result calls recordStat; a genuine improvement
+  // (not the seeding first result) triggers the NYTT REKORD takeover — delayed
+  // a beat so the verdict effects land first — and broadcasts to the party,
+  // where applyRemoteRecord converges every phone's Hall of Fame.
+  const REKORD_META = {
+    reaktion: {
+      label: "Reaktionskollen",
+      better: "lower",
+      fmt: (v) => `${v} ms`,
+      speech: (v) => `snabbaste reaktionen, ${v} millisekunder`,
+    },
+    fylle: {
+      label: "Fyllekollen",
+      better: "higher",
+      fmt: (v) => `${v.toFixed(1)} s kvar`,
+      speech: (v) => `${v.toFixed(1)} sekunder kvar i labyrinten`,
+    },
+    minne: {
+      label: "Minnesluckatestet",
+      better: "higher",
+      fmt: (v) => `${v}/2 rätt`,
+      speech: (v) => `${v} av 2 rätt i minnestestet`,
+    },
+    spy: {
+      label: "Spykollen",
+      better: "higher",
+      fmt: (v) => `${v} undvikna`,
+      speech: (v) => `${v} undvikna spyor`,
+    },
+    piss: {
+      label: "Pissepaus",
+      better: "higher",
+      fmt: (v) => `${v} träffade 🚽`,
+      speech: (v) => `${v} träffade toaletter`,
+    },
+  };
+
+  function loadStats() {
+    return loadJSON(STATS_KEY, () => ({}), isPlainObject);
+  }
+
+  function isBetterRecord(meta, value, prev) {
+    if (!prev) return true;
+    return meta.better === "lower" ? value < prev.v : value > prev.v;
+  }
+
+  function recordStat(gameId, value) {
+    if (currentMode !== MODE_LIVE || !activePlayerId) return;
+    const meta = REKORD_META[gameId];
+    if (!meta || typeof value !== "number" || !isFinite(value)) return;
+    const stats = loadStats();
+    const entry = stats[activePlayerId] || (stats[activePlayerId] = {});
+    const prev = entry[gameId];
+    if (!isBetterRecord(meta, value, prev)) return;
+    entry[gameId] = { v: value, at: Date.now() };
+    safeSet(STATS_KEY, JSON.stringify(stats));
+    if (!prev) return; // first-ever result seeds silently
+    const label = getPlayer(activePlayerId).label;
+    // Let the round's own verdict effects land before the takeover.
+    window.setTimeout(() => {
+      showPartyFlash(
+        "🏆 NYTT REKORD!",
+        `${label}: ${meta.label} — ${meta.fmt(value)}`,
+        `Nytt rekord! ${spokenName(activePlayerId)}: ${meta.speech(value)}`
+      );
+    }, 1400);
+    publishParty({ t: "rekord", p: activePlayerId, g: gameId, v: value });
+  }
+
+  // A record heard over the party: store if it beats what this phone knows
+  // (converging every phone's list), return whether it was news.
+  function applyRemoteRecord(playerId, gameId, value) {
+    const meta = REKORD_META[gameId];
+    if (!meta || typeof value !== "number" || !isFinite(value)) return false;
+    const stats = loadStats();
+    const entry = stats[playerId] || (stats[playerId] = {});
+    if (!isBetterRecord(meta, value, entry[gameId])) return false;
+    entry[gameId] = { v: value, at: Date.now() };
+    safeSet(STATS_KEY, JSON.stringify(stats));
+    return true;
+  }
+
+  function renderRekordList() {
+    const stats = loadStats();
+    rekordListEl.innerHTML = "";
+    Object.keys(REKORD_META).forEach((gameId) => {
+      const meta = REKORD_META[gameId];
+      let best = null;
+      let holder = null;
+      players.forEach((player) => {
+        const rec = stats[player.id] && stats[player.id][gameId];
+        if (rec && (!best || isBetterRecord(meta, rec.v, best))) {
+          best = rec;
+          holder = player;
+        }
+      });
+      const li = document.createElement("li");
+      li.dataset.set = best ? "true" : "false";
+      const game = document.createElement("span");
+      game.className = "rekord-game";
+      game.textContent = meta.label;
+      const value = document.createElement("span");
+      value.className = "rekord-value";
+      if (best) {
+        const strong = document.createElement("strong");
+        strong.textContent = meta.fmt(best.v);
+        value.append(strong, ` — ${holder.label}`);
+      } else {
+        value.textContent = "–";
+      }
+      li.append(game, value);
+      rekordListEl.appendChild(li);
+    });
+  }
+
+  // ── Kvällens recap ────────────────────────────────────────────────────────
+
+  // Tonight's tallies: bingos/grand wins/klunkar per player, own results from
+  // showRewardPayout and everyone else's via party bingo events (deduped by
+  // event id so `since` replays don't double-count). Resets after 18h quiet.
+  function loadNight() {
+    const night = loadJSON(NIGHT_KEY, createFreshNight, isPlainObject);
+    if (!isPlainObject(night.players) || typeof night.at !== "number" || Date.now() - night.at > NIGHT_RESET_MS) {
+      return createFreshNight();
+    }
+    return night;
+  }
+
+  function createFreshNight() {
+    return { at: Date.now(), seen: [], players: {} };
+  }
+
+  function bumpNight(playerId, kind, klunkar, dedupeId) {
+    if (!isValidPlayerId(playerId)) return;
+    const night = loadNight();
+    if (dedupeId) {
+      if (night.seen.includes(dedupeId)) return;
+      night.seen.push(dedupeId);
+      if (night.seen.length > 60) night.seen = night.seen.slice(-60);
+    }
+    const row = night.players[playerId] || (night.players[playerId] = { bingos: 0, grand: 0, klunkar: 0 });
+    if (kind === "grand") row.grand += 1;
+    else row.bingos += 1;
+    row.klunkar += Math.max(0, Math.round(klunkar || 0));
+    night.at = Date.now();
+    safeSet(NIGHT_KEY, JSON.stringify(night));
+  }
+
+  // Beer counts for the poster: own from this phone, others preferably from
+  // the live party roster (their own phones are authoritative).
+  function recapBeerCount(playerId) {
+    const local = beerCountOf(loadBeers(), playerId);
+    if (playerId === activePlayerId) return local;
+    const seen = partyPlayers[playerId];
+    return seen && typeof seen.count === "number" ? seen.count : local;
+  }
+
+  function renderRecap() {
+    const W = 1080;
+    const H = 1350;
+    recapCanvas.width = W;
+    recapCanvas.height = H;
+    const ctx = recapCanvas.getContext("2d");
+    if (!ctx) return;
+
+    const night = loadNight();
+    const rows = players
+      .map((player) => ({
+        player,
+        beers: recapBeerCount(player.id),
+        stats: night.players[player.id] || { bingos: 0, grand: 0, klunkar: 0 },
+      }))
+      .sort((a, b) => b.beers - a.beers);
+    const maxBeers = Math.max(1, ...rows.map((r) => r.beers));
+    const totals = rows.reduce(
+      (acc, r) => ({
+        bingos: acc.bingos + r.stats.bingos,
+        grand: acc.grand + r.stats.grand,
+        klunkar: acc.klunkar + r.stats.klunkar,
+      }),
+      { bingos: 0, grand: 0, klunkar: 0 }
+    );
+
+    // Ground
+    const bg = ctx.createRadialGradient(W * 0.25, H * 0.06, 80, W * 0.5, H * 0.5, H);
+    bg.addColorStop(0, "#2a0b3d");
+    bg.addColorStop(0.55, "#170529");
+    bg.addColorStop(1, "#05010c");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.lineWidth = 2;
+    for (let x = 0; x < W; x += 108) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    // Neon frame
+    ctx.strokeStyle = "#ff2d78";
+    ctx.lineWidth = 6;
+    ctx.shadowColor = "#ff2d78";
+    ctx.shadowBlur = 26;
+    ctx.strokeRect(28, 28, W - 56, H - 56);
+    ctx.shadowBlur = 0;
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#5beaff";
+    ctx.font = "900 40px 'Avenir Next', 'Segoe UI', sans-serif";
+    ctx.fillText("🐭 STYGG MUS BINGO", W / 2, 120);
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#ff2d78";
+    ctx.shadowBlur = 34;
+    ctx.font = "900 92px 'Avenir Next', 'Segoe UI', sans-serif";
+    ctx.fillText("KVÄLLENS RECAP", W / 2, 226);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#bda4d4";
+    ctx.font = "800 34px 'Avenir Next', 'Segoe UI', sans-serif";
+    ctx.fillText(new Date().toLocaleDateString("sv-SE"), W / 2, 282);
+
+    // Ölligan bars
+    const barLeft = 90;
+    const barMaxW = W - 340;
+    rows.forEach((row, i) => {
+      const y = 380 + i * 128;
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#fdf3ff";
+      ctx.font = "900 40px 'Avenir Next', 'Segoe UI', sans-serif";
+      ctx.fillText(row.player.label, barLeft, y);
+      const w = Math.max(14, (row.beers / maxBeers) * barMaxW);
+      ctx.fillStyle = "#faff2d";
+      ctx.shadowColor = "#faff2d";
+      ctx.shadowBlur = 18;
+      ctx.fillRect(barLeft, y + 22, w, 34);
+      ctx.shadowBlur = 0;
+      ctx.textAlign = "right";
+      ctx.font = "900 44px 'Avenir Next', 'Segoe UI', sans-serif";
+      ctx.fillText(`${row.beers} 🍺`, W - 90, y + 54);
+    });
+
+    // Totals
+    const totalsY = 380 + rows.length * 128 + 40;
+    ctx.strokeStyle = "rgba(45, 226, 255, 0.5)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(90, totalsY - 62);
+    ctx.lineTo(W - 90, totalsY - 62);
+    ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#5beaff";
+    ctx.font = "900 42px 'Avenir Next', 'Segoe UI', sans-serif";
+    ctx.fillText(
+      `🎉 ${totals.bingos} bingo · 🏆 ${totals.grand} hela brickan · 🍻 ${totals.klunkar} klunkar`,
+      W / 2,
+      totalsY
+    );
+
+    // Kvällens Fyllo
+    const fyllo = rows[0];
+    ctx.fillStyle = "#bda4d4";
+    ctx.font = "900 38px 'Avenir Next', 'Segoe UI', sans-serif";
+    ctx.fillText("KVÄLLENS FYLLO", W / 2, H - 220);
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#ff2d78";
+    ctx.shadowBlur = 30;
+    ctx.font = "900 64px 'Avenir Next', 'Segoe UI', sans-serif";
+    ctx.fillText(
+      fyllo.beers > 0 ? `👑 ${fyllo.player.label}` : "Ingen?! Skärpning.",
+      W / 2,
+      H - 140
+    );
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#bda4d4";
+    ctx.font = "800 30px 'Avenir Next', 'Segoe UI', sans-serif";
+    ctx.fillText("oski89.github.io/styggmus-bingo", W / 2, H - 68);
+  }
+
+  function shareRecap() {
+    if (!(recapCanvas instanceof HTMLCanvasElement)) return;
+    recapCanvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], "kvallens-recap.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "Kvällens recap — Stygg Mus Bingo" });
+          return;
+        } catch {
+          /* cancelled → fall through to download */
+        }
+      }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "kvallens-recap.png";
+      a.click();
+      window.setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    });
+  }
+
+  // ── Kommentatorn ──────────────────────────────────────────────────────────
+
+  // A sportscaster voice for the moments between verdicts. Few, deterministic
+  // triggers (near-bingo, near-grand, beer milestones, false starts) with a
+  // global cooldown, and it never interrupts ongoing speech — the verdict
+  // shouts always win.
+  const KOMMENTATOR = {
+    almost: [
+      "En ruta kvar till bingo. Det darrar i lokalen!",
+      "Bingovittring! Bara en ruta kvar.",
+      "Nu är det nära. En enda ruta kvar!",
+    ],
+    almostGrand: [
+      "EN RUTA KVAR PÅ HELA BRICKAN. Historiskt ögonblick på gång!",
+      "Hela brickan hänger på en enda ruta!",
+    ],
+    falskstart: [
+      "Falskstart! Alldeles för nykter och ivrig.",
+      "Falskstart. Domaren skakar på huvudet.",
+    ],
+  };
+
+  function spokenName(playerId) {
+    return getPlayer(playerId).label.replace(/^\S+\s/, "");
+  }
+
+  function kommentatorBeerLine(count, name) {
+    if (count === 5) return `${name} tar sin femte öl. Nu börjar det likna något.`;
+    if (count === 10) return `Tvåsiffrigt! ${name} är uppe i tio öl. Publiken jublar.`;
+    if (count === 15) return `Femton öl för ${name}. Vi är imponerade och lite oroliga.`;
+    return `${count} öl för ${name}. Fortsätt dricka.`;
+  }
+
+  function sayCommentary(text) {
+    if (currentMode !== MODE_LIVE || !text) return;
+    if (!("speechSynthesis" in window)) return;
+    if (window.speechSynthesis.speaking) return; // never talk over a verdict
+    const now = Date.now();
+    if (now - kommentatorLastAt < KOMMENTATOR_COOLDOWN_MS) return;
+    kommentatorLastAt = now;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "sv-SE";
+    const voice = window.speechSynthesis
+      .getVoices()
+      .find((v) => v.lang && v.lang.toLowerCase().startsWith("sv"));
+    if (voice) utterance.voice = voice;
+    utterance.rate = 1.02;
+    window.speechSynthesis.speak(utterance);
   }
 
   // ── Celebrations ──────────────────────────────────────────────────────────

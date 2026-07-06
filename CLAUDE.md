@@ -347,6 +347,36 @@ blocks ntfy.sh, so the Playwright suite stubs the transport
 (EventSource/fetch bridged over a BroadcastChannel with localStorage-backed
 replay) — live end-to-end needs real devices.
 
+### Rekord (Hall of Fame), Kvällens recap & Kommentatorn
+
+**Rekord**: all-time per-player mini-game records under `styggmus-bingo-stats-v1`
+(`stats[playerId][gameId] = { v, at }`; direction per game in `REKORD_META` —
+reaktion lower-is-better, the rest higher). Every game's terminal result calls
+`recordStat`; a first-ever result seeds silently, a genuine improvement fires
+the **NYTT REKORD takeover** (reuses `showPartyFlash`, delayed 1.4s so the
+round's verdict effects land first) and broadcasts a party `rekord` event.
+`applyRemoteRecord` stores incoming records if better, converging every
+phone's list; menu → Rekord (`#rekord-overlay`) shows best-per-game + holder.
+Records apply only in live mode with a chosen player — test mode never records.
+
+**Kvällens recap**: menu → Kvällens recap renders a shareable 1080×1350 neon
+poster on `#recap-canvas` (`renderRecap`): Ölligan beer bars (own count local,
+others from the party roster), tonight's bingo/grand/klunkar totals, and
+"Kvällens Fyllo". Tonight's tallies live under `styggmus-bingo-night-v1`,
+bumped in `showRewardPayout` (own) and from party `bingo` events (others),
+deduped by a shared event id (own device id changes on reload, so the payout
+publishes an `id` that both the local bump and every receiver key on); the
+night resets after `NIGHT_RESET_MS` (18h) of quiet. "Dela bilden" uses
+`navigator.share({ files })` with an `<a download>` fallback.
+
+**Kommentatorn**: a sportscaster voice (`sayCommentary`) with deliberately few,
+deterministic triggers — a line one-cell-from-bingo (unawarded 3/4 line),
+15/16 marked, beer milestones every 5th (`kommentatorBeerLine`), and
+Reaktionskollen false starts. Global `KOMMENTATOR_COOLDOWN_MS` (20s), never
+speaks over ongoing speech (verdict shouts always win), live mode only.
+Line pools live in `KOMMENTATOR`; `getAllBoardLines()` (also feeding
+`getWinningLines`) powers the near-bingo detection.
+
 ### PWA & device feedback
 
 The app is an installable PWA: `manifest.webmanifest` (standalone, portrait,
