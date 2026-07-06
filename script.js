@@ -89,6 +89,19 @@
   const KLUNK_MINNE_BASE = 7;
   const KLUNK_SPY = { red: 6, yellow: 4, green: 2 }; // Nykter / Salongsberusad / Full
   const KLUNK_PISS_MAX = 10; // klunkar = toilets hit, capped like Reaktionskollen
+  // Party-länk: live sync between the phones at the table via ntfy.sh, a free
+  // public pub/sub relay — plain fetch POSTs to publish and an EventSource to
+  // subscribe, no account and no library. Everyone shares one (obscure) topic;
+  // the transport is contained in the Party-länk section so it can be swapped
+  // for e.g. Firebase later. Note: the topic is public-by-obscurity, fine for
+  // a party game — don't send anything sensitive over it.
+  const PARTY_SERVER = "https://ntfy.sh";
+  const PARTY_TOPIC = "styggmus-bingo-neonklubben-v1";
+  const PARTY_KEY = "styggmus-bingo-party-v1"; // localStorage: "off" disables
+  const PARTY_BEER_DEBOUNCE_MS = 1200; // batch rapid +/- taps into one publish
+  const PARTY_FLASH_MS = 6000; // how long an incoming bingo takeover stays up
+  const PARTY_SINCE = "45m"; // replay window that warms the roster on connect
+  const PARTY_FRESH_MS = 2 * 60 * 1000; // only replayed events newer than this flash
   const KONAMI_SEQUENCE = [
     "ArrowUp",
     "ArrowUp",
@@ -220,8 +233,19 @@
 
   const menuOverlayEl = document.getElementById("menu-overlay");
   const menuBackBtn = document.getElementById("menu-back-btn");
+  const menuPartyBtn = document.getElementById("menu-party-btn");
   const menuChangePlayerBtn = document.getElementById("menu-change-player-btn");
   const menuExitBtn = document.getElementById("menu-exit-btn");
+
+  const partyOverlayEl = document.getElementById("party-overlay");
+  const partyBackBtn = document.getElementById("party-back-btn");
+  const partyStatusDotEl = document.getElementById("party-status-dot");
+  const partyStatusTextEl = document.getElementById("party-status-text");
+  const partyRosterEl = document.getElementById("party-roster");
+  const partyToggleBtn = document.getElementById("party-toggle-btn");
+  const partyFlashEl = document.getElementById("party-flash");
+  const partyFlashTitleEl = document.getElementById("party-flash-title");
+  const partyFlashTextEl = document.getElementById("party-flash-text");
 
   const overlayEl = document.getElementById("overlay");
   const overlayTitleEl = document.getElementById("overlay-title");
@@ -322,6 +346,13 @@
   let pissGame = null;
   let pissCountdownTimer = null;
   let pissRaf = null;
+  let partyEs = null;
+  let partyStatus = "off"; // "off" | "connecting" | "on"
+  let partyPlayers = {}; // playerId → { count, at } — the live Ölligan roster
+  let partyBeerTimer = null;
+  let partyFlashTimer = null;
+  let partyLastHelloAt = 0; // rate-limits the hello ping-pong below
+  const partyDeviceId = generateSeed(); // session identity; own events are ignored
   let soberAlarmTimer = null;
   let soberAlarmEl = null;
   let drunkPartyTimer = null;
@@ -368,6 +399,16 @@
     menuBtn.addEventListener("click", () => openDialog(menuOverlayEl));
     // Same as backdrop/Escape — just closes the menu, no confirm.
     menuBackBtn.addEventListener("click", () => closeDialog(menuOverlayEl));
+    menuPartyBtn.addEventListener("click", () => {
+      closeDialog(menuOverlayEl);
+      openPartyOverlay();
+    });
+    partyBackBtn.addEventListener("click", () => closeDialog(partyOverlayEl));
+    partyOverlayEl.addEventListener("click", (e) => {
+      if (e.target === partyOverlayEl) closeDialog(partyOverlayEl);
+    });
+    partyToggleBtn.addEventListener("click", onPartyToggle);
+    partyFlashEl.addEventListener("click", hidePartyFlash);
     // Quick-access shortcut to "Byt spelare" — same action as the menu entry,
     // no confirm (switching player was never a confirmed action).
     topbarBackBtn.addEventListener("click", showPlayerGate);
@@ -555,6 +596,7 @@
     renderBeerWidget();
     renderBoard();
     updateStatsAndWinState({ triggerEffects: false });
+    connectParty();
   }
 
   function onBackFromPlayerSelect() {
@@ -570,6 +612,7 @@
   // Clears the session and returns to the password gate. Saved boards and beers
   // stay in localStorage — only the session auth is cleared.
   function performExit() {
+    disconnectParty();
     safeRemoveSession(AUTH_KEY);
     safeRemoveSession(MODE_KEY);
     currentMode = null;
@@ -689,6 +732,7 @@
     beers[playerId] = Math.max(0, beerCountOf(beers, playerId) + delta);
     saveBeers(beers);
     renderBeerWidget();
+    schedulePartyBeerPublish(playerId);
     if (delta > 0) countBeerPress();
   }
 
@@ -2244,6 +2288,216 @@
     runConfetti(2200);
     playWinSound(true);
     openDialog(rewardOverlayEl);
+    // Broadcast the finished reward to the party — the payout is the moment
+    // the klunkar total exists.
+    publishParty({ t: "bingo", p: activePlayerId, kind: grand ? "grand" : "single", k: total });
+  }
+
+  // ── Party-länk (live sync between phones) ─────────────────────────────────
+
+  // Every phone in live mode joins one shared pub/sub topic (see the PARTY_*
+  // constants): beer counts stream into a live roster ("Ölligan") and a
+  // finished bingo reward takes over everyone ELSE's screen with fanfare,
+  // vibration, and the Swedish voice. Publishing is fire-and-forget fetch
+  // POSTs; receiving is one auto-reconnecting EventSource. Everything degrades
+  // silently — no sensor, no net, or party-läge off just means a quiet phone.
+
+  function isPartyEnabled() {
+    return safeGet(PARTY_KEY) !== "off";
+  }
+
+  function connectParty() {
+    if (currentMode !== MODE_LIVE || !isPartyEnabled()) return;
+    if (partyEs || typeof window.EventSource !== "function") return;
+    setPartyStatus("connecting");
+    // `since` replays the recent stream so the roster is warm on join;
+    // onPartyEvent only lets *fresh* bingo events flash (PARTY_FRESH_MS).
+    const es = new EventSource(`${PARTY_SERVER}/${PARTY_TOPIC}/sse?since=${PARTY_SINCE}`);
+    partyEs = es;
+    es.onopen = () => {
+      if (partyEs !== es) return;
+      setPartyStatus("on");
+      publishPartyHello();
+    };
+    // EventSource reconnects on its own; just reflect the state.
+    es.onerror = () => {
+      if (partyEs === es) setPartyStatus("connecting");
+    };
+    es.onmessage = (e) => {
+      if (partyEs !== es) return;
+      let envelope;
+      try {
+        envelope = JSON.parse(e.data);
+      } catch {
+        return;
+      }
+      if (typeof envelope.message !== "string") return;
+      let evt;
+      try {
+        evt = JSON.parse(envelope.message);
+      } catch {
+        return;
+      }
+      if (!evt || evt.d === partyDeviceId) return; // own echo
+      onPartyEvent(evt, (envelope.time || 0) * 1000);
+    };
+  }
+
+  function disconnectParty() {
+    if (partyEs) {
+      partyEs.close();
+      partyEs = null;
+    }
+    if (partyBeerTimer) {
+      window.clearTimeout(partyBeerTimer);
+      partyBeerTimer = null;
+    }
+    partyPlayers = {};
+    setPartyStatus("off");
+  }
+
+  function publishParty(evt) {
+    if (!partyEs) return; // party not running (test mode, disabled, exited)
+    try {
+      fetch(`${PARTY_SERVER}/${PARTY_TOPIC}`, {
+        method: "POST",
+        body: JSON.stringify({ ...evt, d: partyDeviceId }),
+      }).catch(() => {});
+    } catch {
+      /* fire-and-forget */
+    }
+  }
+
+  function publishPartyHello() {
+    partyLastHelloAt = Date.now();
+    publishParty({ t: "hello", p: activePlayerId, c: beerCountOf(loadBeers(), activePlayerId) });
+  }
+
+  // Rapid +/- taps collapse into one publish with the final count.
+  function schedulePartyBeerPublish(playerId) {
+    if (!partyEs) return;
+    if (partyBeerTimer) window.clearTimeout(partyBeerTimer);
+    partyBeerTimer = window.setTimeout(() => {
+      partyBeerTimer = null;
+      publishParty({ t: "beer", p: playerId, c: beerCountOf(loadBeers(), playerId) });
+    }, PARTY_BEER_DEBOUNCE_MS);
+  }
+
+  function onPartyEvent(evt, atMs) {
+    if (!isValidPlayerId(evt.p)) return;
+
+    if (evt.t === "hello" || evt.t === "beer") {
+      const prev = partyPlayers[evt.p];
+      if (!prev || atMs >= prev.at) {
+        partyPlayers[evt.p] = { count: typeof evt.c === "number" ? evt.c : prev && prev.count, at: atMs };
+      }
+      // Hello ping-pong: a fresh join announces itself; answering (at most
+      // once a minute, so responses to responses die out) means a late joiner
+      // learns who's already here even past the `since` replay window.
+      if (evt.t === "hello" && Date.now() - atMs < PARTY_FRESH_MS && Date.now() - partyLastHelloAt > 60000) {
+        publishPartyHello();
+      }
+      if (activeDialog === partyOverlayEl) renderPartyRoster();
+      return;
+    }
+
+    if (evt.t === "bingo") {
+      partyPlayers[evt.p] = { count: partyPlayers[evt.p] && partyPlayers[evt.p].count, at: atMs };
+      // Replayed history from `since` must not take over the screen — only
+      // genuinely-live bingos flash.
+      if (Date.now() - atMs > PARTY_FRESH_MS) return;
+      if (evt.p === activePlayerId) return; // it's this player's own win
+      const label = getPlayer(evt.p).label;
+      const klunkar = Math.max(0, Math.round(evt.k || 0));
+      const grand = evt.kind === "grand";
+      showPartyFlash(
+        grand ? "🏆 HELA BRICKAN!" : "🎉 BINGO!",
+        `${label} delar ut ${klunkar} ${klunkar === 1 ? "klunk" : "klunkar"} — DRICK!`,
+        `${label.replace(/^\S+\s/, "")} har ${grand ? "hela brickan" : "bingo"}! Drick ${klunkar} klunkar!`
+      );
+    }
+  }
+
+  function showPartyFlash(title, text, speech) {
+    if (partyFlashTimer) window.clearTimeout(partyFlashTimer);
+    partyFlashTitleEl.textContent = title;
+    partyFlashTextEl.textContent = text;
+    partyFlashEl.classList.remove("hidden");
+    confettiCanvas.classList.add("confetti--front");
+    runConfetti(2600);
+    playPartySound();
+    vibrate([80, 60, 80, 60, 220]);
+    if (speech) speakVerdict(speech);
+    partyFlashTimer = window.setTimeout(hidePartyFlash, PARTY_FLASH_MS);
+  }
+
+  function hidePartyFlash() {
+    if (partyFlashTimer) {
+      window.clearTimeout(partyFlashTimer);
+      partyFlashTimer = null;
+    }
+    partyFlashEl.classList.add("hidden");
+    // Only drop the lifted confetti if no verdict celebration owns it.
+    if (!drunkPartyEl) confettiCanvas.classList.remove("confetti--front");
+  }
+
+  function openPartyOverlay() {
+    connectParty(); // idempotent; re-tries if it was never started
+    renderPartyRoster();
+    renderPartyStatus();
+    openDialog(partyOverlayEl);
+  }
+
+  function onPartyToggle() {
+    if (isPartyEnabled()) {
+      safeSet(PARTY_KEY, "off");
+      disconnectParty();
+    } else {
+      safeSet(PARTY_KEY, "on");
+      connectParty();
+    }
+    renderPartyStatus();
+    renderPartyRoster();
+  }
+
+  function setPartyStatus(status) {
+    partyStatus = status;
+    renderPartyStatus();
+  }
+
+  function renderPartyStatus() {
+    const enabled = isPartyEnabled();
+    partyStatusDotEl.dataset.state = enabled ? partyStatus : "off";
+    partyStatusTextEl.textContent = !enabled
+      ? "Avstängd"
+      : partyStatus === "on"
+        ? "Ansluten"
+        : partyStatus === "connecting"
+          ? "Ansluter…"
+          : "Avstängd";
+    partyToggleBtn.textContent = enabled ? "Stäng av party-läge" : "Slå på party-läge";
+  }
+
+  function renderPartyRoster() {
+    partyRosterEl.innerHTML = "";
+    players.forEach((player) => {
+      const seen = partyPlayers[player.id];
+      const isSelf = player.id === activePlayerId;
+      const li = document.createElement("li");
+      li.dataset.seen = seen || isSelf ? "true" : "false";
+      const name = document.createElement("span");
+      name.textContent = player.label + (isSelf ? " (du)" : "");
+      const beers = document.createElement("span");
+      beers.className = "party-beers";
+      const count = isSelf
+        ? beerCountOf(loadBeers(), player.id)
+        : seen && typeof seen.count === "number"
+          ? seen.count
+          : null;
+      beers.textContent = count === null ? "–" : `${count} 🍺`;
+      li.append(name, beers);
+      partyRosterEl.appendChild(li);
+    });
   }
 
   // ── Celebrations ──────────────────────────────────────────────────────────

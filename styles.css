@@ -1480,6 +1480,142 @@ button:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Party-länk (live sync) ───────────────────────────────────────────────── */
+
+.party-card {
+  width: min(400px, 100%);
+}
+
+.overlay-card .party-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.5rem;
+}
+
+.party-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0.8rem 0 0.9rem;
+  font-weight: 850;
+}
+
+.party-status-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: rgba(250, 240, 255, 0.28);
+  flex-shrink: 0;
+}
+
+.party-status-dot[data-state="on"] {
+  background: #3fd99b;
+  box-shadow: 0 0 10px rgba(63, 217, 155, 0.8);
+}
+
+.party-status-dot[data-state="connecting"] {
+  background: #ffcf5a;
+  box-shadow: 0 0 10px rgba(255, 207, 90, 0.7);
+}
+
+.party-roster {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.party-roster li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  border: 1px solid rgba(250, 240, 255, 0.12);
+  background: rgba(250, 240, 255, 0.06);
+  text-align: left;
+  font-weight: 850;
+}
+
+/* Players the party hasn't heard from yet. */
+.party-roster li[data-seen="false"] {
+  opacity: 0.42;
+}
+
+.party-roster .party-beers {
+  white-space: nowrap;
+  color: #faff2d;
+  text-shadow: 0 0 10px rgba(250, 255, 45, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.party-hint {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Full-screen takeover when someone ELSE's phone reports a bingo. Sits above
+   every dialog (overlays are z 30, lifted confetti 40). */
+.party-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 45, 120, 0.36), transparent 70%),
+    rgba(7, 2, 14, 0.82);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.party-flash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  text-align: center;
+}
+
+.party-flash-title {
+  font-size: 2.6rem;
+  font-weight: 950;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 10px #ff2d78, 0 0 30px #ff2d78, 0 0 70px rgba(255, 45, 120, 0.8);
+}
+
+.party-flash-text {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.party-flash-dismiss {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .party-flash-title {
+    animation: party-flash-pop 0.55s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes party-flash-pop {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
 /* ── Pissepaus (tilt-aim) ─────────────────────────────────────────────────── */
 
 .pissepaus-card {

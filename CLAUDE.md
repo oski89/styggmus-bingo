@@ -316,6 +316,37 @@ listener. The canvas exposes `data-state` and `data-toilet-x/y` for the
 Playwright suite — one-toilet-at-a-time makes a single coordinate pair the
 full spawn state.
 
+### Party-länk (live sync between phones)
+
+Every phone in live mode auto-joins one shared pub/sub topic on **ntfy.sh**
+(free public relay, no account/library — see the `PARTY_*` constants; the
+topic is public-by-obscurity, fine for a party game, never send anything
+sensitive). The whole transport lives in the **Party-länk** section of
+script.js so it can be swapped (e.g. for Firebase) in one place: publishing is
+fire-and-forget `fetch` POSTs, receiving is one auto-reconnecting
+`EventSource` on `/sse?since=45m` — the `since` replay warms the roster for
+late joiners, and a rate-limited (60s) hello ping-pong covers joins beyond
+that window. Own events are ignored via a per-session `partyDeviceId`.
+
+Three event types: `hello` (presence + beer count; sent on connect and as
+ping-pong answers), `beer` (rapid ± taps debounce into one publish with the
+final count from `adjustBeerForPlayer`), and `bingo` (published in
+`showRewardPayout` where the klunkar total exists). Incoming beer/hello events
+feed `partyPlayers`, rendered as the "Ölligan" roster in `#party-overlay`
+(menu → Party-länk: status dot, per-player beer counts, on/off toggle stored
+under `styggmus-bingo-party-v1`, default on). An incoming **bingo** takes over
+the receiving phone via `#party-flash` — deliberately NOT a dialog (it must
+appear over any open dialog without fighting the focus-trap/close routing;
+plain fixed layer at z 50, tap or `PARTY_FLASH_MS` to dismiss) — with
+fanfare, vibration, lifted confetti, and `speakVerdict`. Replayed events
+older than `PARTY_FRESH_MS` never flash; a player's own win never flashes on
+their own phone. `connectParty()` runs from `startBingoGame` (idempotent),
+`disconnectParty()` from `performExit`. Everything degrades silently offline
+(EventSource retries; publishes are catch-and-drop). The sandbox CI network
+blocks ntfy.sh, so the Playwright suite stubs the transport
+(EventSource/fetch bridged over a BroadcastChannel with localStorage-backed
+replay) — live end-to-end needs real devices.
+
 ### PWA & device feedback
 
 The app is an installable PWA: `manifest.webmanifest` (standalone, portrait,

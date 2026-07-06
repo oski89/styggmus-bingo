@@ -170,8 +170,28 @@
         <div class="menu-actions">
           <button id="new-board-btn" class="secondary-btn" type="button">Ny bricka</button>
           <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>
+          <button id="menu-party-btn" class="secondary-btn" type="button">Party-länk</button>
           <button id="menu-change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
           <button id="menu-exit-btn" class="secondary-btn" type="button">Avsluta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Party-länk overlay (live sync between phones) -->
+    <div id="party-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="party-title">
+      <div class="overlay-card party-card">
+        <div class="menu-header">
+          <button id="party-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
+          <h2 id="party-title" class="party-title">Party-länk</h2>
+        </div>
+        <p class="party-status">
+          <span id="party-status-dot" class="party-status-dot" data-state="off" aria-hidden="true"></span>
+          <span id="party-status-text">Avstängd</span>
+        </p>
+        <ul id="party-roster" class="party-roster"></ul>
+        <p class="party-hint">Bingo och ölräkning sänds live till alla anslutna mobiler i sällskapet.</p>
+        <div class="menu-actions">
+          <button id="party-toggle-btn" class="secondary-btn" type="button">Stäng av party-läge</button>
         </div>
       </div>
     </div>
@@ -298,6 +318,17 @@
         <div class="confirm-actions pissepaus-footer">
           <button id="piss-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Party flash: incoming bingo takeover from another phone. Deliberately
+         NOT a dialog — it must be able to appear over any open dialog without
+         fighting the focus-trap/close routing, so it's a plain fixed layer. -->
+    <div id="party-flash" class="party-flash hidden" role="status" aria-live="assertive">
+      <div class="party-flash-card">
+        <span id="party-flash-title" class="party-flash-title"></span>
+        <span id="party-flash-text" class="party-flash-text"></span>
+        <span class="party-flash-dismiss">Tryck för att stänga</span>
       </div>
     </div>
 
