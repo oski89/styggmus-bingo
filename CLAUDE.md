@@ -34,6 +34,24 @@ so the demo shares an origin with root and would otherwise clobber real boards)
 and `PARTY_TOPIC`/`CACHE_NAME` are demo-specific so test games never leak into a
 real party or cache. When touching the demo, keep those isolations intact.
 
+## `dwarf/` — "Dwarf Bingo" office-themed copy
+
+`dwarf/` is another **self-contained standalone fork** (same isolation rules as
+`demo/`) served at `…/styggmus-bingo/dwarf/` — an office-bingo reskin with a
+**forge/gold/stone visual theme** instead of the neon casino. Differences from
+root: password `DWARF`; **four** players (`trixxers-oski` 🏑 / `flusshuss` 🤒 /
+`p1er` 🍺 / `andon` 🚨, mirrored in the `#player-select` buttons); four
+office-humour prompt groups (`oski`/`huss`/`p1er`/`andon`, Swedish, e.g. "Oski
+hämtar kaffe"); the title/brand/favicon are "Dwarf Bingo" / "DB" / ⛏️, the
+checked-cell corner emblem is ⛏️, and the `GULD` typed easter egg replaces DDKO.
+The **retheme is CSS-only**: the neon palette was remapped in `styles.css` (hot
+pink → forge gold `#e0a838`/`#ffcf5a`, cyan → ember orange `#ff7a2d`, acid
+yellow → gold, deep purples → warm stone/oak; verdict red/yellow/green kept),
+embers + confetti recolored to fire tones in `script.js`, and there is **no
+illustration** — `.page-bg` is a CSS forge glow (so the casino `art/` webp is not
+copied and is removed from the SW SHELL). Isolation: `:dwarf`-suffixed storage
+keys, `PARTY_TOPIC = "dwarf-bingo-forge-v1"`, `CACHE_NAME = "dwarf-bingo-v1"`.
+
 ## Architecture
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus PWA assets and markdown docs:
