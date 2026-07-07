@@ -396,6 +396,7 @@
 
   registerEventListeners();
   renderAccessFlow();
+  startEmbers();
 
   // PWA: register the app-shell service worker (relative path so it works under
   // the GitHub Pages subpath). Guarded — file:// and old browsers just skip it.
@@ -3093,6 +3094,69 @@
       event.preventDefault();
       first.focus();
     }
+  }
+
+  // ── Ambient embers ────────────────────────────────────────────────────────
+
+  // Slow-drifting neon motes rising through the background, giving the room a
+  // living-air feel behind the board. Runs once for the app's lifetime;
+  // skipped entirely under reduced motion (and if the canvas is missing).
+  function startEmbers() {
+    const canvas = document.getElementById("embers");
+    if (!(canvas instanceof HTMLCanvasElement) || prefersReducedMotion()) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const COLORS = ["rgba(255, 45, 120,", "rgba(45, 226, 255,", "rgba(250, 255, 45,"];
+    let motes = [];
+    let ratio = 1;
+
+    function size() {
+      ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(window.innerWidth * ratio);
+      canvas.height = Math.floor(window.innerHeight * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      // Scale count to the viewport so big screens aren't sparse.
+      const target = Math.round((window.innerWidth * window.innerHeight) / 26000);
+      motes = Array.from({ length: Math.max(18, Math.min(46, target)) }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: 1 + Math.random() * 2.4,
+        speed: 0.15 + Math.random() * 0.5,
+        drift: -0.3 + Math.random() * 0.6,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        alpha: 0.15 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2,
+      }));
+    }
+    size();
+    window.addEventListener("resize", size);
+
+    let t = 0;
+    function frame() {
+      t += 0.016;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      ctx.clearRect(0, 0, w, h);
+      for (const m of motes) {
+        m.y -= m.speed;
+        m.x += m.drift + Math.sin(t + m.phase) * 0.2;
+        if (m.y < -6) {
+          m.y = h + 6;
+          m.x = Math.random() * w;
+        }
+        const twinkle = m.alpha * (0.6 + 0.4 * Math.sin(t * 2 + m.phase));
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+        ctx.fillStyle = m.color + twinkle + ")";
+        ctx.shadowColor = m.color + "0.9)";
+        ctx.shadowBlur = 8;
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      window.requestAnimationFrame(frame);
+    }
+    window.requestAnimationFrame(frame);
   }
 
   // ── Confetti ──────────────────────────────────────────────────────────────

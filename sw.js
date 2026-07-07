@@ -2,7 +2,7 @@
 // the next load, with the cache as an offline fallback (the party may well be
 // somewhere without signal). Everything is same-origin and relative so it works
 // under the GitHub Pages subpath.
-const CACHE_NAME = "styggmus-bingo-v3";
+const CACHE_NAME = "styggmus-bingo-v4";
 const SHELL = [
   "./",
   "./index.html",

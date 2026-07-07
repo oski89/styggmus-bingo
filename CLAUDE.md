@@ -34,10 +34,22 @@ grounds (`--bg #05010c` up to `--card #1f0b3a`), **hot pink** `#ff2d78` as the
 primary accent (`--accent`), **electric cyan** `#2de2ff` as the secondary
 (`--checked-light`), and **acid yellow** `#faff2d` reserved for the beer
 counter. Verdict colors (red `#f7706d` / yellow `#ffcf5a` / green `#3fd99b`)
-are semantic and deliberately kept out of the theme palette. Neon-sign
-treatments (white core + colored `text-shadow` halos) sit on the app titles;
-checked cells are pink-filled with a cyan tube rim; confetti uses the neon
-set in `runConfetti`.
+are semantic and deliberately kept out of the theme palette. Confetti uses the
+neon set in `runConfetti`.
+
+The big titles (login `h1`, board `.bingo-topbar-title`) get a **neon-tube**
+treatment — a white-hot core (`-webkit-text-stroke` + tight white shadow)
+wrapped in layered pink halos, plus a faulty-tube `neon-title-flicker`
+keyframe (behind `prefers-reduced-motion`). The **board cells** are dimensional
+glass: a top highlight, a purple body, and a magenta under-glow so unlit cells
+read as lit glass rather than flat black; a `transition` on transform/shadow
+sets up the Tier-2 stamp. A **checked** cell becomes hot-pink glass with a
+glowing cyan tube rim and a 🐭 paw emblem stamped in the corner (`::after`).
+A **winning** cell runs the acid-yellow `cell-win-pulse` (reduced-motion gets
+a static bright variant). `.board-wrap` is a bright pink→cyan→yellow neon-tube
+edge. Ambient **embers** (`#embers` canvas inside `.page-bg`, driven by
+`startEmbers`) drift slow neon motes above the art and behind content; the rAF
+loop is skipped entirely under reduced motion.
 
 `.page-bg` carries the **neon wall art**: `art/neonklubben-bg.webp`, a full
 illustration of the mouse in cap and leather jacket at the casino table

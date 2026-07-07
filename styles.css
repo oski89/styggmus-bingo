@@ -120,6 +120,16 @@ input {
   }
 }
 
+/* Ambient embers canvas: above the art, behind content, non-interactive. Its
+   rAF loop is skipped under reduced motion (startEmbers bails early). */
+.embers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .app,
 .access-screen {
   position: relative;
@@ -204,8 +214,29 @@ input {
   font-size: 2.55rem;
   font-weight: 900;
   line-height: 0.98;
-  /* The venue's neon sign. */
-  text-shadow: 0 0 8px #ff2d78, 0 0 26px #ff2d78, 0 0 56px rgba(255, 45, 120, 0.65);
+  /* The venue's neon sign — a white-hot tube core with a layered pink halo. */
+  -webkit-text-stroke: 0.6px rgba(255, 255, 255, 0.85);
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px #ff2d78,
+    0 0 20px #ff2d78,
+    0 0 40px rgba(255, 45, 120, 0.9),
+    0 0 80px rgba(255, 45, 120, 0.5);
+}
+
+/* Faulty-tube flicker on the big neon titles; disabled under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .access-panel h1,
+  .hero h1,
+  .bingo-topbar-title {
+    animation: neon-title-flicker 5.5s infinite;
+  }
+}
+
+@keyframes neon-title-flicker {
+  0%, 55%, 57%, 60%, 100% { opacity: 1; }
+  56% { opacity: 0.72; }
+  58.5% { opacity: 0.86; }
 }
 
 .password-form {
@@ -403,9 +434,15 @@ input {
      graceful fallback rather than silently clipping the trailing emoji
      off-screen. */
   overflow-wrap: break-word;
-  /* Neon-sign treatment: white tube core with a pink halo. */
+  /* Neon-sign treatment: white-hot tube core with a layered pink halo. */
   color: #fff;
-  text-shadow: 0 0 7px #ff2d78, 0 0 20px #ff2d78, 0 0 42px rgba(255, 45, 120, 0.7);
+  -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.7);
+  text-shadow:
+    0 0 4px #fff,
+    0 0 8px #ff2d78,
+    0 0 16px #ff2d78,
+    0 0 34px rgba(255, 45, 120, 0.9),
+    0 0 60px rgba(255, 45, 120, 0.55);
 }
 
 .beer-widget {
@@ -625,13 +662,17 @@ button:focus-visible {
 .board-wrap {
   position: relative;
   overflow: hidden;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
   padding: 0.72rem;
   background:
-    linear-gradient(145deg, rgba(16, 5, 33, 0.96), rgba(12, 4, 24, 0.98)) padding-box,
-    linear-gradient(135deg, rgba(255, 156, 199, 0.76), rgba(45, 226, 255, 0.35), rgba(250, 240, 255, 0.12)) border-box;
-  box-shadow: 0 26px 56px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    linear-gradient(145deg, rgba(24, 7, 46, 0.97), rgba(9, 3, 20, 0.98)) padding-box,
+    linear-gradient(135deg, #ff2d78, #2de2ff 55%, #faff2d) border-box;
+  box-shadow:
+    0 0 30px rgba(255, 45, 120, 0.32),
+    0 0 60px rgba(45, 226, 255, 0.12),
+    0 26px 56px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .board-wrap::before {
@@ -655,13 +696,20 @@ button:focus-visible {
   position: relative;
   min-height: 116px;
   overflow: hidden;
-  border: 1px solid rgba(250, 240, 255, 0.15);
-  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   padding: 0.66rem;
+  /* Dimensional glass: a top highlight, a purple body, and a faint magenta
+     under-glow rising from the bottom so unlit cells read as lit glass, not
+     flat black rectangles. */
   background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02)),
-    linear-gradient(180deg, #1c0a33, #0e0420);
-  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    radial-gradient(120% 80% at 50% -12%, rgba(255, 255, 255, 0.14), transparent 55%),
+    linear-gradient(180deg, #221041, #120627 78%),
+    radial-gradient(140% 90% at 50% 122%, rgba(255, 45, 120, 0.17), transparent 60%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -14px 24px rgba(0, 0, 0, 0.32),
+    0 12px 22px rgba(0, 0, 0, 0.32);
   color: var(--text);
   font-size: 0.8rem;
   font-weight: 850;
@@ -673,6 +721,7 @@ button:focus-visible {
   hyphens: auto;
   user-select: none;
   -webkit-user-select: none;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .cell::before {
@@ -698,41 +747,73 @@ button:focus-visible {
 
 .cell.checked {
   padding-bottom: 1.55rem;
-  /* Hot-pink fill with a cyan tube rim — the two neon primaries together mark
-     "taken" louder than any checkmark. */
-  border-color: rgba(45, 226, 255, 0.85);
+  /* Hot-pink glass with a glowing cyan tube rim — the two neon primaries
+     together mark "taken" louder than any checkmark. */
+  border-color: #2de2ff;
   background:
-    linear-gradient(160deg, rgba(45, 226, 255, 0.22), transparent 55%),
-    linear-gradient(180deg, #ff2d78, var(--checked));
+    radial-gradient(120% 80% at 50% -12%, rgba(255, 255, 255, 0.28), transparent 55%),
+    linear-gradient(180deg, #ff3d86, #b3134f 90%);
   color: #fff;
-  box-shadow: 0 0 18px rgba(255, 45, 120, 0.55), inset 0 0 14px rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 18px rgba(255, 255, 255, 0.16),
+    0 0 16px rgba(45, 226, 255, 0.7),
+    0 0 30px rgba(255, 45, 120, 0.5),
+    0 12px 26px rgba(0, 0, 0, 0.4);
 }
 
+/* The 🐭 paw emblem stamped in the corner of a marked cell. */
 .cell.checked::after {
-  content: "✓";
+  content: "🐭";
   position: absolute;
   right: 0.42rem;
   bottom: 0.38rem;
   width: 1.18rem;
   height: 1.18rem;
-  border: 1px solid rgba(45, 226, 255, 0.8);
+  border: 1px solid rgba(45, 226, 255, 0.9);
   border-radius: 999px;
-  background: rgba(9, 3, 18, 0.5);
-  color: #2de2ff;
+  background: rgba(9, 3, 18, 0.55);
   display: grid;
   place-items: center;
-  font-size: 0.86rem;
-  font-weight: 950;
+  font-size: 0.8rem;
   line-height: 1;
-  box-shadow: 0 0 8px rgba(45, 226, 255, 0.7);
+  box-shadow: 0 0 10px rgba(45, 226, 255, 0.8);
 }
 
+/* Winning line: an acid-yellow neon tube that pulses (the celebratory colour,
+   distinct from the pink/cyan of a normal marked cell). */
 .cell[data-winning="true"] {
-  border-color: rgba(255, 156, 199, 0.88);
-  box-shadow:
-    0 0 0 2px rgba(255, 156, 199, 0.28) inset,
-    0 0 24px rgba(255, 45, 120, 0.48),
-    0 16px 30px rgba(0, 0, 0, 0.28);
+  border-color: rgba(250, 255, 45, 0.9);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cell[data-winning="true"] {
+    animation: cell-win-pulse 1.3s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell[data-winning="true"] {
+    box-shadow:
+      inset 0 0 0 2px rgba(250, 255, 45, 0.8),
+      0 0 26px rgba(250, 255, 45, 0.7),
+      0 12px 26px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@keyframes cell-win-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 2px rgba(250, 255, 45, 0.5),
+      0 0 18px rgba(250, 255, 45, 0.5),
+      0 12px 26px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(250, 255, 45, 0.95),
+      0 0 34px rgba(250, 255, 45, 0.9),
+      0 0 60px rgba(255, 45, 120, 0.5);
+  }
 }
 
 /* ── Overlays ─────────────────────────────────────────────────────────────── */
