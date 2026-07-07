@@ -1,0 +1,2357 @@
+:root {
+  --accent: #ff2d78;
+  --accent-strong: #ff7cab;
+  --bg: #05010c;
+  --bg-elevated: #150724;
+  --card: #1f0b3a;
+  --card-deep: #120522;
+  --text: #fdf3ff;
+  --muted: #bda4d4;
+  --checked: #8a0e4c;
+  --checked-light: #2de2ff;
+  --danger: #f26d7d;
+  --edge: rgba(250, 240, 255, 0.16);
+  --edge-strong: rgba(255, 45, 120, 0.64);
+  --shadow: rgba(0, 0, 0, 0.42);
+  --font-main: "Avenir Next", "Inter", "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100svh;
+  font-family: var(--font-main);
+  color: var(--text);
+  background:
+    radial-gradient(circle at 22% 6%, #2a0b3d 0%, #170529 42%, #0a0116 72%, #05010c 100%),
+    var(--bg);
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.page-bg::before,
+.page-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.page-bg::before {
+  background:
+    linear-gradient(115deg, rgba(255, 45, 120, 0.18), transparent 28%, rgba(45, 226, 255, 0.12) 58%, transparent 78%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 72px);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.32));
+}
+
+.page-bg::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%),
+    repeating-linear-gradient(135deg, rgba(255, 45, 120, 0.06) 0 1px, transparent 1px 18px);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+
+/* ── Neon wall art (the gambling mouse in .page-bg) ──────────────────────────
+   A full illustration (art/neonklubben-bg.webp): the mouse in cap and leather
+   jacket at the casino table. cover + center keeps the mouse centred when
+   portrait phones crop the wide scene; dimmed and vignetted toward the middle
+   so the board and dialogs stay legible on top. */
+.page-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.55;
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.55) 62%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.55) 30%,
+    rgba(0, 0, 0, 0.55) 62%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+}
+
+/* Portrait phones crop the wide scene so hard that the mouse's face — the
+   whole point of the art — lands exactly behind the board/login panel. Slide
+   the image down so the grin sits in the free band under the board instead,
+   and fade the image's top edge into the page background to hide the seam. */
+@media (max-width: 680px) {
+  .page-bg-img {
+    top: auto;
+    bottom: -42%;
+    height: 112%;
+    opacity: 0.6;
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 22%, rgba(0, 0, 0, 0.9) 100%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 22%, rgba(0, 0, 0, 0.9) 100%);
+  }
+}
+
+/* Ambient embers canvas: above the art, behind content, non-interactive. Its
+   rAF loop is skipped under reduced motion (startEmbers bails early). */
+.embers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* The iOS haptic-tick switch: invisible but still rendered (display:none would
+   stop iOS from firing the toggle haptic), out of the layout and untouchable. */
+.haptic-tick {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  margin: 0;
+}
+
+.app,
+.access-screen {
+  position: relative;
+  z-index: 1;
+}
+
+.app {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  padding: calc(1rem + env(safe-area-inset-top)) 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 0.9rem;
+}
+
+.access-screen {
+  width: min(560px, 100%);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: calc(1.25rem + env(safe-area-inset-top)) 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+}
+
+.access-panel {
+  position: relative;
+  width: 100%;
+  padding: 1.35rem;
+  overflow: hidden;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background:
+    linear-gradient(155deg, rgba(16, 23, 35, 0.94), rgba(14, 5, 28, 0.96)) padding-box,
+    linear-gradient(135deg, rgba(255, 156, 199, 0.7), rgba(45, 226, 255, 0.26), rgba(250, 240, 255, 0.12)) border-box;
+  box-shadow: 0 28px 80px var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(22px);
+}
+
+.access-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 16px);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.access-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-mark {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 0.65rem;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.38));
+}
+
+.brand-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The shared <symbol> sprite is referenced via <use>; it never renders itself.
+   (Brand-mark colours are carried as inline styles on the symbol so they apply
+   through <use> in every browser — see index.html.) */
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.access-panel h1,
+.hero h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 2.55rem;
+  font-weight: 900;
+  line-height: 0.98;
+  /* The venue's neon sign — a white-hot tube core with a layered pink halo. */
+  -webkit-text-stroke: 0.6px rgba(255, 255, 255, 0.85);
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px #ff2d78,
+    0 0 20px #ff2d78,
+    0 0 40px rgba(255, 45, 120, 0.9),
+    0 0 80px rgba(255, 45, 120, 0.5);
+}
+
+/* Faulty-tube flicker on the big neon titles; disabled under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .access-panel h1,
+  .hero h1,
+  .bingo-topbar-title {
+    animation: neon-title-flicker 5.5s infinite;
+  }
+}
+
+@keyframes neon-title-flicker {
+  0%, 55%, 57%, 60%, 100% { opacity: 1; }
+  56% { opacity: 0.72; }
+  58.5% { opacity: 0.86; }
+}
+
+.password-form {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.35rem;
+  text-align: left;
+}
+
+.password-form label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.password-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+}
+
+.password-row input {
+  min-width: 0;
+  min-height: 50px;
+  border: 1px solid rgba(250, 240, 255, 0.18);
+  border-radius: 8px;
+  padding: 0 0.9rem;
+  background: rgba(7, 2, 14, 0.66);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 28px rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.password-row input:focus-visible {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px rgba(255, 45, 120, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.feedback {
+  min-height: 1.2rem;
+  margin: 0;
+  color: #ffb1bd;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.player-select {
+  margin-top: 1.35rem;
+}
+
+.player-select h2 {
+  margin: 0 0 0.8rem;
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 850;
+}
+
+.player-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.player-buttons button:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+.player-buttons button {
+  min-height: 52px;
+  border: 1px solid rgba(250, 240, 255, 0.14);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
+    rgba(22, 8, 42, 0.78);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.player-buttons button:hover,
+.player-buttons button:focus-visible {
+  border-color: rgba(255, 156, 199, 0.56);
+  transform: translateY(-1px);
+}
+
+.reset-all-btn {
+  margin-top: 0.8rem;
+  padding: 0.45rem 0.65rem;
+  background: transparent;
+  color: rgba(250, 240, 255, 0.6);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.reset-all-btn:hover,
+.reset-all-btn:focus-visible {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+/* "Avsluta" — ends the session and returns to the password gate. Lives at the
+   bottom of every logged-in page; centred so it doesn't stretch to fill its
+   flex (dashboard/beer) or grid (bingo) parent. */
+.exit-btn {
+  align-self: center;
+  justify-self: center;
+  width: auto;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid rgba(250, 240, 255, 0.18);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(250, 240, 255, 0.6);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.exit-btn:hover,
+.exit-btn:focus-visible {
+  border-color: rgba(255, 156, 199, 0.5);
+  color: var(--accent-strong);
+}
+
+.version-line {
+  margin: 0;
+  color: rgba(250, 240, 255, 0.48);
+  font-size: 0.76rem;
+  font-weight: 750;
+  text-align: center;
+}
+
+.access-panel .version-line {
+  margin-top: 1rem;
+}
+
+.hero {
+  position: relative;
+  padding: 0.75rem 0 0.15rem;
+  text-align: center;
+}
+
+.hero-mark {
+  width: 58px;
+  height: 58px;
+  margin-bottom: 0.45rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  margin: 0 0 0.5rem;
+  padding: 0.25rem 0.72rem;
+  border: 1px solid rgba(255, 45, 120, 0.22);
+  border-radius: 999px;
+  background: rgba(9, 3, 18, 0.42);
+  color: rgba(250, 240, 255, 0.68);
+  font-size: 0.78rem;
+  font-weight: 850;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.subtitle {
+  margin: 0.55rem auto 0;
+  max-width: 35rem;
+  color: rgba(250, 240, 255, 0.68);
+  font-size: 0.98rem;
+  font-weight: 650;
+}
+
+/* ── Bingo top bar + beer widget ──────────────────────────────────────────── */
+
+.bingo-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.1rem 0 0;
+  /* Without this, the grid item's automatic min-width bubbles up from the
+     title's nowrap text and pushes the whole bar wider than its column,
+     overflowing the viewport instead of letting the title ellipsize. */
+  min-width: 0;
+}
+
+.bingo-topbar-title {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.1;
+  /* Fits one line down to ~375px; narrower widths (e.g. 320px) wrap to a
+     second line instead — wrapping stays allowed (not nowrap+ellipsis) as a
+     graceful fallback rather than silently clipping the trailing emoji
+     off-screen. */
+  overflow-wrap: break-word;
+  /* Neon-sign treatment: white-hot tube core with a layered pink halo. */
+  color: #fff;
+  -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.7);
+  text-shadow:
+    0 0 4px #fff,
+    0 0 8px #ff2d78,
+    0 0 16px #ff2d78,
+    0 0 34px rgba(255, 45, 120, 0.9),
+    0 0 60px rgba(255, 45, 120, 0.55);
+}
+
+.beer-widget {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.28rem 0.34rem;
+  /* Acid-yellow neon — the third tube colour, reserved for the beer counter. */
+  border: 1px solid rgba(250, 255, 45, 0.5);
+  border-radius: 999px;
+  background: rgba(18, 6, 36, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 16px rgba(250, 255, 45, 0.18);
+}
+
+.beer-widget-value {
+  min-width: 2.7rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #faff2d;
+  text-shadow: 0 0 10px rgba(250, 255, 45, 0.65);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.beer-widget-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 240, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.85);
+  color: var(--text);
+  font-size: 1.4rem;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.beer-widget-btn:active {
+  border-color: rgba(255, 45, 120, 0.5);
+}
+
+.beer-widget-btn--plus {
+  border-color: rgba(250, 240, 255, 0.3);
+  background: linear-gradient(180deg, #ff7cab, #ff2d78 52%, #b3134f);
+  color: #160d02;
+}
+
+.menu-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 240, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.85);
+  color: var(--text);
+  font-size: 1.3rem;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.menu-btn:active {
+  border-color: rgba(255, 45, 120, 0.5);
+}
+
+/* Quick-access shortcut to "Byt spelare" (same action as the menu entry),
+   at the opposite end of the top bar from the ⋮ menu button, so switching
+   player doesn't require opening the full menu. */
+.back-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 240, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.85);
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.back-btn:active {
+  border-color: rgba(255, 45, 120, 0.5);
+}
+
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+button {
+  min-width: 0;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.82rem 1rem;
+  font-size: 0.94rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+button:focus-visible {
+  outline: 3px solid rgba(255, 156, 199, 0.34);
+  outline-offset: 2px;
+}
+
+.primary-btn {
+  border: 1px solid rgba(250, 240, 255, 0.3);
+  background:
+    linear-gradient(180deg, #ff7cab 0%, #ff2d78 46%, #b3134f 100%);
+  color: #160d02;
+  box-shadow: 0 16px 28px rgba(179, 19, 79, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
+}
+
+.primary-btn:hover,
+.primary-btn:focus-visible {
+  box-shadow: 0 18px 34px rgba(255, 45, 120, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.secondary-btn {
+  border: 1px solid rgba(250, 240, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.8);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.secondary-btn:hover,
+.secondary-btn:focus-visible {
+  border-color: rgba(45, 226, 255, 0.46);
+  background:
+    linear-gradient(180deg, rgba(45, 226, 255, 0.18), rgba(255, 255, 255, 0.045)),
+    rgba(18, 6, 36, 0.88);
+}
+
+/* ── Stats ────────────────────────────────────────────────────────────────── */
+
+.stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  /* Same fix as .bingo-topbar: without this, the beer widget's fixed-size
+     children bubble up an automatic min-width that pushes the whole row (and
+     its .app grid column) wider than the viewport instead of letting the
+     Spelare card share the leftover space. */
+  min-width: 0;
+}
+
+.stat {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  overflow: hidden;
+  border: 1px solid rgba(250, 240, 255, 0.12);
+  border-radius: 8px;
+  padding: 0.5rem 0.78rem;
+  /* Near-opaque: the neon wall art behind must stay a faint glow here, not
+     bleed through and read as a stray border. */
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.075), transparent 62%),
+    rgba(14, 5, 28, 0.94);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.stat::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--checked-light));
+  opacity: 0.75;
+}
+
+.stat-value {
+  display: block;
+  min-width: 0;
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 900;
+  line-height: 1.1;
+  /* Keep each stat to a single line so the three columns stay short — the long
+     player name ellipsises rather than wrapping the row taller. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Board ────────────────────────────────────────────────────────────────── */
+
+.board-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 0.72rem;
+  background:
+    linear-gradient(145deg, rgba(24, 7, 46, 0.97), rgba(9, 3, 20, 0.98)) padding-box,
+    linear-gradient(135deg, #ff2d78, #2de2ff 55%, #faff2d) border-box;
+  box-shadow:
+    0 0 30px rgba(255, 45, 120, 0.32),
+    0 0 60px rgba(45, 226, 255, 0.12),
+    0 26px 56px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.board-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 14px);
+  pointer-events: none;
+}
+
+.board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.cell {
+  position: relative;
+  min-height: 116px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.66rem;
+  /* Dimensional glass: a top highlight, a purple body, and a faint magenta
+     under-glow rising from the bottom so unlit cells read as lit glass, not
+     flat black rectangles. */
+  background:
+    radial-gradient(120% 80% at 50% -12%, rgba(255, 255, 255, 0.14), transparent 55%),
+    linear-gradient(180deg, #221041, #120627 78%),
+    radial-gradient(140% 90% at 50% 122%, rgba(255, 45, 120, 0.17), transparent 60%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -14px 24px rgba(0, 0, 0, 0.32),
+    0 12px 22px rgba(0, 0, 0, 0.32);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 850;
+  line-height: 1.12;
+  text-align: center;
+  display: grid;
+  place-items: center;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255, 45, 120, 0.14), transparent 42%, rgba(45, 226, 255, 0.1));
+  opacity: 0;
+  transition: opacity 140ms ease;
+  pointer-events: none;
+}
+
+.cell:hover,
+.cell:focus-visible {
+  border-color: rgba(255, 156, 199, 0.5);
+  transform: translateY(-1px);
+}
+
+.cell:hover::before,
+.cell:focus-visible::before {
+  opacity: 1;
+}
+
+.cell.checked {
+  padding-bottom: 1.55rem;
+  /* Hot-pink glass with a glowing cyan tube rim — the two neon primaries
+     together mark "taken" louder than any checkmark. */
+  border-color: #2de2ff;
+  background:
+    radial-gradient(120% 80% at 50% -12%, rgba(255, 255, 255, 0.28), transparent 55%),
+    linear-gradient(180deg, #ff3d86, #b3134f 90%);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 18px rgba(255, 255, 255, 0.16),
+    0 0 16px rgba(45, 226, 255, 0.7),
+    0 0 30px rgba(255, 45, 120, 0.5),
+    0 12px 26px rgba(0, 0, 0, 0.4);
+}
+
+/* The 🐭 paw emblem stamped in the corner of a marked cell. */
+.cell.checked::after {
+  content: "🐭";
+  position: absolute;
+  right: 0.42rem;
+  bottom: 0.38rem;
+  width: 1.18rem;
+  height: 1.18rem;
+  border: 1px solid rgba(45, 226, 255, 0.9);
+  border-radius: 999px;
+  background: rgba(9, 3, 18, 0.55);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  line-height: 1;
+  box-shadow: 0 0 10px rgba(45, 226, 255, 0.8);
+}
+
+/* Winning line: an acid-yellow neon tube that pulses (the celebratory colour,
+   distinct from the pink/cyan of a normal marked cell). */
+.cell[data-winning="true"] {
+  border-color: rgba(250, 255, 45, 0.9);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cell[data-winning="true"] {
+    animation: cell-win-pulse 1.3s ease-in-out infinite;
+    /* Negative delay staggered by position offsets each cell's phase, so the
+       glow travels along the line like a marquee runner (set in JS). */
+    animation-delay: calc(var(--win-order, 0) * -0.16s);
+  }
+
+  /* Tactile stamp when a cell is marked: a scale-pop, an expanding cyan spark
+     ring (reusing ::before), and the 🐭 emblem slamming down. */
+  .cell.stamp {
+    animation: cell-stamp 0.42s cubic-bezier(0.22, 1.4, 0.4, 1);
+  }
+  .cell.stamp::before {
+    background: radial-gradient(circle at 50% 50%, rgba(45, 226, 255, 0.85), rgba(255, 45, 120, 0.4) 45%, transparent 68%);
+    animation: cell-spark 0.42s ease-out;
+  }
+  .cell.stamp::after {
+    animation: emblem-slam 0.42s cubic-bezier(0.22, 1.5, 0.4, 1);
+  }
+}
+
+@keyframes cell-stamp {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cell-spark {
+  0% { opacity: 1; transform: scale(0.35); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+@keyframes emblem-slam {
+  0% { transform: scale(2.3); opacity: 0; }
+  55% { transform: scale(0.86); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell[data-winning="true"] {
+    box-shadow:
+      inset 0 0 0 2px rgba(250, 255, 45, 0.8),
+      0 0 26px rgba(250, 255, 45, 0.7),
+      0 12px 26px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@keyframes cell-win-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 2px rgba(250, 255, 45, 0.5),
+      0 0 18px rgba(250, 255, 45, 0.5),
+      0 12px 26px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 2px rgba(250, 255, 45, 0.95),
+      0 0 34px rgba(250, 255, 45, 0.9),
+      0 0 60px rgba(255, 45, 120, 0.5);
+  }
+}
+
+/* ── Overlays ─────────────────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background:
+    linear-gradient(180deg, rgba(7, 2, 14, 0.82), rgba(7, 2, 14, 0.92)),
+    rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.overlay-card {
+  position: relative;
+  width: min(460px, 100%);
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  background:
+    linear-gradient(155deg, rgba(20, 28, 42, 0.98), rgba(13, 4, 26, 0.98)) padding-box,
+    linear-gradient(135deg, rgba(255, 156, 199, 0.8), rgba(45, 226, 255, 0.36), rgba(250, 240, 255, 0.16)) border-box;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: pop-in 220ms ease-out;
+}
+
+.overlay-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 15px);
+  pointer-events: none;
+}
+
+.overlay-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.overlay-card h2 {
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: 2rem;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 16px 34px rgba(255, 45, 120, 0.24);
+}
+
+.overlay-card p {
+  margin: 0.9rem 0 1rem;
+  color: rgba(250, 240, 255, 0.88);
+  font-size: 1rem;
+  font-weight: 720;
+}
+
+.overlay-card button {
+  border: 1px solid rgba(250, 240, 255, 0.28);
+  background: linear-gradient(180deg, #ff7cab, #ff2d78 52%, #b3134f);
+  color: #160d02;
+  box-shadow: 0 16px 28px rgba(179, 19, 79, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.46);
+}
+
+/* ── Bingo reward overlay (mini-game intro + klunkar payout) ───────────────── */
+
+.reward-card {
+  width: min(440px, 100%);
+}
+
+.reward-body {
+  margin: 0.2rem 0 0.4rem;
+}
+
+.reward-lead {
+  font-size: 1.02rem;
+}
+
+.reward-game-preview {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.reward-game-preview strong {
+  color: var(--text);
+}
+
+.reward-game-list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.reward-game-list strong {
+  color: var(--text);
+}
+
+.reward-breakdown {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reward-breakdown li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0.1rem 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  background: rgba(250, 240, 255, 0.06);
+  border: 1px solid rgba(250, 240, 255, 0.12);
+  text-align: left;
+}
+
+.reward-row-game {
+  font-weight: 850;
+  color: var(--text);
+}
+
+.reward-row-klunk {
+  grid-row: span 2;
+  align-self: center;
+  font-weight: 950;
+  white-space: nowrap;
+  color: var(--accent-strong);
+}
+
+.reward-row-verdict {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(250, 240, 255, 0.7);
+}
+
+.reward-total {
+  font-size: 1.18rem;
+  font-weight: 850;
+}
+
+.reward-total strong {
+  font-size: 1.7rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+}
+
+/* ── Confirm dialog ───────────────────────────────────────────────────────── */
+
+.confirm-card {
+  width: min(440px, 100%);
+}
+
+/* Smaller, calmer than the celebratory "BINGO!" heading the card normally
+   carries. More specific than `.overlay-card h2` so it wins. */
+.overlay-card .confirm-title {
+  font-size: 1.5rem;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.confirm-actions button {
+  min-width: 8rem;
+}
+
+/* The generic `.overlay-card button` rule paints every overlay button gold;
+   re-assert the neutral secondary look for the cancel button (two classes beat
+   the one-class-one-type selector). */
+.confirm-actions .secondary-btn {
+  border: 1px solid rgba(250, 240, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.8);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.confirm-actions .secondary-btn:hover,
+.confirm-actions .secondary-btn:focus-visible {
+  border-color: rgba(45, 226, 255, 0.46);
+}
+
+/* ── Menu overlay (byt spelare / avsluta) ─────────────────────────────────── */
+
+.menu-card {
+  width: min(360px, 100%);
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* The generic `.overlay-card button` rule paints every overlay button gold
+   (same issue `.menu-actions .secondary-btn` re-asserts against below) —
+   re-assert `.back-btn`'s own neutral look here so it still reads as a
+   nav control, not an action button. */
+.menu-header .back-btn {
+  border: 1px solid rgba(250, 240, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.85);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.overlay-card .menu-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.5rem;
+}
+
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.menu-actions button {
+  width: 100%;
+}
+
+/* The generic `.overlay-card button` rule paints every overlay button gold;
+   re-assert the neutral look here (two classes beat the one-class-one-type
+   selector) so all four menu actions share one theme, matching
+   `.confirm-actions .secondary-btn`. */
+.menu-actions .secondary-btn {
+  border: 1px solid rgba(250, 240, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.8);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.menu-actions .secondary-btn:hover,
+.menu-actions .secondary-btn:focus-visible {
+  border-color: rgba(45, 226, 255, 0.46);
+}
+
+/* ── Fyllekollen (swipe maze) ─────────────────────────────────────────────── */
+
+.fyllekollen-card {
+  width: min(420px, 100%);
+}
+
+.overlay-card .fyllekollen-title {
+  font-size: 1.6rem;
+}
+
+.fyllekollen-text {
+  margin: 0.7rem 0 1rem;
+}
+
+/* Shared by Reaktionskollen/Minnesluckatestet/Spykollen: a short static
+   emoji description, always visible regardless of how the game was opened
+   (reward flow, beer-counter cadence, or the test menu) — matches
+   Fyllekollen's own always-visible .fyllekollen-text (same margin, same
+   inherited `.overlay-card p` size/color) instead of a smaller muted caption. */
+.minigame-blurb {
+  margin: 0.7rem 0 1rem;
+}
+
+.maze-timer {
+  margin: 0 0 0.6rem;
+  font-size: 1.8rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Turns red when the clock is running low. */
+.maze-timer[data-urgent="true"] {
+  color: #f7706d;
+}
+
+/* Failure tone for the shared prize overlay (red-tinted heading). */
+.overlay[data-tone="fail"] .overlay-card h2 {
+  color: #f7706d;
+  text-shadow: 0 16px 34px rgba(247, 112, 109, 0.24);
+}
+
+.maze-wrap {
+  position: relative;
+  margin: 0 auto 1rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+/* Verdict panel shown over the maze when a round ends (mirrors .spy-result). */
+.maze-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0 1rem;
+  text-align: center;
+  border-radius: 8px;
+  background: rgba(7, 2, 14, 0.78);
+  backdrop-filter: blur(2px);
+}
+
+.maze-result-headline {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.maze-result-detail {
+  font-size: 1.6rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--text);
+}
+
+.maze-result-msg {
+  font-size: 0.9rem;
+  font-weight: 720;
+  color: rgba(250, 240, 255, 0.85);
+}
+
+.maze-result[data-level="green"] .maze-result-headline { color: #3fd99b; }
+.maze-result[data-level="yellow"] .maze-result-headline { color: #ffcf5a; }
+.maze-result[data-level="red"] .maze-result-headline { color: #f7706d; }
+
+.maze-canvas {
+  display: block;
+  /* Width/height are set in px by drawMaze() so the grid stays square; cap at
+     the wrapper width as a safety net. */
+  max-width: 100%;
+  margin: 0 auto;
+  border: 1px solid rgba(250, 240, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(13, 4, 26, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* Own the gesture so swiping the maze never scrolls or pans the page. */
+  touch-action: none;
+}
+
+/* ── Reaktionskollen (reaction mini-game) ─────────────────────────────────── */
+
+.reaktion-card {
+  width: min(420px, 100%);
+}
+
+.overlay-card .reaktion-title {
+  font-size: 1.6rem;
+}
+
+.reaktion-instruction {
+  margin: 0.7rem 0 1rem;
+  min-height: 1.2em;
+}
+
+.reaktion-stage {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid rgba(250, 240, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(13, 4, 26, 0.85);
+  cursor: pointer;
+  /* Snappy taps — no double-tap-zoom delay eating into the reaction time. */
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.reaktion-stage[data-state="active"] {
+  border-color: rgba(45, 226, 255, 0.6);
+  background: rgba(20, 40, 34, 0.85);
+}
+
+.reaktion-stage[data-state="waiting"] {
+  background: rgba(10, 3, 22, 0.95);
+}
+
+.reaktion-stage:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+.reaktion-countdown {
+  font-size: 4rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  line-height: 1;
+}
+
+.reaktion-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 3.4rem;
+  line-height: 1;
+  pointer-events: none;
+  animation: reaktion-pop 140ms ease-out;
+}
+
+@keyframes reaktion-pop {
+  from { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.reaktion-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.reaktion-ms {
+  font-size: 2.4rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--text);
+}
+
+.reaktion-level {
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reaktion-msg {
+  font-size: 0.92rem;
+  font-weight: 720;
+  color: rgba(250, 240, 255, 0.85);
+}
+
+.reaktion-result[data-level="green"] .reaktion-level { color: #3fd99b; }
+.reaktion-result[data-level="yellow"] .reaktion-level { color: #ffcf5a; }
+.reaktion-result[data-level="red"] .reaktion-level { color: #f7706d; }
+.reaktion-result[data-level="early"] .reaktion-level { color: #f7706d; }
+
+/* ── Minnesluckatestet (memory / flash-count test) ────────────────────────── */
+
+.memory-card {
+  width: min(420px, 100%);
+}
+
+.overlay-card .memory-title {
+  font-size: 1.5rem;
+}
+
+.memory-instruction {
+  margin: 0.6rem 0 1rem;
+  min-height: 1.2em;
+}
+
+.memory-stage {
+  position: relative;
+  min-height: 210px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1rem;
+}
+
+.memory-countdown {
+  font-size: 4rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  line-height: 1;
+}
+
+.memory-flash {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 0.35rem 0.5rem;
+  max-width: 320px;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.memory-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  width: 100%;
+}
+
+.memory-pickers {
+  display: flex;
+  justify-content: center;
+  gap: 1.6rem;
+}
+
+.memory-wheel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.memory-wheel-label {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.memory-wheel-viewport {
+  position: relative;
+  width: 72px;
+  height: 120px;
+  overflow: hidden;
+  border: 1px solid rgba(250, 240, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(13, 4, 26, 0.85);
+}
+
+/* The scroll column itself: hidden scrollbar, snap each value to the centre. */
+.memory-wheel-scroll {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  outline: none;
+  touch-action: pan-y;
+}
+
+.memory-wheel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.memory-wheel-spacer {
+  height: 40px;
+}
+
+.memory-wheel-opt {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 850;
+  color: rgba(250, 240, 255, 0.5);
+  scroll-snap-align: center;
+}
+
+/* Highlight band marking the selected (centre) row. */
+.memory-wheel-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40px;
+  height: 40px;
+  pointer-events: none;
+  border-top: 1px solid rgba(255, 45, 120, 0.5);
+  border-bottom: 1px solid rgba(255, 45, 120, 0.5);
+  background: rgba(255, 45, 120, 0.08);
+}
+
+.memory-wheel-scroll:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent-strong);
+}
+
+.memory-submit-btn {
+  min-width: 8rem;
+}
+
+.memory-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
+.memory-result-headline {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.memory-facit {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.memory-msg {
+  font-size: 0.92rem;
+  font-weight: 720;
+  color: rgba(250, 240, 255, 0.85);
+}
+
+.memory-result[data-level="green"] .memory-result-headline { color: #3fd99b; }
+.memory-result[data-level="yellow"] .memory-result-headline { color: #ffcf5a; }
+.memory-result[data-level="red"] .memory-result-headline { color: #f7706d; }
+
+/* ── Spykollen (dodge mini-game) ──────────────────────────────────────────── */
+
+.spykollen-card {
+  width: min(420px, 100%);
+}
+
+.overlay-card .spykollen-title {
+  font-size: 1.5rem;
+}
+
+.spykollen-instruction {
+  margin: 0.6rem 0 0.9rem;
+  min-height: 1.2em;
+}
+
+.spy-stage-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 0.9rem;
+}
+
+.spy-canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid rgba(250, 240, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(13, 4, 26, 0.92);
+  /* Own the gesture so dragging on the playfield never scrolls the page. */
+  touch-action: none;
+}
+
+.spy-countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 4rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  pointer-events: none;
+}
+
+.spy-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0 1rem;
+  text-align: center;
+  border-radius: 10px;
+  background: rgba(7, 2, 14, 0.78);
+  backdrop-filter: blur(2px);
+}
+
+.spy-result-headline {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.spy-result-score {
+  font-size: 2.2rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--text);
+}
+
+.spy-result-msg {
+  font-size: 0.9rem;
+  font-weight: 720;
+  color: rgba(250, 240, 255, 0.85);
+}
+
+.spy-result[data-level="green"] .spy-result-headline { color: #3fd99b; }
+.spy-result[data-level="yellow"] .spy-result-headline { color: #ffcf5a; }
+.spy-result[data-level="red"] .spy-result-headline { color: #f7706d; }
+
+.spy-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.spy-dir-btn {
+  width: 84px;
+  min-height: 60px;
+  border: 1px solid rgba(250, 240, 255, 0.18);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(18, 6, 36, 0.85);
+  color: var(--text);
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.spy-dir-btn:active {
+  border-color: rgba(255, 156, 199, 0.5);
+  background:
+    linear-gradient(180deg, rgba(255, 156, 199, 0.22), rgba(255, 156, 199, 0.08)),
+    rgba(18, 6, 36, 0.9);
+}
+
+.spy-score {
+  min-width: 3rem;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Party-länk (live sync) ───────────────────────────────────────────────── */
+
+.party-card {
+  width: min(400px, 100%);
+}
+
+.overlay-card .party-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.5rem;
+}
+
+.party-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0.8rem 0 0.9rem;
+  font-weight: 850;
+}
+
+.party-status-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: rgba(250, 240, 255, 0.28);
+  flex-shrink: 0;
+}
+
+.party-status-dot[data-state="on"] {
+  background: #3fd99b;
+  box-shadow: 0 0 10px rgba(63, 217, 155, 0.8);
+}
+
+.party-status-dot[data-state="connecting"] {
+  background: #ffcf5a;
+  box-shadow: 0 0 10px rgba(255, 207, 90, 0.7);
+}
+
+.party-roster {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.party-roster li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  border: 1px solid rgba(250, 240, 255, 0.12);
+  background: rgba(250, 240, 255, 0.06);
+  text-align: left;
+  font-weight: 850;
+}
+
+/* Players the party hasn't heard from yet. */
+.party-roster li[data-seen="false"] {
+  opacity: 0.42;
+}
+
+.party-roster .party-beers {
+  white-space: nowrap;
+  color: #faff2d;
+  text-shadow: 0 0 10px rgba(250, 255, 45, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.party-hint {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Full-screen takeover when someone ELSE's phone reports a bingo. Sits above
+   every dialog (overlays are z 30, lifted confetti 40). */
+.party-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 45, 120, 0.36), transparent 70%),
+    rgba(7, 2, 14, 0.82);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.party-flash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  text-align: center;
+}
+
+.party-flash-title {
+  font-size: 2.6rem;
+  font-weight: 950;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 10px #ff2d78, 0 0 30px #ff2d78, 0 0 70px rgba(255, 45, 120, 0.8);
+}
+
+.party-flash-text {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.party-flash-dismiss {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .party-flash-title {
+    animation: party-flash-pop 0.55s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes party-flash-pop {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+/* ── Rekord (Hall of Fame) & Kvällens recap ──────────────────────────────── */
+
+.rekord-card {
+  width: min(400px, 100%);
+}
+
+.overlay-card .rekord-title,
+.overlay-card .recap-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.5rem;
+}
+
+.rekord-list {
+  list-style: none;
+  margin: 0.9rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rekord-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  border: 1px solid rgba(250, 240, 255, 0.12);
+  background: rgba(250, 240, 255, 0.06);
+  text-align: left;
+}
+
+.rekord-list li[data-set="false"] {
+  opacity: 0.42;
+}
+
+.rekord-game {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.rekord-value {
+  font-weight: 900;
+}
+
+.rekord-value strong {
+  color: #faff2d;
+  text-shadow: 0 0 10px rgba(250, 255, 45, 0.5);
+}
+
+.rekord-hint {
+  margin: 0 0 0.4rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.recap-card {
+  width: min(420px, 100%);
+}
+
+.recap-canvas {
+  display: block;
+  width: 100%;
+  margin: 0.9rem 0 0.2rem;
+  border: 1px solid rgba(250, 240, 255, 0.16);
+  border-radius: 10px;
+}
+
+/* ── Pissepaus (tilt-aim) ─────────────────────────────────────────────────── */
+
+.pissepaus-card {
+  width: min(420px, 100%);
+}
+
+.overlay-card .pissepaus-title {
+  font-size: 1.5rem;
+}
+
+.pissepaus-instruction {
+  margin: 0.6rem 0 0.9rem;
+  min-height: 1.2em;
+}
+
+.piss-stage-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 0.7rem;
+}
+
+.piss-canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid rgba(250, 240, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(13, 4, 26, 0.92);
+  /* Own the gesture so aim-dragging on the playfield never scrolls the page. */
+  touch-action: none;
+}
+
+.piss-countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 4rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  pointer-events: none;
+}
+
+/* The explicit start button exists because iOS only grants tilt-sensor access
+   from a user gesture — see onPissStart. */
+.piss-start-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 52px;
+  padding: 0 1.6rem;
+}
+
+.piss-hud {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 1rem;
+  font-size: 1.35rem;
+  font-weight: 950;
+}
+
+.piss-timer {
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.piss-score-wrap {
+  color: #faff2d;
+  text-shadow: 0 0 10px rgba(250, 255, 45, 0.5);
+}
+
+.piss-score {
+  font-variant-numeric: tabular-nums;
+}
+
+.piss-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0 1rem;
+  text-align: center;
+  border-radius: 10px;
+  background: rgba(7, 2, 14, 0.78);
+  backdrop-filter: blur(2px);
+}
+
+.piss-result-headline {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.piss-result-score {
+  font-size: 2.2rem;
+  font-weight: 950;
+  line-height: 1;
+  color: var(--text);
+}
+
+.piss-result-msg {
+  font-size: 0.9rem;
+  font-weight: 720;
+  color: rgba(250, 240, 255, 0.85);
+}
+
+.piss-result[data-level="green"] .piss-result-headline { color: #3fd99b; }
+.piss-result[data-level="yellow"] .piss-result-headline { color: #ffcf5a; }
+.piss-result[data-level="red"] .piss-result-headline { color: #f7706d; }
+
+/* ── Canvas & animations ──────────────────────────────────────────────────── */
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+/* While a "Full som ett ägg" verdict celebrates, the confetti is lifted above
+   the mini-game overlay (z-index 30) so it rains over the result card. */
+.confetti.confetti--front {
+  z-index: 40;
+}
+
+.hidden {
+  display: none;
+}
+
+.champion {
+  animation: champion-glow 900ms ease-in-out 6 alternate;
+}
+
+.stygg-mode .board-wrap {
+  animation: stygg-wobble 700ms ease-in-out 3;
+}
+
+.konami-mode .cell {
+  animation: konami-flash 500ms ease-in-out 4;
+}
+
+.ddko-mode #game-title {
+  animation: ddko-pulse 620ms ease-in-out 4;
+}
+
+/* "Nykter" (sober — drinking too slowly!) verdict: the whole overlay flashes a
+   red drink-faster warning. Added by signalSoberAlarm() on the overlay element,
+   removed on round restart / dialog close. Paired with a klaxon in script.js. */
+.overlay.sober-alarm {
+  animation: sober-alarm-bg 0.6s steps(1, end) infinite;
+}
+
+.overlay.sober-alarm .overlay-card {
+  border-color: #f7706d;
+  animation: sober-alarm-card 0.6s ease-in-out infinite;
+}
+
+.overlay.sober-alarm .overlay-card::after {
+  content: "⚠ DRICK FORTARE ⚠";
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto 0;
+  padding: 0.3rem 0;
+  background: #f7706d;
+  color: #1a0608;
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-align: center;
+  animation: sober-alarm-banner 0.6s steps(1, end) infinite;
+}
+
+.overlay.sober-alarm .reaktion-level,
+.overlay.sober-alarm .memory-result-headline,
+.overlay.sober-alarm .spy-result-headline,
+.overlay.sober-alarm .piss-result-headline,
+.overlay.sober-alarm .maze-result-headline {
+  animation: sober-alarm-banner 0.6s steps(1, end) infinite;
+}
+
+@keyframes sober-alarm-bg {
+  0%, 50% { background:
+      linear-gradient(180deg, rgba(60, 6, 10, 0.86), rgba(40, 4, 8, 0.94)),
+      rgba(0, 0, 0, 0.72); }
+  50.01%, 100% { background:
+      linear-gradient(180deg, rgba(7, 2, 14, 0.82), rgba(7, 2, 14, 0.92)),
+      rgba(0, 0, 0, 0.72); }
+}
+
+@keyframes sober-alarm-card {
+  0%, 100% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 0 rgba(247, 112, 109, 0); }
+  50% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 38px 6px rgba(247, 112, 109, 0.85); }
+}
+
+@keyframes sober-alarm-banner {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0.25; }
+}
+
+/* "Full som ett ägg" (properly drunk — the goal!) verdict: the overlay throws a
+   green party. Added by signalDrunkCelebration() on the overlay element, paired
+   with confetti + a fanfare in script.js; removed by stopVerdictEffects(). */
+.overlay.drunk-celebrate {
+  animation: drunk-celebrate-bg 0.7s steps(1, end) infinite;
+}
+
+.overlay.drunk-celebrate .overlay-card {
+  border-color: #3fd99b;
+  animation: drunk-celebrate-card 0.8s ease-in-out infinite;
+}
+
+.overlay.drunk-celebrate .overlay-card::after {
+  content: "🎉 SKÅL! 🎉";
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto 0;
+  padding: 0.3rem 0;
+  background: linear-gradient(90deg, #3fd99b, #ffcf5a);
+  color: #06281c;
+  font-size: 0.9rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-align: center;
+  animation: drunk-celebrate-banner 0.5s ease-in-out infinite;
+}
+
+.overlay.drunk-celebrate .reaktion-level,
+.overlay.drunk-celebrate .memory-result-headline,
+.overlay.drunk-celebrate .spy-result-headline,
+.overlay.drunk-celebrate .piss-result-headline,
+.overlay.drunk-celebrate .maze-result-headline {
+  animation: drunk-celebrate-pop 0.5s ease-in-out infinite;
+}
+
+@keyframes drunk-celebrate-bg {
+  0%, 50% { background:
+      linear-gradient(180deg, rgba(6, 50, 30, 0.86), rgba(4, 34, 22, 0.94)),
+      rgba(0, 0, 0, 0.72); }
+  50.01%, 100% { background:
+      linear-gradient(180deg, rgba(7, 2, 14, 0.82), rgba(7, 2, 14, 0.92)),
+      rgba(0, 0, 0, 0.72); }
+}
+
+@keyframes drunk-celebrate-card {
+  0%, 100% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 0 rgba(63, 217, 155, 0); }
+  50% { box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), 0 0 40px 6px rgba(63, 217, 155, 0.85); }
+}
+
+@keyframes drunk-celebrate-banner {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(1px); opacity: 0.82; }
+}
+
+@keyframes drunk-celebrate-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes pop-in {
+  from {
+    transform: translateY(10px) scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes champion-glow {
+  from {
+    filter: saturate(1);
+  }
+  to {
+    filter: saturate(1.28) brightness(1.1);
+  }
+}
+
+@keyframes stygg-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(0.7deg);
+  }
+  75% {
+    transform: rotate(-0.7deg);
+  }
+}
+
+@keyframes konami-flash {
+  0%,
+  100% {
+    border-color: rgba(250, 240, 255, 0.15);
+  }
+  50% {
+    border-color: var(--accent-strong);
+    box-shadow: 0 0 22px rgba(255, 156, 199, 0.5);
+  }
+}
+
+@keyframes ddko-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+
+/* ── Dashboard ────────────────────────────────────────────────────────────── */
+
+.dashboard {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 100%);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: calc(1.25rem + env(safe-area-inset-top)) 1rem calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.dashboard-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  min-height: calc(100svh - calc(1.25rem + env(safe-area-inset-top)) - calc(1.5rem + env(safe-area-inset-bottom)));
+}
+
+.dashboard-brand {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.dashboard-brand-mark {
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 0.55rem;
+}
+
+.dashboard-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 2.1rem;
+  font-weight: 900;
+  line-height: 0.98;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 18px 40px rgba(255, 45, 120, 0.18);
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+/* Test-mode menu: stack the mini-game tiles in one column. Two classes so
+   it beats the single-class `.app-grid` rule inside the mobile media query. */
+.app-grid.app-grid--test {
+  grid-template-columns: 1fr;
+}
+
+.test-screen-hint {
+  margin: 0 0 0.9rem;
+  color: rgba(250, 240, 255, 0.78);
+  font-weight: 760;
+  text-align: center;
+}
+
+.app-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.5rem 1rem 1.25rem;
+  border: 1px solid rgba(250, 240, 255, 0.14);
+  border-radius: 12px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025)),
+    rgba(22, 8, 42, 0.78);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  text-align: center;
+  cursor: pointer;
+}
+
+.app-tile:hover,
+.app-tile:focus-visible {
+  border-color: rgba(255, 156, 199, 0.42);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
+    rgba(22, 8, 42, 0.88);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.app-tile-icon {
+  /* Keep the tile's "SM" dark/muted (its original look) instead of the gold
+     used by the standalone brand marks. Inherits into the <use> shadow tree. */
+  --mark-text-color: #000;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.32));
+}
+
+.app-tile-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.app-tile-icon--emoji {
+  font-size: 2.6rem;
+  line-height: 1;
+  filter: none;
+}
+
+.app-tile-name {
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 680px) {
+  .app {
+    gap: 0.75rem;
+  }
+
+  .access-panel {
+    padding: 1.1rem;
+  }
+
+  .access-panel h1,
+  .hero h1 {
+    font-size: 2.05rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Ny bricka tar hela första raden, de andra delar andra raden */
+  #new-board-btn {
+    grid-column: 1 / -1;
+  }
+
+  /* Keep the three stats as columns of one row (compact) even on phones. */
+  .stats {
+    gap: 0.45rem;
+  }
+
+  .stat {
+    min-height: auto;
+    padding: 0.5rem 0.55rem;
+  }
+
+  .stat-value {
+    font-size: 0.92rem;
+  }
+
+  .board-wrap {
+    padding: 0.5rem;
+  }
+
+  .board {
+    gap: 0.38rem;
+  }
+
+  .cell {
+    min-height: 86px;
+    padding: 0.48rem;
+    font-size: 0.68rem;
+    line-height: 1.08;
+  }
+
+  .app-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .password-row,
+  .player-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .player-buttons button:nth-child(5) {
+    grid-column: auto;
+  }
+
+  .brand-mark {
+    width: 64px;
+    height: 64px;
+  }
+
+  .hero-mark {
+    width: 50px;
+    height: 50px;
+  }
+
+  .cell {
+    min-height: 78px;
+    font-size: 0.62rem;
+  }
+
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+
+/* Honour the OS "reduce motion" setting: collapse animations and transitions to
+   near-instant so the easter-egg wobble/flash, champion glow, pop-in, and hover
+   lifts don't move. Confetti is skipped separately in script.js. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

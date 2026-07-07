@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Stygg Mus 2026 – Test</title>
+    <meta
+      name="description"
+      content="Stygg Mus 2026 – Bingo och Ölräknare."
+    />
+    <meta name="theme-color" content="#0d0219" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Stygg Mus" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐭</text></svg>" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- iOS haptic fallback: Safari has no Vibration API, but toggling an
+         <input switch> fires a subtle system haptic on iOS 17.4+. The vibrate()
+         helper flips this from inside a tap when navigator.vibrate is absent.
+         Kept rendered (opacity 0) — display:none would suppress the haptic. -->
+    <input id="haptic-tick" class="haptic-tick" type="checkbox" switch aria-hidden="true" tabindex="-1" />
+
+    <div class="page-bg" aria-hidden="true">
+      <!-- Neon wall art: the naughty mouse at the casino table (art/, WebP).
+           object-fit: cover keeps the mouse centered on portrait phones; the
+           ::after scanline layer in styles.css sits on top for ambience. -->
+      <img class="page-bg-img" src="./art/neonklubben-bg.webp" alt="" />
+      <!-- Ambient life: slow-drifting neon embers, canvas-drawn in script.js
+           (startEmbers). Sits above the art but behind all content. -->
+      <canvas id="embers" class="embers"></canvas>
+    </div>
+
+    <!-- Shared SVG icons, referenced via <use> throughout. Colours live in
+         inline styles (with theme vars) so they survive <use> cloning in every
+         browser, including Firefox where document class selectors don't reach
+         into the use shadow tree. -->
+    <svg class="svg-sprite" aria-hidden="true" focusable="false">
+      <symbol id="sm-mark" viewBox="0 0 96 96">
+        <path style="fill: rgba(0, 0, 0, 0.34)" d="M48 7 81 20v27c0 22-13 35-33 42C28 82 15 69 15 47V20L48 7Z" />
+        <path style="fill: #150724; stroke: var(--accent-strong); stroke-width: 2.2" d="M48 11 76 22v24c0 19-11 31-28 37-17-6-28-18-28-37V22L48 11Z" />
+        <path style="fill: none; stroke: rgba(250, 240, 255, 0.34); stroke-linecap: round; stroke-width: 2" d="M31 30h34M28 62h40" />
+        <text x="48" y="57" text-anchor="middle" style="fill: var(--mark-text-color, var(--accent-strong)); font-family: var(--font-main); font-size: 24px; font-weight: 900">SM</text>
+      </symbol>
+    </svg>
+
+    <!-- Access screen: password + player select -->
+    <section id="access-screen" class="access-screen" aria-live="polite">
+      <div class="access-panel">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 96 96" focusable="false"><use href="#sm-mark" /></svg>
+        </div>
+        <h1>Stygg Mus 2026</h1>
+
+        <form id="password-form" class="password-form">
+          <label for="password-input">Lösenord</label>
+          <div class="password-row">
+            <input
+              id="password-input"
+              type="password"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+            <button class="primary-btn" type="submit">Öppna</button>
+          </div>
+          <p id="password-feedback" class="feedback" role="alert"></p>
+        </form>
+
+        <div id="player-select" class="player-select hidden">
+          <h2>Vem är du?</h2>
+          <div class="player-buttons" aria-label="Välj spelare">
+            <button type="button" data-player-id="kasinomusen">🐭 Kasinomusen</button>
+            <button type="button" data-player-id="tarningsmastaren">🎲 Tärningsmästaren</button>
+            <button type="button" data-player-id="olbaronen">🍺 Ölbaronen</button>
+            <button type="button" data-player-id="jackpott-jonny">🎰 Jackpott-Jonny</button>
+            <button type="button" data-player-id="ostkungen">🧀 Ostkungen</button>
+          </div>
+          <button id="reset-all-btn" class="reset-all-btn" type="button">← Tillbaka</button>
+        </div>
+        <p class="version-line">Stygg Mus 2026</p>
+      </div>
+    </section>
+
+    <!-- Bingo app -->
+    <main id="app" class="app hidden">
+      <header class="bingo-topbar">
+        <button id="topbar-back-btn" class="back-btn" type="button" aria-label="Byt spelare">←</button>
+        <h1 id="game-title" class="bingo-topbar-title">Stygg Mus Bingo 🍆🐭🎲</h1>
+        <button id="menu-btn" class="menu-btn" type="button" aria-label="Meny">⋮</button>
+      </header>
+
+      <section class="stats" aria-live="polite">
+        <div class="stat" aria-label="Spelare">
+          <span id="current-player" class="stat-value">-</span>
+        </div>
+        <div class="beer-widget" role="group" aria-label="Ölräknare">
+          <button id="beer-widget-minus" class="beer-widget-btn" type="button" aria-label="Ta bort en öl">−</button>
+          <span class="beer-widget-value"><span id="beer-widget-count">0</span> 🍺</span>
+          <button id="beer-widget-plus" class="beer-widget-btn beer-widget-btn--plus" type="button" aria-label="Lägg till en öl">+</button>
+        </div>
+      </section>
+
+      <section class="board-wrap" aria-label="Bingobricka">
+        <div id="board" class="board" role="grid" aria-label="Bingobricka 4 gånger 4"></div>
+      </section>
+    </main>
+
+    <!-- Test mode (password MGT): launch each mini-game directly -->
+    <main id="test-screen" class="dashboard hidden">
+      <div class="dashboard-inner">
+        <div class="dashboard-brand">
+          <div class="brand-mark dashboard-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 96 96" focusable="false"><use href="#sm-mark" /></svg>
+          </div>
+          <h1 class="dashboard-title">Testläge</h1>
+        </div>
+
+        <p class="test-screen-hint">Välj vilket minigame du vill testa</p>
+
+        <div class="app-grid app-grid--test" aria-label="Minigames att testa">
+          <button id="test-fyllekollen-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🐭</div>
+            <span class="app-tile-name">Fyllekollen</span>
+          </button>
+          <button id="test-reaktion-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">⏱️</div>
+            <span class="app-tile-name">Reaktionskollen</span>
+          </button>
+          <button id="test-minne-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🧠</div>
+            <span class="app-tile-name">Minnesluckatestet</span>
+          </button>
+          <button id="test-spykollen-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🤮</div>
+            <span class="app-tile-name">Spykollen</span>
+          </button>
+          <button id="test-pissepaus-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🚽</div>
+            <span class="app-tile-name">Pissepaus</span>
+          </button>
+        </div>
+
+        <button class="exit-btn" type="button">Avsluta</button>
+
+        <p class="version-line">Stygg Mus 2026</p>
+      </div>
+    </main>
+
+    <!-- Bingo prize overlay -->
+    <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-live="assertive">
+      <div class="overlay-card">
+        <h2 id="overlay-title">BINGO!</h2>
+        <p id="overlay-text"></p>
+        <button id="close-overlay-btn" type="button">Fortsätt spela</button>
+      </div>
+    </div>
+
+    <!-- Bingo reward overlay (mini-game intro + klunkar payout) -->
+    <div id="reward-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="reward-title">
+      <div class="overlay-card reward-card">
+        <h2 id="reward-title">BINGO!</h2>
+        <div id="reward-body" class="reward-body"></div>
+        <button id="reward-action-btn" class="primary-btn" type="button">Spela</button>
+      </div>
+    </div>
+
+    <!-- Menu overlay (byt spelare / avsluta) -->
+    <div id="menu-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="menu-title">
+      <div class="overlay-card menu-card">
+        <div class="menu-header">
+          <button id="menu-back-btn" class="back-btn" type="button" aria-label="Stäng meny">←</button>
+          <h2 id="menu-title" class="menu-title">Meny</h2>
+        </div>
+        <div class="menu-actions">
+          <button id="new-board-btn" class="secondary-btn" type="button">Ny bricka</button>
+          <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>
+          <button id="menu-party-btn" class="secondary-btn" type="button">Party-länk</button>
+          <button id="menu-rekord-btn" class="secondary-btn" type="button">Rekord</button>
+          <button id="menu-recap-btn" class="secondary-btn" type="button">Kvällens recap</button>
+          <button id="menu-change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
+          <button id="menu-exit-btn" class="secondary-btn" type="button">Avsluta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hall of Fame: all-time mini-game records -->
+    <div id="rekord-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rekord-title">
+      <div class="overlay-card rekord-card">
+        <div class="menu-header">
+          <button id="rekord-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
+          <h2 id="rekord-title" class="rekord-title">🏆 Rekord</h2>
+        </div>
+        <ul id="rekord-list" class="rekord-list"></ul>
+        <p class="rekord-hint">Slå ett rekord i ett minispel så exploderar allas mobiler.</p>
+      </div>
+    </div>
+
+    <!-- Kvällens recap: canvas-drawn shareable summary poster -->
+    <div id="recap-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="recap-title">
+      <div class="overlay-card recap-card">
+        <div class="menu-header">
+          <button id="recap-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
+          <h2 id="recap-title" class="recap-title">Kvällens recap</h2>
+        </div>
+        <canvas id="recap-canvas" class="recap-canvas" aria-label="Sammanfattning av kvällen"></canvas>
+        <div class="confirm-actions recap-actions">
+          <button id="recap-share-btn" class="primary-btn" type="button">Dela bilden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Party-länk overlay (live sync between phones) -->
+    <div id="party-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="party-title">
+      <div class="overlay-card party-card">
+        <div class="menu-header">
+          <button id="party-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
+          <h2 id="party-title" class="party-title">Party-länk</h2>
+        </div>
+        <p class="party-status">
+          <span id="party-status-dot" class="party-status-dot" data-state="off" aria-hidden="true"></span>
+          <span id="party-status-text">Avstängd</span>
+        </p>
+        <ul id="party-roster" class="party-roster"></ul>
+        <p class="party-hint">Bingo och ölräkning sänds live till alla anslutna mobiler i sällskapet.</p>
+        <div class="menu-actions">
+          <button id="party-toggle-btn" class="secondary-btn" type="button">Stäng av party-läge</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm dialog -->
+    <div id="confirm-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="overlay-card confirm-card">
+        <h2 id="confirm-title" class="confirm-title">Bekräfta</h2>
+        <p id="confirm-text"></p>
+        <div class="confirm-actions">
+          <button id="confirm-cancel-btn" class="secondary-btn" type="button">Avbryt</button>
+          <button id="confirm-accept-btn" class="primary-btn" type="button">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fyllekollen mini-game (swipe maze) -->
+    <div id="fyllekollen-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="fyllekollen-title">
+      <div class="overlay-card fyllekollen-card">
+        <h2 id="fyllekollen-title" class="fyllekollen-title">Fyllekollen</h2>
+        <p class="fyllekollen-text">Swipea 🐭 till 🍺 innan tiden tar slut — piltangenterna funkar också.</p>
+        <div id="maze-timer" class="maze-timer" aria-live="off">0.0 s</div>
+        <div class="maze-wrap">
+          <canvas id="maze-canvas" class="maze-canvas" aria-label="Labyrint, swipea för att flytta"></canvas>
+          <div id="maze-result" class="maze-result hidden"></div>
+        </div>
+        <div class="confirm-actions maze-controls">
+          <button id="fyllekollen-close-btn" class="secondary-btn" type="button">Avbryt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reaktionskollen mini-game (reaction test) -->
+    <div id="reaktion-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="reaktion-title">
+      <div class="overlay-card reaktion-card">
+        <h2 id="reaktion-title" class="reaktion-title">Reaktionskollen</h2>
+        <p class="minigame-blurb">Tryck när 🍺 dyker upp</p>
+        <p id="reaktion-instruction" class="reaktion-instruction"></p>
+        <div id="reaktion-stage" class="reaktion-stage" role="button" tabindex="0" aria-label="Reaktionsyta — tryck när ölen dyker upp">
+          <span id="reaktion-countdown" class="reaktion-countdown">5</span>
+          <span id="reaktion-target" class="reaktion-target hidden" aria-hidden="true">🍺</span>
+          <div id="reaktion-result" class="reaktion-result hidden"></div>
+        </div>
+        <div class="confirm-actions reaktion-controls">
+          <button id="reaktion-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Minnesluckatestet mini-game (memory / flash-count test) -->
+    <div id="memory-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="memory-title">
+      <div class="overlay-card memory-card">
+        <h2 id="memory-title" class="memory-title">Minnesluckatestet</h2>
+        <p class="minigame-blurb">Räkna 🍺 och 🐭</p>
+        <p id="memory-instruction" class="memory-instruction"></p>
+        <div id="memory-stage" class="memory-stage">
+          <span id="memory-countdown" class="memory-countdown">5</span>
+          <div id="memory-flash" class="memory-flash hidden" aria-hidden="true"></div>
+          <div id="memory-answer" class="memory-answer hidden">
+            <div class="memory-pickers">
+              <div class="memory-wheel">
+                <span class="memory-wheel-label" aria-hidden="true">🍺</span>
+                <div class="memory-wheel-viewport">
+                  <div id="memory-wheel-beer" class="memory-wheel-scroll" tabindex="0" role="spinbutton" aria-label="Antal ölemojis"></div>
+                  <div class="memory-wheel-band" aria-hidden="true"></div>
+                </div>
+              </div>
+              <div class="memory-wheel">
+                <span class="memory-wheel-label" aria-hidden="true">🐭</span>
+                <div class="memory-wheel-viewport">
+                  <div id="memory-wheel-mouse" class="memory-wheel-scroll" tabindex="0" role="spinbutton" aria-label="Antal musemojis"></div>
+                  <div class="memory-wheel-band" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+            <button id="memory-submit-btn" class="primary-btn memory-submit-btn" type="button">Svara</button>
+          </div>
+          <div id="memory-result" class="memory-result hidden"></div>
+        </div>
+        <div class="confirm-actions memory-controls">
+          <button id="memory-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spykollen mini-game (dodge the falling vomit) -->
+    <div id="spykollen-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="spykollen-title">
+      <div class="overlay-card spykollen-card">
+        <h2 id="spykollen-title" class="spykollen-title">Spykollen</h2>
+        <p class="minigame-blurb">Undvik 🤮 med 🛋️</p>
+        <p id="spykollen-instruction" class="spykollen-instruction"></p>
+        <div class="spy-stage-wrap">
+          <canvas id="spy-canvas" class="spy-canvas" aria-label="Undvik spyorna med soffan"></canvas>
+          <span id="spy-countdown" class="spy-countdown" aria-hidden="true">3</span>
+          <div id="spy-result" class="spy-result hidden"></div>
+        </div>
+        <div class="spy-controls" aria-label="Styrning">
+          <button id="spy-left-btn" class="spy-dir-btn" type="button" aria-label="Flytta vänster">◀</button>
+          <span id="spy-score" class="spy-score" aria-live="off">0</span>
+          <button id="spy-right-btn" class="spy-dir-btn" type="button" aria-label="Flytta höger">▶</button>
+        </div>
+        <div class="confirm-actions spykollen-footer">
+          <button id="spy-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pissepaus mini-game (tilt-aim the stream at the toilets) -->
+    <div id="pissepaus-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pissepaus-title">
+      <div class="overlay-card pissepaus-card">
+        <h2 id="pissepaus-title" class="pissepaus-title">Pissepaus</h2>
+        <p class="minigame-blurb">Luta mobilen och sikta 🍆-strålen på 🚽</p>
+        <p id="pissepaus-instruction" class="pissepaus-instruction"></p>
+        <div class="piss-stage-wrap">
+          <canvas id="piss-canvas" class="piss-canvas" aria-label="Luta enheten för att sikta strålen på toaletten"></canvas>
+          <span id="piss-countdown" class="piss-countdown hidden" aria-hidden="true">3</span>
+          <button id="piss-start-btn" class="primary-btn piss-start-btn" type="button">Starta</button>
+          <div id="piss-result" class="piss-result hidden"></div>
+        </div>
+        <div class="piss-hud" aria-live="off">
+          <span id="piss-timer" class="piss-timer">10.0 s</span>
+          <span class="piss-score-wrap">🚽 <span id="piss-score" class="piss-score">0</span></span>
+        </div>
+        <div class="confirm-actions pissepaus-footer">
+          <button id="piss-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Party flash: incoming bingo takeover from another phone. Deliberately
+         NOT a dialog — it must be able to appear over any open dialog without
+         fighting the focus-trap/close routing, so it's a plain fixed layer. -->
+    <div id="party-flash" class="party-flash hidden" role="status" aria-live="assertive">
+      <div class="party-flash-card">
+        <span id="party-flash-title" class="party-flash-title"></span>
+        <span id="party-flash-text" class="party-flash-text"></span>
+        <span class="party-flash-dismiss">Tryck för att stänga</span>
+      </div>
+    </div>
+
+    <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
+    <script src="./script.js"></script>
+  </body>
+</html>

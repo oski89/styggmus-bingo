@@ -16,6 +16,24 @@ There is no build, install, lint, or test step — open the served page directly
 
 Push to `main` — the GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) deploys automatically to GitHub Pages. No build step required; the entire repo root is uploaded as-is (`path: "."`).
 
+## `demo/` — anonymized test copy
+
+`demo/` is a **self-contained, standalone copy** of the whole app (its own
+`index.html`/`styles.css`/`script.js`/`sw.js`/`manifest`/`art`/`icons`) served
+at `…/styggmus-bingo/demo/`, for letting friends try the game without the real
+names or inside jokes. It is a deliberate fork — **not kept in sync** with the
+root; changes to the real game do not propagate. What differs from root: the
+password is `TEST` (→ live mode; `PASSWORDS = { TEST: MODE_LIVE }`), five
+made-up casino-mouse players (`kasinomusen`/`tarningsmastaren`/`olbaronen`/
+`jackpott-jonny`/`ostkungen`, mirrored in the `#player-select` buttons in its
+`index.html`), five name-free politically-correct prompt groups
+(`kasino`/`spel`/`dryck`/`musik`/`snack`), the DDKO typed easter egg swapped for
+`JACKPOT`, and the Spykollen blurb's "hommage till Per" dropped. Crucially it is
+**isolated**: every storage key is `:demo`-suffixed (localStorage is per-origin,
+so the demo shares an origin with root and would otherwise clobber real boards)
+and `PARTY_TOPIC`/`CACHE_NAME` are demo-specific so test games never leak into a
+real party or cache. When touching the demo, keep those isolations intact.
+
 ## Architecture
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus PWA assets and markdown docs:
