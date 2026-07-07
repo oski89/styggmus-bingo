@@ -130,6 +130,20 @@ input {
   pointer-events: none;
 }
 
+/* The iOS haptic-tick switch: invisible but still rendered (display:none would
+   stop iOS from firing the toggle haptic), out of the layout and untouchable. */
+.haptic-tick {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  margin: 0;
+}
+
 .app,
 .access-screen {
   position: relative;

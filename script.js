@@ -288,6 +288,7 @@
   const confirmAcceptBtn = document.getElementById("confirm-accept-btn");
   const confirmCancelBtn = document.getElementById("confirm-cancel-btn");
   const confettiCanvas = document.getElementById("confetti");
+  const hapticTickEl = document.getElementById("haptic-tick");
   const fyllekollenOverlayEl = document.getElementById("fyllekollen-overlay");
   const mazeCanvas = document.getElementById("maze-canvas");
   const mazeTimerEl = document.getElementById("maze-timer");
@@ -3506,11 +3507,22 @@
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  // Haptic feedback where the hardware supports it (mostly Android — iOS
-  // Safari has no vibration API and just no-ops). A new call replaces any
-  // pattern still running.
+  // Haptic feedback where the hardware supports it. Android Chrome has the
+  // Vibration API (patterns work). iOS Safari has NO vibration API, so as a
+  // best-effort fallback we flip a hidden <input switch>, whose toggle fires a
+  // subtle system haptic on iOS 17.4+ — a single light tick, no patterns, and
+  // only perceptible when called inside a user gesture (a tap). Everywhere it
+  // isn't supported it's a silent no-op.
   function vibrate(pattern) {
-    if (navigator.vibrate) navigator.vibrate(pattern);
+    if (navigator.vibrate) {
+      navigator.vibrate(pattern);
+      return;
+    }
+    if (hapticTickEl) {
+      // A real .click() toggle is what emits the haptic on iOS (a synthetic
+      // change event does not); the resulting checked state is meaningless.
+      hapticTickEl.click();
+    }
   }
 
   function prefersReducedMotion() {

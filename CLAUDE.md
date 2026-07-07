@@ -417,7 +417,13 @@ Three device-feedback layers, all guarded no-ops where unsupported:
   mark/unmark (18/8ms) in `onBoardClick`, the 🍺 appearing in
   `showReaktionTarget` (35ms), the hit jolt in `onSpyHit` (90ms — the red/green
   verdict signals replace it, yellow keeps it), bingo/grand-win reward starts,
-  and strong patterns in `signalSoberAlarm`/`signalDrunkCelebration`.
+  and strong patterns in `signalSoberAlarm`/`signalDrunkCelebration`. Android
+  Chrome uses the real Vibration API. **iOS Safari has no Vibration API**, so
+  `vibrate()` falls back to `.click()`ing a hidden `<input switch>`
+  (`#haptic-tick`) whose toggle fires a subtle system haptic on iOS 17.4+ — a
+  single light tick, no patterns, and only when the call sits inside a tap
+  (cell mark qualifies; timer-driven cues like the alarm do not). The switch is
+  opacity-0 but **must stay rendered** (`display:none` suppresses the haptic).
 - **Screen wake lock** — `acquireWakeLock()` in `openDialog`,
   `releaseWakeLock()` at the very end of `closeDialog` (only when no dialog
   remains — reward routing may already have opened the next one). The browser

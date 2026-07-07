@@ -19,6 +19,12 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <!-- iOS haptic fallback: Safari has no Vibration API, but toggling an
+         <input switch> fires a subtle system haptic on iOS 17.4+. The vibrate()
+         helper flips this from inside a tap when navigator.vibrate is absent.
+         Kept rendered (opacity 0) — display:none would suppress the haptic. -->
+    <input id="haptic-tick" class="haptic-tick" type="checkbox" switch aria-hidden="true" tabindex="-1" />
+
     <div class="page-bg" aria-hidden="true">
       <!-- Neon wall art: the naughty mouse at the casino table (art/, WebP).
            object-fit: cover keeps the mouse centered on portrait phones; the
