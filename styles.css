@@ -789,7 +789,40 @@ button:focus-visible {
 @media (prefers-reduced-motion: no-preference) {
   .cell[data-winning="true"] {
     animation: cell-win-pulse 1.3s ease-in-out infinite;
+    /* Negative delay staggered by position offsets each cell's phase, so the
+       glow travels along the line like a marquee runner (set in JS). */
+    animation-delay: calc(var(--win-order, 0) * -0.16s);
   }
+
+  /* Tactile stamp when a cell is marked: a scale-pop, an expanding cyan spark
+     ring (reusing ::before), and the 🐭 emblem slamming down. */
+  .cell.stamp {
+    animation: cell-stamp 0.42s cubic-bezier(0.22, 1.4, 0.4, 1);
+  }
+  .cell.stamp::before {
+    background: radial-gradient(circle at 50% 50%, rgba(45, 226, 255, 0.85), rgba(255, 45, 120, 0.4) 45%, transparent 68%);
+    animation: cell-spark 0.42s ease-out;
+  }
+  .cell.stamp::after {
+    animation: emblem-slam 0.42s cubic-bezier(0.22, 1.5, 0.4, 1);
+  }
+}
+
+@keyframes cell-stamp {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cell-spark {
+  0% { opacity: 1; transform: scale(0.35); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+@keyframes emblem-slam {
+  0% { transform: scale(2.3); opacity: 0; }
+  55% { transform: scale(0.86); opacity: 1; }
+  100% { transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {

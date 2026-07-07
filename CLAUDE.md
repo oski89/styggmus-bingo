@@ -42,14 +42,23 @@ treatment — a white-hot core (`-webkit-text-stroke` + tight white shadow)
 wrapped in layered pink halos, plus a faulty-tube `neon-title-flicker`
 keyframe (behind `prefers-reduced-motion`). The **board cells** are dimensional
 glass: a top highlight, a purple body, and a magenta under-glow so unlit cells
-read as lit glass rather than flat black; a `transition` on transform/shadow
-sets up the Tier-2 stamp. A **checked** cell becomes hot-pink glass with a
-glowing cyan tube rim and a 🐭 paw emblem stamped in the corner (`::after`).
-A **winning** cell runs the acid-yellow `cell-win-pulse` (reduced-motion gets
-a static bright variant). `.board-wrap` is a bright pink→cyan→yellow neon-tube
-edge. Ambient **embers** (`#embers` canvas inside `.page-bg`, driven by
-`startEmbers`) drift slow neon motes above the art and behind content; the rAF
-loop is skipped entirely under reduced motion.
+read as lit glass rather than flat black. A **checked** cell becomes hot-pink
+glass with a glowing cyan tube rim and a 🐭 paw emblem stamped in the corner
+(`::after`). `.board-wrap` is a bright pink→cyan→yellow neon-tube edge. Ambient
+**embers** (`#embers` canvas inside `.page-bg`, driven by `startEmbers`) drift
+slow neon motes above the art and behind content; the rAF loop is skipped
+entirely under reduced motion.
+
+**Tactile feedback (all behind `prefers-reduced-motion`):** marking a cell adds
+a transient `.stamp` class (re-triggered via reflow in `onBoardClick`, cleared
+after 460ms) that runs a scale-pop (`cell-stamp`), an expanding cyan spark ring
+(`cell-spark` on `::before`), and the emblem slamming down (`emblem-slam` on
+`::after`); unmarking is quiet. A **winning** cell runs the acid-yellow
+`cell-win-pulse`, staggered into a travelling marquee wave by a negative
+`animation-delay` keyed off `--win-order` (set per-cell along the line in
+`highlightWinningCells`); reduced-motion gets a static bright variant. Confetti
+(`runConfetti`) tumbles casino shapes — neon chips (rect/circle) plus card-suit
+and 🍺/🎲 glyphs — with per-piece glow.
 
 `.page-bg` carries the **neon wall art**: `art/neonklubben-bg.webp`, a full
 illustration of the mouse in cap and leather jacket at the casino table

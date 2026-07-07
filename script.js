@@ -871,6 +871,16 @@
     target.ariaPressed = willCheck ? "true" : "false";
     vibrate(willCheck ? 18 : 8);
 
+    // Tactile stamp: a one-shot scale-pop + spark ring + emblem slam, retriggered
+    // by removing/re-adding the class across a reflow. Marking only (unmarking
+    // is quiet). No-op visual under reduced motion (the keyframes are gated).
+    if (willCheck) {
+      target.classList.remove("stamp");
+      void target.offsetWidth;
+      target.classList.add("stamp");
+      window.setTimeout(() => target.classList.remove("stamp"), 460);
+    }
+
     updateStatsAndWinState({ triggerEffects: true });
   }
 
@@ -2203,12 +2213,18 @@
   }
 
   function highlightWinningCells(lines) {
-    const winningIndexes = new Set(lines.flat());
+    // Position along the line drives the pulse's animation-delay (via
+    // --win-order), so the neon shimmer travels down the row like a marquee
+    // instead of blinking all at once. A cell in two lines keeps the last order.
+    const order = new Map();
+    lines.forEach((line) => line.forEach((cellIdx, i) => order.set(cellIdx, i)));
     boardEl.querySelectorAll(".cell").forEach((cell, idx) => {
-      if (winningIndexes.has(idx)) {
+      if (order.has(idx)) {
         cell.dataset.winning = "true";
+        cell.style.setProperty("--win-order", String(order.get(idx)));
       } else {
         cell.dataset.winning = "false";
+        cell.style.removeProperty("--win-order");
       }
     });
   }
@@ -3171,23 +3187,35 @@
 
     if (confettiAnimationFrame) cancelAnimationFrame(confettiAnimationFrame);
 
+    // The ctx is scaled by devicePixelRatio in resizeConfettiCanvas, so draw in
+    // CSS pixels.
+    const W = window.innerWidth;
+    const H = window.innerHeight;
     const colors = ["#ff2d78", "#2de2ff", "#faff2d", "#ff9dc0", "#b26bff"];
-    const pieces = Array.from({ length: 120 }, () => ({
-      x: Math.random() * confettiCanvas.width,
-      y: -20 - Math.random() * confettiCanvas.height * 0.4,
-      size: 4 + Math.random() * 8,
-      color: randomItem(colors),
-      speedY: 2 + Math.random() * 5,
-      speedX: -2 + Math.random() * 4,
-      rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: -0.18 + Math.random() * 0.36,
-    }));
+    // Casino confetti: card suits and the odd 🍺/🎲 tumbling among neon chips.
+    const GLYPHS = ["♠", "♥", "♦", "♣", "🍺", "🎲"];
+    const SHAPES = ["rect", "circle", "glyph"];
+    const pieces = Array.from({ length: 130 }, () => {
+      const shape = randomItem(SHAPES);
+      return {
+        x: Math.random() * W,
+        y: -20 - Math.random() * H * 0.4,
+        size: shape === "glyph" ? 13 + Math.random() * 12 : 4 + Math.random() * 8,
+        color: randomItem(colors),
+        glyph: randomItem(GLYPHS),
+        shape,
+        speedY: 2 + Math.random() * 5,
+        speedX: -2 + Math.random() * 4,
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: -0.18 + Math.random() * 0.36,
+      };
+    });
 
     const endAt = performance.now() + durationMs;
     animate();
 
     function animate() {
-      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      ctx.clearRect(0, 0, W, H);
 
       pieces.forEach((piece) => {
         piece.x += piece.speedX;
@@ -3197,20 +3225,41 @@
         ctx.save();
         ctx.translate(piece.x, piece.y);
         ctx.rotate(piece.rotation);
-        ctx.fillStyle = piece.color;
-        ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size);
+        if (piece.shape === "glyph") {
+          ctx.font = `${piece.size}px serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          // Emoji glyphs carry their own color; suits pick up the neon palette.
+          if (piece.glyph.length === 1) {
+            ctx.fillStyle = piece.color;
+            ctx.shadowColor = piece.color;
+            ctx.shadowBlur = 10;
+          }
+          ctx.fillText(piece.glyph, 0, 0);
+        } else {
+          ctx.fillStyle = piece.color;
+          ctx.shadowColor = piece.color;
+          ctx.shadowBlur = 8;
+          if (piece.shape === "circle") {
+            ctx.beginPath();
+            ctx.arc(0, 0, piece.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size);
+          }
+        }
         ctx.restore();
 
-        if (piece.y > confettiCanvas.height + 20) {
+        if (piece.y > H + 20) {
           piece.y = -20;
-          piece.x = Math.random() * confettiCanvas.width;
+          piece.x = Math.random() * W;
         }
       });
 
       if (performance.now() < endAt) {
         confettiAnimationFrame = requestAnimationFrame(animate);
       } else {
-        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        ctx.clearRect(0, 0, W, H);
       }
     }
   }
