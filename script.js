@@ -786,6 +786,13 @@
     beers[playerId] = Math.max(0, beerCountOf(beers, playerId) + delta);
     saveBeers(beers);
     renderBeerWidget();
+    // Pop the counter (CSS beer-pop; the class flip re-triggers per press).
+    const valueEl = beerWidgetCountEl && beerWidgetCountEl.parentElement;
+    if (valueEl) {
+      valueEl.classList.remove("pop");
+      void valueEl.offsetWidth;
+      valueEl.classList.add("pop");
+    }
     schedulePartyBeerPublish(playerId);
     if (delta > 0) countBeerPress();
   }
@@ -841,9 +848,18 @@
       button.textContent = label;
 
       if (isChecked) button.classList.add("checked");
+      // Stagger index for the deal-in cascade (CSS cell-enter).
+      button.style.setProperty("--cell-i", String(index));
 
       boardEl.appendChild(button);
     });
+
+    // Run the deal-in once per render; the class is removed after the cascade
+    // finishes so later .stamp/.win animations never fight it.
+    boardEl.classList.remove("deal");
+    void boardEl.offsetWidth;
+    boardEl.classList.add("deal");
+    window.setTimeout(() => boardEl.classList.remove("deal"), 1100);
   }
 
   function onBoardClick(event) {
@@ -1207,9 +1223,25 @@
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
 
-    ctx.strokeStyle = "rgba(250, 240, 255, 0.72)";
+    // Soft glow pads under the goal and the mouse so they read as the maze's
+    // two beacons (drawn first, everything else on top).
+    const pad = (cx, cy, color) => {
+      const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, cell * 0.9);
+      grad.addColorStop(0, color);
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(cx - cell, cy - cell, cell * 2, cell * 2);
+    };
+    pad(goal.c * cell + cell / 2, goal.r * cell + cell / 2, "rgba(250, 255, 45, 0.28)");
+    pad(player.c * cell + cell / 2, player.r * cell + cell / 2, "rgba(255, 45, 120, 0.3)");
+
+    // Neon-tube walls: cyan strokes with a glow. One shadowBlur pass is cheap
+    // here — the maze only redraws on moves, not per animation frame.
+    ctx.strokeStyle = "rgba(120, 235, 255, 0.9)";
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
+    ctx.shadowColor = "rgba(45, 226, 255, 0.8)";
+    ctx.shadowBlur = 6;
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
@@ -1224,6 +1256,7 @@
         ctx.stroke();
       }
     }
+    ctx.shadowBlur = 0;
 
     const glyph = Math.floor(cell * 0.64);
     ctx.font = `${glyph}px serif`;
@@ -1753,12 +1786,46 @@
     }
   }
 
+  // Synthwave floor shared by the arcade stages (Spykollen, Pissepaus): a pink
+  // perspective grid fading toward a horizon line. Cheap enough for rAF loops
+  // (~16 strokes per frame).
+  function drawNeonFloor(ctx, w, h) {
+    const horizon = h * 0.42;
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 45, 120, 0.5)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, horizon);
+    ctx.lineTo(w, horizon);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 45, 120, 0.14)";
+    ctx.lineWidth = 1;
+    // Horizontal lines: spacing grows quadratically toward the bottom edge.
+    for (let i = 1; i <= 7; i++) {
+      const t = i / 7;
+      const y = horizon + t * t * (h - horizon);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+    // Verticals fanning out from a vanishing point on the horizon.
+    for (let i = -4; i <= 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(w / 2 + i * (w / 24), horizon);
+      ctx.lineTo(w / 2 + i * (w / 3.2), h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawSpy() {
     if (!spyGame) return;
     const ctx = spyCanvas.getContext("2d");
     if (!ctx) return;
     const g = spyGame;
     ctx.clearRect(0, 0, g.w, g.h);
+    drawNeonFloor(ctx, g.w, g.h);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
@@ -1768,7 +1835,12 @@
     ctx.font = `${g.vomitSize}px serif`;
     for (const v of g.vomits) ctx.fillText("🤮", v.x, v.y);
 
+    // A cool blue rim glow so the couch pops off the dark floor.
+    ctx.save();
+    ctx.shadowColor = "rgba(91, 149, 223, 0.9)";
+    ctx.shadowBlur = 14;
     drawCouch(ctx, g.couchX, g.couchCenterY, g.couchW, g.couchH);
+    ctx.restore();
   }
 
   // Draws a simple couch whose footprint is exactly couchW × couchH (so it lines
@@ -2073,8 +2145,21 @@
     const ctx = pissCanvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, g.w, g.h);
+    drawNeonFloor(ctx, g.w, g.h);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+
+    // Pulsing cyan target ring so the current toilet reads as THE objective.
+    const ringR = g.toiletSize * 0.68 + Math.sin(now / 220) * 3;
+    ctx.save();
+    ctx.strokeStyle = "rgba(45, 226, 255, 0.75)";
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = "rgba(45, 226, 255, 0.9)";
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(g.toilet.x, g.toilet.y, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
 
     ctx.font = `${Math.floor(g.toiletSize)}px serif`;
     ctx.fillText("🚽", g.toilet.x, g.toilet.y);
@@ -2884,6 +2969,15 @@
     ctx.fillStyle = "#bda4d4";
     ctx.font = "800 30px 'Avenir Next', 'Segoe UI', sans-serif";
     ctx.fillText("oski89.github.io/styggmus-bingo", W / 2, H - 68);
+
+    // CRT finish: faint scanlines + corner vignette over the whole poster.
+    ctx.fillStyle = "rgba(0, 0, 0, 0.09)";
+    for (let y = 0; y < H; y += 6) ctx.fillRect(0, y, W, 2);
+    const vin = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75);
+    vin.addColorStop(0, "rgba(0, 0, 0, 0)");
+    vin.addColorStop(1, "rgba(0, 0, 0, 0.32)");
+    ctx.fillStyle = vin;
+    ctx.fillRect(0, 0, W, H);
   }
 
   function shareRecap() {

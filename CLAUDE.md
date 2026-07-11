@@ -96,6 +96,19 @@ after 460ms) that runs a scale-pop (`cell-stamp`), an expanding cyan spark ring
 (`runConfetti`) tumbles casino shapes — neon chips (rect/circle) plus card-suit
 and 🍺/🎲 glyphs — with per-piece glow.
 
+**Motion & scenography (all gated behind `prefers-reduced-motion`):** dialogs
+open with a neon-sign `dialog-ignite` flicker inside a full pink→cyan→yellow
+neon-tube frame; boards **deal in** cell-by-cell (`board.deal` + per-cell
+`--cell-i` stagger, class cleared ~1.1s later in `renderBoard`); the beer
+counter pops (`beer-widget-value.pop`, re-triggered in `adjustBeerForPlayer`);
+mini-game countdowns pulse (`countdown-pop`) and the Reaktionskollen 🍺 throbs
+(`target-pulse`). The mini-game canvases are scenography, not flat stages:
+`drawMaze` renders **neon-tube walls** (cyan glow) over radial beacon glow-pads
+under the 🐭/🍺; `drawSpy` and `drawPiss` share `drawNeonFloor` (a pink
+synthwave perspective grid) with a glowing couch / a pulsing cyan target ring
+on the toilet; `renderRecap` finishes the poster with CRT scanlines + a
+vignette.
+
 `.page-bg` carries the **neon wall art**: `art/neonklubben-bg.webp`, a full
 illustration of the mouse in cap and leather jacket at the casino table
 (BINGO/SLOTS/STYGG MUSS signs, neon cards, dice, chips). It renders through

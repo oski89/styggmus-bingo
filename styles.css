@@ -176,7 +176,7 @@ input {
   border: 1px solid transparent;
   border-radius: 8px;
   background:
-    linear-gradient(155deg, rgba(16, 23, 35, 0.94), rgba(14, 5, 28, 0.96)) padding-box,
+    linear-gradient(155deg, rgba(26, 10, 48, 0.94), rgba(14, 5, 28, 0.96)) padding-box,
     linear-gradient(135deg, rgba(255, 156, 199, 0.7), rgba(45, 226, 255, 0.26), rgba(250, 240, 255, 0.12)) border-box;
   box-shadow: 0 28px 80px var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(22px);
@@ -472,7 +472,18 @@ input {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 16px rgba(250, 255, 45, 0.18);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .beer-widget-value.pop {
+    animation: beer-pop 0.32s cubic-bezier(0.2, 1.4, 0.4, 1);
+  }
+}
+
+@keyframes beer-pop {
+  40% { transform: scale(1.28); text-shadow: 0 0 18px rgba(250, 255, 45, 1); }
+}
+
 .beer-widget-value {
+  display: inline-block;
   min-width: 2.7rem;
   text-align: center;
   font-size: 1rem;
@@ -822,6 +833,21 @@ button:focus-visible {
   }
 }
 
+/* Deal-in: cells cascade onto the table when a board renders (login, byt
+   spelare, ny bricka). The .deal class is transient — renderBoard removes it
+   once the cascade is done, so it can't clash with .stamp/.win animations. */
+@media (prefers-reduced-motion: no-preference) {
+  .board.deal .cell {
+    animation: cell-enter 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+    animation-delay: calc(var(--cell-i, 0) * 32ms);
+  }
+}
+
+@keyframes cell-enter {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
 @keyframes cell-stamp {
   0% { transform: scale(1); }
   35% { transform: scale(1.09); }
@@ -882,15 +908,34 @@ button:focus-visible {
   position: relative;
   width: min(460px, 100%);
   overflow: hidden;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
   padding: 1.25rem;
   text-align: center;
   background:
-    linear-gradient(155deg, rgba(20, 28, 42, 0.98), rgba(13, 4, 26, 0.98)) padding-box,
-    linear-gradient(135deg, rgba(255, 156, 199, 0.8), rgba(45, 226, 255, 0.36), rgba(250, 240, 255, 0.16)) border-box;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    linear-gradient(155deg, rgba(31, 11, 58, 0.97), rgba(13, 4, 26, 0.98)) padding-box,
+    linear-gradient(135deg, #ff2d78, rgba(45, 226, 255, 0.8) 55%, rgba(250, 255, 45, 0.85)) border-box;
+  box-shadow:
+    0 0 26px rgba(255, 45, 120, 0.24),
+    0 0 60px rgba(45, 226, 255, 0.1),
+    0 30px 80px rgba(0, 0, 0, 0.54),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: pop-in 220ms ease-out;
+}
+
+/* Power-on: dialogs ignite like a neon sign being switched on. */
+@media (prefers-reduced-motion: no-preference) {
+  .overlay-card {
+    animation: pop-in 220ms ease-out, dialog-ignite 0.55s steps(1, end);
+  }
+}
+
+@keyframes dialog-ignite {
+  0% { opacity: 0.45; }
+  9% { opacity: 1; }
+  15% { opacity: 0.6; }
+  22% { opacity: 1; }
+  100% { opacity: 1; }
 }
 
 .overlay-card::before {
@@ -1274,6 +1319,35 @@ button:focus-visible {
   font-weight: 950;
   color: var(--accent-strong);
   line-height: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reaktion-countdown,
+  .memory-countdown {
+    display: inline-block;
+    animation: countdown-pop 1s ease-out infinite;
+  }
+
+  .spy-countdown,
+  .piss-countdown {
+    animation: countdown-pop 0.7s ease-out infinite;
+  }
+
+  /* The 🍺 pulses with a hot glow the instant it appears — TRYCK! */
+  .reaktion-target {
+    animation: target-pulse 0.55s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes countdown-pop {
+  0% { transform: scale(1.3); opacity: 0.65; text-shadow: 0 0 28px rgba(255, 45, 120, 0.9); }
+  40% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes target-pulse {
+  from { filter: drop-shadow(0 0 6px rgba(250, 255, 45, 0.8)); }
+  to { filter: drop-shadow(0 0 22px rgba(255, 45, 120, 1)); }
 }
 
 .reaktion-target {
