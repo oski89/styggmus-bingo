@@ -1164,6 +1164,22 @@ button:focus-visible {
   border-color: rgba(45, 226, 255, 0.46);
 }
 
+/* Admin "Ny omgång" — a distinct danger red so it never gets tapped by mistake
+   (it's hidden until a long-press on the menu title reveals it anyway). */
+.menu-actions .menu-admin-btn {
+  margin-top: 0.35rem;
+  border: 1px solid rgba(247, 112, 109, 0.6);
+  background:
+    linear-gradient(180deg, rgba(247, 112, 109, 0.22), rgba(247, 112, 109, 0.08)),
+    rgba(28, 8, 10, 0.85);
+  color: #ffd7d5;
+}
+
+.menu-actions .menu-admin-btn:hover,
+.menu-actions .menu-admin-btn:focus-visible {
+  border-color: rgba(247, 112, 109, 0.9);
+}
+
 /* ── Fyllekollen (swipe maze) ─────────────────────────────────────────────── */
 
 .fyllekollen-card {

@@ -254,9 +254,11 @@
 
   const menuOverlayEl = document.getElementById("menu-overlay");
   const menuBackBtn = document.getElementById("menu-back-btn");
+  const menuTitleEl = document.getElementById("menu-title");
   const menuPartyBtn = document.getElementById("menu-party-btn");
   const menuChangePlayerBtn = document.getElementById("menu-change-player-btn");
   const menuExitBtn = document.getElementById("menu-exit-btn");
+  const menuAdminBtn = document.getElementById("menu-admin-btn");
 
   const partyOverlayEl = document.getElementById("party-overlay");
   const partyBackBtn = document.getElementById("party-back-btn");
@@ -385,6 +387,7 @@
   let partyFlashTimer = null;
   let partyLastHelloAt = 0; // rate-limits the hello ping-pong below
   let kommentatorLastAt = 0;
+  const partySeenResets = new Set(); // reset event ids already applied this session
   const partyDeviceId = generateSeed(); // session identity; own events are ignored
   let soberAlarmTimer = null;
   let soberAlarmEl = null;
@@ -430,9 +433,16 @@
     beerWidgetPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
     beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
-    menuBtn.addEventListener("click", () => openDialog(menuOverlayEl));
+    menuBtn.addEventListener("click", () => {
+      // The admin action starts hidden every time the menu opens; only a
+      // long-press on the "Meny" title reveals it (see registerAdminUnlock).
+      menuAdminBtn.classList.add("hidden");
+      openDialog(menuOverlayEl);
+    });
     // Same as backdrop/Escape — just closes the menu, no confirm.
     menuBackBtn.addEventListener("click", () => closeDialog(menuOverlayEl));
+    registerAdminUnlock();
+    menuAdminBtn.addEventListener("click", onAdminResetPressed);
     menuPartyBtn.addEventListener("click", () => {
       closeDialog(menuOverlayEl);
       openPartyOverlay();
@@ -2564,6 +2574,18 @@
   }
 
   function onPartyEvent(evt, atMs, eventId) {
+    // Admin "ny omgång": wipe this phone too. Handled before the player guard
+    // (a reset isn't tied to a player). Only act on fresh events, and dedupe by
+    // id so a `since` replay can't wipe a phone that already started over.
+    if (evt.t === "reset") {
+      const id = evt.id || eventId;
+      if (Date.now() - atMs > PARTY_FRESH_MS) return;
+      if (id && partySeenResets.has(id)) return;
+      if (id) partySeenResets.add(id);
+      performRoundReset({ broadcast: false, announce: true });
+      return;
+    }
+
     if (!isValidPlayerId(evt.p)) return;
 
     if (evt.t === "hello" || evt.t === "beer") {
@@ -2614,14 +2636,18 @@
     }
   }
 
-  function showPartyFlash(title, text, speech) {
+  // `opts.quiet` skips the confetti + fanfare (used by the admin round-reset
+  // notice, which is informational rather than celebratory).
+  function showPartyFlash(title, text, speech, opts) {
     if (partyFlashTimer) window.clearTimeout(partyFlashTimer);
     partyFlashTitleEl.textContent = title;
     partyFlashTextEl.textContent = text;
     partyFlashEl.classList.remove("hidden");
-    confettiCanvas.classList.add("confetti--front");
-    runConfetti(2600);
-    playPartySound();
+    if (!(opts && opts.quiet)) {
+      confettiCanvas.classList.add("confetti--front");
+      runConfetti(2600);
+      playPartySound();
+    }
     vibrate([80, 60, 80, 60, 220]);
     if (speech) speakVerdict(speech);
     partyFlashTimer = window.setTimeout(hidePartyFlash, PARTY_FLASH_MS);
@@ -2694,6 +2720,80 @@
       li.append(name, beers);
       partyRosterEl.appendChild(li);
     });
+  }
+
+  // ── Admin: reset the round ────────────────────────────────────────────────
+
+  // The "Ny omgång" action is hidden until a long-press (1.3s) on the "Meny"
+  // title reveals it — so only someone who knows the trick (the spelledare)
+  // finds it. A curious tap on the title does nothing.
+  function registerAdminUnlock() {
+    let timer = null;
+    const start = () => {
+      timer = window.setTimeout(() => {
+        timer = null;
+        menuAdminBtn.classList.remove("hidden");
+        vibrate(30);
+      }, 1300);
+    };
+    const cancel = () => {
+      if (timer) {
+        window.clearTimeout(timer);
+        timer = null;
+      }
+    };
+    menuTitleEl.addEventListener("pointerdown", start);
+    menuTitleEl.addEventListener("pointerup", cancel);
+    menuTitleEl.addEventListener("pointerleave", cancel);
+    menuTitleEl.addEventListener("pointercancel", cancel);
+  }
+
+  function onAdminResetPressed() {
+    closeDialog(menuOverlayEl);
+    const broadcast = partyStatus === "on";
+    showConfirm({
+      title: "Ny omgång?",
+      message: broadcast
+        ? "Nollställer rekord, brickor och ölräknare för ALLA anslutna telefoner. Går inte att ångra."
+        : "Nollställer rekord, brickor och ölräknare på den här telefonen. Går inte att ångra. (Party-läge är av — andra telefoner påverkas inte.)",
+      confirmLabel: "Nollställ allt",
+      onConfirm: () => performRoundReset({ broadcast, announce: false }),
+    });
+  }
+
+  // Wipes this phone's records, boards and beer counts, rebuilds a fresh board,
+  // and (when broadcast) tells every connected phone to do the same. Keeps the
+  // session, the chosen player, and the party on/off preference.
+  function performRoundReset({ broadcast, announce }) {
+    safeRemove(STATS_KEY);
+    safeRemove(NIGHT_KEY);
+    safeRemove(BEERS_KEY);
+    players.forEach((player) => safeRemove(getBoardStorageKey(player.id)));
+
+    partyPlayers = {};
+    beerAddedTotal = 0;
+
+    if (broadcast) {
+      const id = generateSeed();
+      partySeenResets.add(id); // don't act on our own echo
+      publishParty({ t: "reset", id });
+    }
+
+    // Rebuild the visible state so the wipe is immediate, not on next load.
+    if (activePlayerId) {
+      state = createFreshState(activePlayerId);
+      saveState();
+      renderBoard();
+      renderBeerWidget();
+      updateStatsAndWinState({ triggerEffects: false });
+    }
+    if (activeDialog === rekordOverlayEl) renderRekordList();
+    if (activeDialog === partyOverlayEl) renderPartyRoster();
+
+    if (announce) {
+      // A phone that was reset by the spelledare gets a heads-up (no fanfare).
+      showPartyFlash("🔄 NY OMGÅNG", "Spelledaren nollställde allt — rekord, brickor och öl.", "Ny omgång!", { quiet: true });
+    }
   }
 
   // ── Rekord (Hall of Fame) ─────────────────────────────────────────────────
@@ -3666,6 +3766,10 @@
 
   function safeSet(key, value) {
     tryStorage(() => localStorage.setItem(key, value));
+  }
+
+  function safeRemove(key) {
+    tryStorage(() => localStorage.removeItem(key));
   }
 
   function safeGetSession(key) {

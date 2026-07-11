@@ -447,6 +447,26 @@ speaks over ongoing speech (verdict shouts always win), live mode only.
 Line pools live in `KOMMENTATOR`; `getAllBoardLines()` (also feeding
 `getWinningLines`) powers the near-bingo detection.
 
+### Admin: reset the round
+
+A hidden spelledare-only action to start a fresh round. The menu's
+`#menu-admin-btn` ("Ny omgång (nollställ allt)", danger-red) is hidden every
+time the menu opens and only revealed by a **long-press (1.3s) on the "Meny"
+title** (`registerAdminUnlock`) — so a curious tap finds nothing. Pressing it
+closes the menu and opens a `showConfirm`; accepting calls `performRoundReset`,
+which `safeRemove`s the stats/night/beers keys and every player's board key,
+resets `partyPlayers`/`beerAddedTotal`, and rebuilds a fresh board in place.
+When party-läge is on it also `publishParty({ t: "reset", id })` so every
+connected phone runs the same wipe; the wording in the confirm reflects
+local-only vs all-phones. Receivers handle the `reset` event **before** the
+player guard in `onPartyEvent` (a reset isn't tied to a player), only act on
+fresh events (`PARTY_FRESH_MS`) and dedupe by id via `partySeenResets` (so a
+`since` replay can't wipe a late-joiner), and show a quiet
+`showPartyFlash(..., { quiet: true })` notice (no confetti/fanfare). The admin's
+own broadcast is ignored on their own phone via `partyDeviceId` + the id being
+pre-seeded into `partySeenResets`. Session auth, the chosen player, and the
+party on/off preference are kept. Only wired in root (not demo/dwarf).
+
 ### PWA & device feedback
 
 The app is an installable PWA: `manifest.webmanifest` (standalone, portrait,
