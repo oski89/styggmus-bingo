@@ -1,7 +1,8 @@
 # TODO
 
-Aktuell, kort backlogg för Stygg Mus Bingo. Den gamla UX-listan är borttagen
-eftersom den inte längre speglade appens faktiska läge.
+Aktuell, kort backlogg för Stygg Mus Bingo. Features som redan finns
+(minigames, party-länk, rekord, recap, PWA, demo/dwarf) listas i `README.md`
+och detaljeras i `CLAUDE.md` — inte här.
 
 ## Nästa steg
 

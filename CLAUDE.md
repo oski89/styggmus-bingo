@@ -56,9 +56,9 @@ keys, `PARTY_TOPIC = "dwarf-bingo-forge-v1"`, `CACHE_NAME = "dwarf-bingo-v1"`.
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus PWA assets and markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#confirm-overlay` (styled `confirm()` replacement), and the five mini-game overlays — and a `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server, plus the PWA wiring: `theme-color`, the `apple-mobile-web-app-*` metas, `<link rel="manifest">`, and an `apple-touch-icon`.
+- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (ny bricka / nollställ / party / rekord / recap / byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#party-overlay`, `#rekord-overlay`, `#recap-overlay`, `#confirm-overlay` (styled `confirm()` replacement), the five mini-game overlays, plus non-dialog layers `#party-flash` and `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server, plus the PWA wiring: `theme-color`, the `apple-mobile-web-app-*` metas, `<link rel="manifest">`, and an `apple-touch-icon`.
 - `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Beer UI, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Pissepaus (tilt-aiming), Win detection, Celebrations, Confetti, Audio, Utilities, Storage.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Pissepaus (tilt-aiming), Win detection, Bingo rewards, Party-länk, Admin, Rekord, Kvällens recap, Kommentatorn, Celebrations, Dialog helpers, Ambient embers, Confetti, Audio, Utilities, Storage.
 - `manifest.webmanifest`, `sw.js`, `icons/` — the PWA layer (see PWA & device feedback below).
 
 UI language is Swedish.
@@ -151,15 +151,17 @@ top bar (`menu-btn` → opens `#menu-overlay`, `.menu-actions` in that order):
 the current marks and reshuffles a new board); "Nollställ bricka" closes the
 menu and calls `onResetBoard()` (confirms, then clears `state.checked` /
 `bingoLinesAwarded` / `grandWin` on the *same* board — prompts don't change);
+"Party-länk" / "Rekord" / "Kvällens recap" open their respective overlays;
 "Byt spelare" closes the menu and calls `showPlayerGate()`. "Avsluta" in the
 menu (`menuExitBtn`) is wired straight to `onExit()`, same as `#test-screen`'s
 own Avsluta button (auto-wired via the generic `exitButtons` NodeList,
 selector `.exit-btn` — the menu's Avsluta isn't styled `.exit-btn` itself, so
 it needs its own explicit listener but shares the same confirm-then-
-`performExit()` flow). All four menu buttons share plain `.secondary-btn`
-styling (`.menu-actions .secondary-btn` re-asserts it over the generic
-`.overlay-card button` neon-pink default) — no more `.primary-btn`/`.exit-btn`
-visual distinction between them. The menu header (`.menu-header`) also has a
+`performExit()` flow). A hidden admin button ("Ny omgång") is revealed by
+long-pressing the "Meny" title. All menu action buttons share plain
+`.secondary-btn` styling (`.menu-actions .secondary-btn` re-asserts it over
+the generic `.overlay-card button` neon-pink default) — no
+`.primary-btn`/`.exit-btn` visual distinction between them. The menu header (`.menu-header`) also has a
 ← `back-btn` next to the "Meny" title (`menu-back-btn` → `closeDialog`, no
 confirm — identical to backdrop/Escape, just a visible way to do it); its own
 `.menu-header .back-btn` rule re-asserts the neutral circular look over the
@@ -224,7 +226,7 @@ button, label, and a short `blurb` (a one-line emoji description, e.g.
 opens the shared `#reward-overlay` and renders that preview before the player
 commits: for a single line it names the one game they're about to get
 (`.reward-game-preview`); for a grand win it lists all five, in the session's
-actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fyra"). The
+actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fem"). The
 same blurb text also sits as a permanent, always-visible line inside each
 mini-game's own overlay (`.minigame-blurb`, shared by Reaktionskollen/
 Minnesluckatestet/Spykollen/Pissepaus; Fyllekollen already has an equivalent standing

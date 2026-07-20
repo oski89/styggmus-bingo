@@ -1,6 +1,13 @@
-Original prompt: Gör en bingo-app för vår årliga tradition med grabbhäng som vi kallar "Stygg Mus". Stygg Mus är en ordlek av ordet "Stugmys" och vi är 5 grabbar som dricker öl, grillar, badar och hänger under en hel helg på sommaren. Det brukar bli diverese lekar, quiz, etc. Jag vill att appen ska se bra ut i mobilen (iOS och Andriod) och vara tillgänglig via min public github.
+# Progress
 
-## 2026-05-25
+Original prompt: Gör en bingo-app för vår årliga tradition med grabbhäng som vi kallar
+"Stygg Mus". Stygg Mus är en ordlek av ordet "Stugmys" och vi är 5 grabbar som
+dricker öl, grillar, badar och hänger under en hel helg på sommaren. Det brukar
+bli diverse lekar, quiz, etc. Jag vill att appen ska se bra ut i mobilen (iOS
+och Android) och vara tillgänglig via min public github.
+
+## 2026-05-25 — Första versionen
+
 - Skapade komplett statisk app med:
   - Interaktiv bingobricka
   - Unik bricka per användare via seedad shuffle
@@ -17,14 +24,43 @@ Original prompt: Gör en bingo-app för vår årliga tradition med grabbhäng so
 - Uppdaterade README med lokalkörning och publiceringssteg.
 - Verifierade appen:
   - Mobil- och desktop-screenshot via Playwright.
-  - Funktionstest för:
-    - check/uncheck
-    - bingo-overlay
-    - grand-win-overlay
-    - persistens över refresh
+  - Funktionstest för check/uncheck, bingo-overlay, grand-win, persistens.
   - Inga JS-konsolfel i testkörning.
 
-## Senare uppdateringar
-- Brickan är nu 4x4 (`BOARD_SIZE = 4`) med 16 rutor.
-- Appen har förenklad bingo-vy, inline ölräknare, toppmeny och fyra minigames.
-- Bingo-rewards styrs av minigame-resultat i klunkar; full bricka spelar alla fyra minigames i följd.
+## Senare — Bingo-vy, öl & minigames
+
+- Brickan är 4×4 (`BOARD_SIZE = 4`) med 16 rutor.
+- Förenklad bingo-vy: toppmeny (⋮), ← byt spelare, inline ölräknare (−/🍺/+).
+- Fem minigames (roterar på varje tillagd öl + testläge `MGT`):
+  - **Reaktionskollen** — reaktionstid när 🍺 dyker upp
+  - **Minnesluckatestet** — räkna flashade 🍺/🐭
+  - **Fyllekollen** — swipe-maze, timed
+  - **Spykollen** — dodge-spel (soffa vs 🤮)
+  - **Pissepaus** — tilt/sikta-stream mot 🚽
+- Bingo-rewards styrs av minigame-resultat i klunkar; full bricka spelar alla
+  fem i följd och summerar.
+- Delade verdict-nivåer: Nykter (alarm) / Salongsberusad / Full som ett ägg
+  (firande).
+
+## Senare — Party, rekord, recap, PWA
+
+- **Party-länk** via ntfy.sh: ölligan, bingo-flash på andras telefoner, rekord-
+  sync, round-reset.
+- **Rekord** (hall of fame) per spelare och minigame.
+- **Kvällens recap** — delbar neon-poster med nattens tallies.
+- **Kommentatorn** — sporadisk `sv-SE`-röst vid nästan-bingo, ölmilstolpar m.m.
+- Dold admin "Ny omgång" (långtryck på Meny-titeln).
+- PWA: manifest, service worker (network-first), ikoner, haptics, wake lock,
+  speech.
+- Neonklubben-visuell identitet + bakgrundskonst (`art/neonklubben-bg.webp`).
+
+## Kopior
+
+- `demo/` — anonymiserad, isolerad testkopia (lösenord `TEST`).
+- `dwarf/` — kontorsbingo med forge-tema (lösenord `DWARF`).
+
+## Docs
+
+- 2026-07-21: `README.md` och denna fil synkade mot nuvarande app (fem
+  minigames, party/rekord/recap, demo/dwarf). `CLAUDE.md` är fortfarande den
+  detaljerade arkitekturguiden.
