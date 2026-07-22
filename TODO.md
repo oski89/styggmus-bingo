@@ -18,6 +18,8 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 - **Promillekalkylator & Fyllemätare:** Real-tids promillekalkylator (`0.0 ‰`) och 5-stegs berusningsmätare (*Nykter → Salongs → Slirig → Kalasfull → Överfull*) integrerad i statsbaren med färg/glow-indikationer och röst-pitch-shifts.
 - **Utmaning & Duel-läge (1v1 Duels):** Klicka på "⚔️ Utmana" bredvid en online-spelare i Ölligan-rostern för att utmana dem i ett slumpat minispel. Båda spelarna battles live, poäng jämförs via ntfy.sh SSE stream (`duel_score`), och förloraren drabbas av en skärm-takeover med 5 straffklunkar (eller 2 klunkar vid fegis/decline).
 - **Kvällens Statistik & Öldiagram (Night Analytics):** Interaktiv statistik-sida (`#analytics-overlay`) i menyn med canvas-baserat linjediagram för alla spelares ölkonsumtion över tid, öl-ledare & promille, totalt utdelade klunkar och topp 3 mest checkade rutor ikväll.
+- **Gyllene Musen (Secret Konami Code):** 5 snabba taps på `🍆` i titeln eller Konami-koden `↑ ↑ ↓ ↓ ← → ← → B A` togglar 3D guld-spegelkort, guldglitterregn och 8-bit retro-fanfar. Toggle igen återställer brickan med nollställningsgrafik & ljud.
+- **Mouse Trap Slime Explosion:** 3 snabba taps på spelarnamnet som `Mouse Trap Pukie 👴🏻` utlöser en neongrön slem-explosion (`#slime-overlay`), slem-ljud och belönar Pukie med +1 bonus-mulligan.
 - **Topbar visual refresh:** Tillbaka-pilen borttagen från bingo-toppbaren, titeln "Stygg Mus Bingo" förstorad med neon-effekt (`Orbitron`), och meny-alternativen logiskt sorterade.
 
 ---

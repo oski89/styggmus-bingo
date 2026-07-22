@@ -64,3 +64,13 @@ och Android) och vara tillgänglig via min public github.
 - 2026-07-21: `README.md` och denna fil synkade mot nuvarande app (fem
   minigames, party/rekord/recap, demo/dwarf). `CLAUDE.md` är fortfarande den
   detaljerade arkitekturguiden.
+
+## 2026-07-22 — Nya Features & Easter Eggs
+
+- **Mulligan-läge (Byt rutor):** Vaska upp till 3 ocheckade rutor per bricka via menyn.
+- **Party-länk Quick Widget:** Flyttad till toppbaren med `🌐` glob + Apple iOS toggle slider.
+- **Utmaning & Duel-läge (1v1 Duels):** Utmana party-medlemmar live i slumpade minispel via ntfy.sh SSE stream.
+- **Kvällens Statistik & Öldiagram (Night Analytics):** Interaktiv statistik-modal (`#analytics-overlay`) med canvas-baserat linjediagram för alla spelares ölkonsumtion över tid.
+- **Real-tids BAC Promillekalkylator:** Exakt promillekalkylator baserad på Widmark-formeln, spelarvikt i kg (President 85kg, Pukie 78kg, Pommesansvarig 90kg, AFC Master 70kg, Prospect 75kg), antal öl och realtidstimmar. Integration mot MiniWebtool API.
+- **Gyllene Musen (Secret Konami Code):** 5 snabba taps på `🍆` i titeln eller Konami-koden (`↑ ↑ ↓ ↓ ← → ← → B A`) togglar 3D guld-spegelkort (`.gyllene-musen-active`), guldglitterregn och 8-bit retro-fanfar. Toggle igen återställer med nollställningsgrafik & ljud.
+- **Mouse Trap Slime Explosion:** 3 snabba taps på spelarnamnet som `Mouse Trap Pukie 👴🏻` utlöser en fullskärms neon-slemexplosion (`#slime-overlay`), slem-ljud och belönar Pukie med +1 bonus-mulligan.
