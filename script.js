@@ -126,6 +126,20 @@
     "a",
   ];
 
+  const NIGHT_QUOTES = [
+    "Dags att hänga ut drulen?",
+    "Efterfesten har precis börjat...",
+    "Solen har gått ner, dags för bus.",
+    "Bara en boga till...",
+    "Vem däckar först ikväll?",
+    "Nattliga äventyr väntar...",
+    "Stygga möss sover aldrig...",
+    "Göm spriten, Pukie är lös."
+  ];
+
+  let isNightShift = false;
+  let nightQuoteInterval = null;
+
   const promptGroups = [
     {
       id: "lagget",
@@ -285,6 +299,7 @@
 
   let mulliganModeActive = false;
   let selectedMulliganIndices = new Set();
+  let gyroPermissionAsked = false;
 
   const partyOverlayEl = document.getElementById("party-overlay");
   const partyBackBtn = document.getElementById("party-back-btn");
@@ -429,8 +444,37 @@
   let rewardActionHandler = null;
   let wakeLock = null;
 
+  function updateNightShift() {
+    const hour = new Date().getHours();
+    const nowNight = hour >= 0 && hour < 5;
+    if (nowNight !== isNightShift) {
+      isNightShift = nowNight;
+      const nightQuoteEl = document.getElementById("night-quote");
+      if (isNightShift) {
+        document.body.classList.add("night-shift");
+        if (nightQuoteEl) {
+          nightQuoteEl.classList.remove("hidden");
+          const changeQuote = () => {
+            nightQuoteEl.textContent = NIGHT_QUOTES[Math.floor(Math.random() * NIGHT_QUOTES.length)];
+          };
+          changeQuote();
+          nightQuoteInterval = window.setInterval(changeQuote, 16000);
+        }
+      } else {
+        document.body.classList.remove("night-shift");
+        if (nightQuoteEl) nightQuoteEl.classList.add("hidden");
+        if (nightQuoteInterval) {
+          window.clearInterval(nightQuoteInterval);
+          nightQuoteInterval = null;
+        }
+      }
+    }
+  }
+
   registerEventListeners();
   renderAccessFlow();
+  updateNightShift();
+  window.setInterval(updateNightShift, 60000);
   startEmbers();
 
   // PWA: register the app-shell service worker (relative path so it works under
@@ -475,6 +519,29 @@
     if (menuMulliganBtn) menuMulliganBtn.addEventListener("click", onMenuMulliganPressed);
     if (mulliganConfirmBtn) mulliganConfirmBtn.addEventListener("click", onMulliganConfirmPressed);
     if (mulliganCancelBtn) mulliganCancelBtn.addEventListener("click", exitMulliganMode);
+    
+    const gyroToast = document.getElementById("gyro-toast");
+    const gyroYes = document.getElementById("gyro-toast-yes");
+    const gyroNo = document.getElementById("gyro-toast-no");
+    if (gyroYes) {
+      gyroYes.addEventListener("click", () => {
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission().then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener('deviceorientation', handleGyro, { passive: true });
+            }
+          }).catch(console.error);
+        }
+        if (gyroToast) gyroToast.classList.add("hidden");
+      });
+    }
+    if (gyroNo) {
+      gyroNo.addEventListener("click", () => {
+        if (gyroToast) gyroToast.classList.add("hidden");
+        window.addEventListener('pointermove', handlePointerTilt, { passive: true });
+      });
+    }
+
     registerAdminUnlock();
     menuAdminBtn.addEventListener("click", onAdminResetPressed);
     if (menuPartyBtn) {
@@ -1192,11 +1259,54 @@
     window.setTimeout(() => boardEl.classList.remove("deal"), 1100);
   }
 
+  function handleGyro(e) {
+    if (e.beta === null || e.gamma === null) return;
+    let ry = e.gamma; 
+    let rx = e.beta - 45; 
+    
+    ry = Math.max(-25, Math.min(25, ry));
+    rx = Math.max(-25, Math.min(25, rx));
+
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.style.setProperty('--rx', `${-rx}deg`);
+      cell.style.setProperty('--ry', `${ry}deg`);
+    });
+  }
+
+  function handlePointerTilt(e) {
+    const x = (e.clientX / window.innerWidth - 0.5) * 2; 
+    const y = (e.clientY / window.innerHeight - 0.5) * 2;
+    
+    const ry = x * 15; 
+    const rx = -y * 15;
+    
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.style.setProperty('--rx', `${rx}deg`);
+      cell.style.setProperty('--ry', `${ry}deg`);
+    });
+  }
+
   function onBoardClick(event) {
     if (!state) return;
 
+    if (!gyroPermissionAsked) {
+      gyroPermissionAsked = true;
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const toast = document.getElementById("gyro-toast");
+        if (toast) toast.classList.remove("hidden");
+      } else {
+        window.addEventListener('deviceorientation', handleGyro, { passive: true });
+        window.addEventListener('pointermove', handlePointerTilt, { passive: true });
+      }
+    }
+
     const target = event.target;
     if (!(target instanceof HTMLElement) || !target.classList.contains("cell")) return;
+
+    if (typeof window.triggerShockwave === 'function') {
+      const rect = target.getBoundingClientRect();
+      window.triggerShockwave(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
 
     const index = Number(target.dataset.index);
 
@@ -2746,6 +2856,53 @@
 
   // ── Win detection ─────────────────────────────────────────────────────────
 
+  function drawPlasmaLines(linesToDraw, callback) {
+    const boardWrap = document.querySelector('.board-wrap');
+    if (!boardWrap) return callback && callback();
+    const boardRect = boardWrap.getBoundingClientRect();
+    const cells = document.querySelectorAll('.cell');
+
+    let longestAnim = 600;
+
+    linesToDraw.forEach(line => {
+      const firstCell = cells[line[0]];
+      const lastCell = cells[line[line.length - 1]];
+      if (!firstCell || !lastCell) return;
+
+      const r1 = firstCell.getBoundingClientRect();
+      const r2 = lastCell.getBoundingClientRect();
+
+      const x1 = r1.left + r1.width / 2 - boardRect.left;
+      const y1 = r1.top + r1.height / 2 - boardRect.top;
+
+      const x2 = r2.left + r2.width / 2 - boardRect.left;
+      const y2 = r2.top + r2.height / 2 - boardRect.top;
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+      const plasma = document.createElement('div');
+      plasma.className = 'plasma-line';
+      plasma.style.width = `${length}px`;
+      plasma.style.setProperty('--tx', `${x1}px`);
+      plasma.style.setProperty('--ty', `${y1 - 3}px`);
+      plasma.style.setProperty('--rot', `${angle}deg`);
+
+      boardWrap.appendChild(plasma);
+
+      setTimeout(() => {
+        if (plasma.parentElement) plasma.parentElement.removeChild(plasma);
+      }, 2500);
+    });
+
+    if (callback) {
+      if (linesToDraw.length > 0) setTimeout(callback, longestAnim);
+      else callback();
+    }
+  }
+
   function updateStatsAndWinState({ triggerEffects }) {
     if (!state) return;
 
@@ -2773,9 +2930,12 @@
 
       // A grand win supersedes the single-line reward for the same check: filling
       // the last cell also completes lines, but we only run one reward flow.
-      if (justGrandWin) startGrandReward();
-      else if (newLines.length > 0) startBingoReward();
-      else if (marked === CELL_COUNT - 1) {
+      if (justGrandWin) {
+        drawPlasmaLines(lines, () => startGrandReward());
+      } else if (newLines.length > 0) {
+        const linesToDraw = newLines.map(k => k.split('-').map(Number));
+        drawPlasmaLines(linesToDraw, () => startBingoReward());
+      } else if (marked === CELL_COUNT - 1) {
         // Kommentatorn: tension calls when no reward fired this check.
         sayCommentary(randomItem(KOMMENTATOR.almostGrand));
       } else {
@@ -4266,6 +4426,11 @@
     let pointerX = -1000;
     let pointerY = -1000;
     let lastPointerTime = 0;
+    let shockwaves = [];
+    
+    window.triggerShockwave = (x, y) => {
+      shockwaves.push({ x, y, radius: 0, life: 1 });
+    };
 
     function onPointerMove(e) {
       pointerX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || -1000;
@@ -4301,10 +4466,11 @@
         return {
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
-          r: 1.2 + Math.random() * 3.2,
+          rBase: 1.2 + Math.random() * 3.2,
           speed: 0.2 + Math.random() * 0.6,
           drift: -0.3 + Math.random() * 0.6,
-          color: c,
+          baseColor: c,
+          nightColor: { r: 160 + Math.floor(Math.random() * 60), g: 20 + Math.floor(Math.random() * 40), b: 255 },
           alpha: 0.2 + Math.random() * 0.55,
           phase: Math.random() * Math.PI * 2,
         };
@@ -4330,7 +4496,7 @@
           if (distSq < maxDist * maxDist) {
             const dist = Math.sqrt(distSq);
             const lineAlpha = (1 - dist / maxDist) * 0.12;
-            const c1 = motes[i].color;
+            const c1 = isNightShift ? motes[i].nightColor : motes[i].baseColor;
             ctx.beginPath();
             ctx.moveTo(motes[i].x, motes[i].y);
             ctx.lineTo(motes[j].x, motes[j].y);
@@ -4345,6 +4511,15 @@
       for (const m of motes) {
         m.y -= m.speed;
         m.x += m.drift + Math.sin(t + m.phase) * 0.25;
+
+        if (m.vx) {
+          m.x += m.vx;
+          m.vx *= 0.92;
+        }
+        if (m.vy) {
+          m.y += m.vy;
+          m.vy *= 0.92;
+        }
 
         // Pointer repulsion
         const dx = m.x - pointerX;
@@ -4365,14 +4540,51 @@
         if (m.x > w + 10) m.x = -10;
 
         const twinkle = m.alpha * (0.65 + 0.35 * Math.sin(t * 2.5 + m.phase));
-        const c = m.color;
+        const c = isNightShift ? m.nightColor : m.baseColor;
+        const currentR = isNightShift ? m.rBase * 2.5 : m.rBase;
 
         ctx.beginPath();
-        ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+        ctx.arc(m.x, m.y, currentR, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${twinkle})`;
-        ctx.shadowColor = `rgba(${c.r}, ${c.g}, ${c.b}, 0.85)`;
-        ctx.shadowBlur = 10;
+        ctx.shadowColor = `rgba(${c.r}, ${c.g}, ${c.b}, ${isNightShift ? 0.95 : 0.85})`;
+        ctx.shadowBlur = isNightShift ? 20 : 10;
         ctx.fill();
+      }
+
+      // Draw shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        const sw = shockwaves[i];
+        sw.radius += 12;
+        sw.life -= 0.025;
+
+        if (sw.life <= 0) {
+          shockwaves.splice(i, 1);
+          continue;
+        }
+
+        // Apply physical force to motes
+        for (const m of motes) {
+          const dx = m.x - sw.x;
+          const dy = m.y - sw.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (Math.abs(dist - sw.radius) < 25) {
+             const force = sw.life * 3.5;
+             m.vx = (m.vx || 0) + (dx / dist) * force;
+             m.vy = (m.vy || 0) + (dy / dist) * force;
+          }
+        }
+
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(45, 226, 255, ${sw.life * 0.6})`;
+        ctx.lineWidth = 2 + sw.life * 5;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.radius * 0.85, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 45, 120, ${sw.life * 0.3})`;
+        ctx.lineWidth = 1 + sw.life * 2;
+        ctx.stroke();
       }
 
       // Draw pointer sparks

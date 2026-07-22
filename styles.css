@@ -964,23 +964,30 @@ button:focus-visible {
   user-select: none;
   -webkit-user-select: none;
   backdrop-filter: blur(12px);
+  --rx: 0deg;
+  --ry: 0deg;
+  --ty: 0px;
+  --s: 1;
+  transform: translateY(var(--ty)) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
   transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
 .cell::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -50%;
   background: linear-gradient(120deg, rgba(255, 45, 120, 0.22), transparent 42%, rgba(45, 226, 255, 0.18));
   opacity: 0;
-  transition: opacity 160ms ease;
+  transition: opacity 160ms ease, transform 0.1s ease;
   pointer-events: none;
+  transform: translate(calc(var(--ry) * 2), calc(var(--rx) * -2));
 }
 
 .cell:hover,
 .cell:focus-visible {
   border-color: rgba(45, 226, 255, 0.75);
-  transform: translateY(-3px) scale(1.02);
+  --ty: -3px;
+  --s: 1.02;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
     0 0 22px rgba(45, 226, 255, 0.45),
@@ -1023,6 +1030,27 @@ button:focus-visible {
   font-size: 0.82rem;
   line-height: 1;
   box-shadow: 0 0 14px rgba(45, 226, 255, 0.9), inset 0 0 6px rgba(255, 45, 120, 0.5);
+}
+
+.plasma-line {
+  position: absolute;
+  top: 0; left: 0;
+  height: 6px;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 0 10px #fff, 0 0 20px #ff2d78, 0 0 30px #2de2ff, 0 0 40px #ff2d78;
+  transform-origin: left center;
+  pointer-events: none;
+  z-index: 10;
+  animation: plasma-grow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, plasma-fade 1.5s ease-in 1.2s forwards;
+}
+
+@keyframes plasma-grow {
+  0% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scaleX(0); }
+  100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scaleX(1); }
+}
+@keyframes plasma-fade {
+  to { opacity: 0; }
 }
 
 /* Winning line: an acid-yellow neon tube that pulses (the celebratory colour). */
@@ -3023,4 +3051,67 @@ button:focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── Night Shift Mode ─────────────────────────────────────────────────────── */
+
+.night-quote {
+  text-align: center;
+  color: var(--neon-purple);
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-style: italic;
+  margin: 1rem 1rem 0;
+  text-shadow: 0 0 10px rgba(181, 45, 255, 0.8);
+  animation: fade-quote 8s infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes fade-quote {
+  0% { opacity: 0.3; transform: scale(0.98); }
+  100% { opacity: 0.9; transform: scale(1.02); }
+}
+
+body.night-shift {
+  background:
+    radial-gradient(circle at 22% 6%, #3d0b3a 0%, #200529 42%, #0f0116 72%, #05010c 100%),
+    var(--bg);
+}
+
+.gyro-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 6, 36, 0.95);
+  border: 1px solid rgba(45, 226, 255, 0.6);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(45, 226, 255, 0.2);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.gyro-toast.hidden {
+  opacity: 0;
+  transform: translate(-50%, 20px);
+  pointer-events: none;
+}
+.gyro-toast span {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.gyro-toast-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.gyro-toast-actions button {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  min-width: 0;
 }

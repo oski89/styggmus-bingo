@@ -21,6 +21,8 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 - **Gyllene Musen (Secret Konami Code):** 5 snabba taps på `🍆` i titeln eller Konami-koden `↑ ↑ ↓ ↓ ← → ← → B A` togglar 3D guld-spegelkort, guldglitterregn och 8-bit retro-fanfar. Toggle igen återställer brickan med nollställningsgrafik & ljud.
 - **Mouse Trap Slime Explosion:** 3 snabba taps på spelarnamnet som `Mouse Trap Pukie 👴🏻` utlöser en neongrön slem-explosion (`#slime-overlay`), slem-ljud och belönar Pukie med +1 bonus-mulligan.
 - **Topbar visual refresh:** Tillbaka-pilen borttagen från bingo-toppbaren, titeln "Stygg Mus Bingo" förstorad med neon-effekt (`Orbitron`), och meny-alternativen logiskt sorterade.
+- **Efterfest / Night Shift Mode:** Automatisk natt-transformeringsläge efter midnatt (kl 00:00) med lila nebula-partiklar och busiga natt-citat under bingobrickan.
+
 
 ---
 
@@ -49,16 +51,16 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 - [x] **🤮 Mouse Trap Slime Explosion:**
   - Klicka på ditt eget spelarnamn 3 gånger som `Mouse Trap Pukie 👴🏻`.
   - Utlöser grön neon-slime animation på skärmen, slem-ljudeffekt och belönar Pukie med +1 bonus-mulligan!
-- [ ] **🌙 Efterfest / Night Shift Mode (Midnight / 00:00):**
+- [x] **🌙 Efterfest / Night Shift Mode (Midnight / 00:00):**
   - Automatisk natt-transformeringsläge efter midnatt (kl 00:00) med lila nebula-partiklar och busiga natt-citat.
 
 ---
 
 ## 🎆 Planerade Grafiska Uppgraderingar (Visual Upgrades)
 
-- [ ] **🌌 Hyper-Realistisk 3D Tilt Fysik för Bingorutor:**
+- [x] **🌌 Hyper-Realistisk 3D Tilt Fysik för Bingorutor:**
   - Gyro/touch orientation på bingorutor (`perspective(1000px) rotateX/Y`) så reflektioner och metallic light sweeps rör sig med telefonens lutning.
-- [ ] **⚡ Plasma Arc & Laser-linjer vid Bingo:**
+- [x] **⚡ Plasma Arc & Laser-linjer vid Bingo:**
   - Animerade glowing plasma-lasrar som förbinder rutorna i en vinnande bingo-rad innan partikel-fyrverkerier exploderar.
-- [ ] **💥 Vatten/Partikel Shockwave Engine:**
+- [x] **💥 Vatten/Partikel Shockwave Engine:**
   - Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
