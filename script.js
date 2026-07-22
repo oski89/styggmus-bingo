@@ -229,13 +229,13 @@
     },
     {
       id: "afc-master",
-      label: "💨 AFC master TBD",
+      label: "💨 AFC master 🥷",
       excludedGroup: "oski",
       weightKg: 70,
     },
     {
       id: "prospect",
-      label: "🛋️ Prospect TBD",
+      label: "🛋️ Prospect 🪴",
       excludedGroup: "per",
       weightKg: 70,
     },
