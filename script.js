@@ -212,30 +212,35 @@
     {
       id: "stygg-mus-president",
       label: "🐭 Stygg mus president 👑",
+      shortLabel: "🐭👑",
       excludedGroup: "lagget",
       weightKg: 80,
     },
     {
       id: "mouse-trap-pukie",
       label: "🤮 Mouse trap pukie 👴🏻",
+      shortLabel: "🤮👴🏻",
       excludedGroup: "ks",
       weightKg: 80,
     },
     {
       id: "pommesansvarig",
       label: "👨🏿 Pommesansvarig 🍟",
+      shortLabel: "👨🏿🍟",
       excludedGroup: "marcus",
       weightKg: 90,
     },
     {
       id: "afc-master",
       label: "💨 AFC master 🥷",
+      shortLabel: "💨🥷",
       excludedGroup: "oski",
       weightKg: 70,
     },
     {
       id: "prospect",
       label: "🛋️ Prospect 🪴",
+      shortLabel: "🛋️🪴",
       excludedGroup: "per",
       weightKg: 70,
     },
@@ -781,7 +786,8 @@
     state = loadOrCreateState(activePlayerId);
     hideAllScreens();
     appEl.classList.remove("hidden");
-    currentPlayerEl.textContent = getPlayer(activePlayerId).label;
+    const p = getPlayer(activePlayerId);
+    currentPlayerEl.textContent = p.shortLabel || p.label;
     renderBeerWidget();
     renderBoard();
     updateStatsAndWinState({ triggerEffects: false });
