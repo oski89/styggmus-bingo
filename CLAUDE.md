@@ -77,12 +77,12 @@ The big titles (login `h1`, board `.bingo-topbar-title`) get a **neon-tube**
 treatment — styled in `Orbitron` with a white-hot core (`-webkit-text-stroke` + tight white shadow)
 wrapped in layered pink halos, plus a faulty-tube `neon-title-flicker`
 keyframe (behind `prefers-reduced-motion`). The **board cells** are 3D dimensional
-glass: a top highlight, a purple body, and a magenta under-glow so unlit cells
+glass featuring **interactive device-orientation (gyroscope) or pointer tracking tilt physics**: they rotate up to 25 degrees, shifting parallax reflections. A top highlight, a purple body, and a magenta under-glow make unlit cells
 read as lit glass rather than flat black. A **checked** cell becomes hot-pink
 glass with a glowing cyan tube rim and a 🐭 paw emblem stamped in the corner
 (`::after`). `.board-wrap` is a bright pink→cyan→yellow neon-tube edge. Ambient
 **constellation particles** (`#embers` canvas inside `.page-bg`, driven by `startEmbers`) drift
-neon motes with dynamic touch/mouse cursor repulsion and energy filaments.
+neon motes with dynamic touch/mouse cursor repulsion, energy filaments, and an interactive **water/particle shockwave engine** (clicking a cell expands a ring that applies physical velocity vectors pushing motes away). At midnight, an automatic **Night Shift Mode** kicks in, tinting the background purple and introducing cheeky night-themed quotes.
 
 **Tactile feedback (all behind `prefers-reduced-motion`):** marking a cell adds
 a transient `.stamp` class (re-triggered via reflow in `onBoardClick`, cleared
@@ -90,9 +90,7 @@ after 460ms) that runs a scale-pop (`cell-stamp`), an expanding cyan spark ring
 (`cell-spark` on `::before`), and the emblem slamming down (`emblem-slam` on
 `::after`); unmarking is quiet. A **winning** cell runs the acid-yellow
 `cell-win-pulse`, staggered into a travelling marquee wave by a negative
-`animation-delay` keyed off `--win-order` (set per-cell along the line in
-`highlightWinningCells`); reduced-motion gets a static bright variant. Confetti
-(`runConfetti`) tumbles casino shapes — neon chips (rect/circle) plus card-suit
+wave by a negative `animation-delay` keyed off `--win-order`. A glowing neon-white **plasma laser line** with magenta/cyan drop shadows animates across the exact centers of the winning cells for 600ms before triggering the win sequence. Confetti (`runConfetti`) tumbles casino shapes — neon chips (rect/circle) plus card-suit
 and 🍺/🎲 glyphs — with per-piece glow.
 
 ### Screen flow
@@ -146,11 +144,13 @@ Player selection persists under `styggmus-bingo-player-v1`.
 
 There are 5 players (`players`) and 5 prompt groups (`promptGroups`), one group
 per real-life person × 8 prompts = 40 total. Player labels, emojis & weights:
-- `stygg-mus-president`: `🐭 Stygg mus president 👑` (85 kg)
-- `mouse-trap-pukie`: `🤮 Mouse trap pukie 👴🏻` (78 kg)
+- `stygg-mus-president`: `🐭 Stygg mus president 👑` (80 kg)
+- `mouse-trap-pukie`: `🤮 Mouse trap pukie 👴🏻` (80 kg)
 - `pommesansvarig`: `👨🏿 Pommesansvarig 🍟` (90 kg)
-- `afc-master`: `💨 AFC master TBD` (70 kg)
-- `prospect`: `🛋️ Prospect TBD` (75 kg)
+- `afc-master`: `💨 AFC master 🥷` (70 kg)
+- `prospect`: `🛋️ Prospect 🪴` (70 kg)
+
+The bingo top bar uses `shortLabel` (e.g., `💨🥷`) to conserve screen space.
 
 Each player has an `excludedGroup` that is removed before the board is built.
 

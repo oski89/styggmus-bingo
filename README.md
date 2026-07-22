@@ -17,11 +17,21 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 - **Meny:** Mulligan, ny bricka, nollställ markeringar, rekord, kvällens recap, byt spelare och avsluta.
 
 ### Spelare
-1. `🐭 Stygg mus president 👑`
-2. `🤮 Mouse trap pukie 👴🏻`
-3. `👨🏿 Pommesansvarig 🍟`
-4. `💨 AFC master TBD`
-5. `🛋️ Prospect TBD`
+1. `🐭 Stygg mus president 👑` (80 kg)
+2. `🤮 Mouse trap pukie 👴🏻` (80 kg)
+3. `👨🏿 Pommesansvarig 🍟` (90 kg)
+4. `💨 AFC master 🥷` (70 kg)
+5. `🛋️ Prospect 🪴` (70 kg)
+
+*Spelarna visas i toppbaren med en komprimerad emojiversion (t.ex. `💨🥷`) för att spara utrymme.*
+
+### Visuella Uppgraderingar & Easter Eggs
+- **Hyper-Realistisk 3D Tilt Fysik:** Gyro/touch orientation på bingorutor så reflektioner och metallic light sweeps rör sig med telefonens lutning.
+- **Plasma Arc:** Animerade glowing plasma-lasrar förbinder rutorna i en vinnande rad innan partikel-fyrverkerierna exploderar.
+- **Vatten/Partikel Shockwave Engine:** Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
+- **Gyllene Musen (Konami Code):** 5 taps på `🍆` eller `↑ ↑ ↓ ↓ ← → ← → B A` för 3D-guldbricka & 8-bit glitterfanfar.
+- **Mouse Trap Slime Explosion:** 3 taps på Pukies spelarnamn för slem-explosion & +1 bonus-mulligan.
+- **Efterfest / Night Shift Mode:** Automatisk natt-transformeringsläge efter midnatt (kl 00:00) med lila nebula-partiklar och busiga natt-citat under bingobrickan.
 
 ### Ölräknare, Promille & Minigames
 - Inline ölräknare (−/🍺/+) per spelare.
@@ -51,7 +61,6 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 ### PWA & Enhetsstöd
 - Installerbar PWA (manifest + service worker, network-first med offline-fallback).
 - Haptics (Vibration API + iOS switch-fallback), screen wake lock under dialoger, speech för verdicts.
-- Easter eggs: Gyllene Musen (5 taps på 🍆 eller Konami-kod `↑ ↑ ↓ ↓ ← → ← → B A` för 3D-guldbricka & 8-bit glitterfanfar), Mouse Trap Slime Explosion (3 taps på spelarnamnet som Pukie för slem-explosion & +1 bonus-mulligan).
 
 ## Kör lokalt
 

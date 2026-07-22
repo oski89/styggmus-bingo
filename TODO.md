@@ -22,6 +22,10 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 - **Mouse Trap Slime Explosion:** 3 snabba taps på spelarnamnet som `Mouse Trap Pukie 👴🏻` utlöser en neongrön slem-explosion (`#slime-overlay`), slem-ljud och belönar Pukie med +1 bonus-mulligan.
 - **Topbar visual refresh:** Tillbaka-pilen borttagen från bingo-toppbaren, titeln "Stygg Mus Bingo" förstorad med neon-effekt (`Orbitron`), och meny-alternativen logiskt sorterade.
 - **Efterfest / Night Shift Mode:** Automatisk natt-transformeringsläge efter midnatt (kl 00:00) med lila nebula-partiklar och busiga natt-citat under bingobrickan.
+- **🌌 Hyper-Realistisk 3D Tilt Fysik för Bingorutor:** Gyro/touch orientation på bingorutor (`perspective(1000px) rotateX/Y`) så reflektioner och metallic light sweeps rör sig med telefonens lutning.
+- **⚡ Plasma Arc & Laser-linjer vid Bingo:** Animerade glowing plasma-lasrar som förbinder rutorna i en vinnande bingo-rad innan partikel-fyrverkerier exploderar.
+- **💥 Vatten/Partikel Shockwave Engine:** Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
+- **Uppdaterade Emojis & Namnvisning:** Spelarna (AFC Master, Prospect m.fl.) har nya emojis och visas i toppbaren med förkortad version (endast emojis) för att spara plats.
 
 
 ---
@@ -56,11 +60,3 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 
 ---
 
-## 🎆 Planerade Grafiska Uppgraderingar (Visual Upgrades)
-
-- [x] **🌌 Hyper-Realistisk 3D Tilt Fysik för Bingorutor:**
-  - Gyro/touch orientation på bingorutor (`perspective(1000px) rotateX/Y`) så reflektioner och metallic light sweeps rör sig med telefonens lutning.
-- [x] **⚡ Plasma Arc & Laser-linjer vid Bingo:**
-  - Animerade glowing plasma-lasrar som förbinder rutorna i en vinnande bingo-rad innan partikel-fyrverkerier exploderar.
-- [x] **💥 Vatten/Partikel Shockwave Engine:**
-  - Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
