@@ -1860,12 +1860,19 @@
     }
     ctx.shadowBlur = 0;
 
-    const glyph = Math.floor(cell * 0.64);
-    ctx.font = `${glyph}px serif`;
+    const glyph = Math.floor(cell * 0.75);
+    ctx.font = `${glyph}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    
+    // Add a slight text-shadow to ensure they pop
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 4;
+    
     ctx.fillText("🍺", goal.c * cell + cell / 2, goal.r * cell + cell / 2);
     ctx.fillText("🐭", player.c * cell + cell / 2, player.r * cell + cell / 2);
+    
+    ctx.shadowBlur = 0; // reset
   }
 
   // Steps the mouse one cell in `dir` when no wall blocks it; reaching the goal
