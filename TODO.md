@@ -32,33 +32,13 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 
 ## 🚀 Planerade Större Features (Major Enhancements)
 
-- [x] **🍻 Promillekalkylator & Fyllemätare (Dynamic Drunk Meter)**
-  - Real-tidspromille och berusningsnivå (*Nykter → Salongs → Slirig → Kalasfull → Överfull*) i statsbaren baserat på ölräknaren.
-  - Dynamiska effekter vid höga nivåer: skärm-wobble (`stygg-wobble`), rainbow text glow och röst-pitch-shifts.
-- [x] **⚔️ Utmaning & Duel-läge (1v1 Mini-Game Duels in Party-länk)**
-  - Klicka på en spelare i Ölligan-rostern för att utmana dem i ett slumpmässigt minispel (*Spykollen*, *Pissepaus*, etc.).
-  - Förloraren får en skärm-takeover som tvingar dem att dricka X klunkar.
-- [x] **📊 Kvällens Graf & Statistik-sida (Night Analytics)**
-  - Interaktiv statistik-sida i menyn med öl-övertids-diagram, bingo-hastighet, mest checkade rutor och totalt utdelade klunkar per spelare.
+
 - [ ] **✏️ Redigerbar lista med egna bingo-frågor i UI:**
   - Möjlighet att lägga till/redigera egna frågor direkt i appen.
 - [ ] **🔗 Dela min bricka:**
   - Generera en delbar länk eller kod för att dela en specifik bingobricka.
 
----
 
-## 🥚 Planerade Easter Eggs
-
-- [x] **🐭 Gyllene Musen (Secret Konami Code)**
-  - Klicka på 🍆 i "Stygg Mus Bingo 🍆🐭🎲" 5 gånger i snabb följd (eller slå Konami-koden `↑ ↑ ↓ ↓ ← → ← → B A`).
-  - Förvandlar hela brickan till 3D guld-spegelkort (`.gyllene-musen-active`), guld-glitterregn och 8-bit retro arcade-fanfar!
-- [x] **🤮 Mouse Trap Slime Explosion:**
-  - Klicka på ditt eget spelarnamn 3 gånger som `Mouse Trap Pukie 👴🏻`.
-  - Utlöser grön neon-slime animation på skärmen, slem-ljudeffekt och belönar Pukie med +1 bonus-mulligan!
-- [x] **🌙 Efterfest / Night Shift Mode (Midnight / 00:00):**
-  - Automatisk natt-transformeringsläge efter midnatt (kl 00:00) med lila nebula-partiklar och busiga natt-citat.
-
----
 
 ## 🐛 QA & Optimeringar (Bugs & Optimizations)
 
