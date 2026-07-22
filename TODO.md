@@ -62,32 +62,32 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 
 ## 🐛 QA & Optimeringar (Bugs & Optimizations)
 
-**1. DOM Memory Leak (Plasma Lasers)**
+**1. DOM Memory Leak (Plasma Lasers) [Fixad ✅]**
 - *Bug:* `.plasma-line` element som skapas vid bingo läggs till i `.board-wrap` men tas aldrig bort från DOM efter att deras CSS-animation är klar. Vid flera bingo byggs osynliga noder på hög.
-- *Fix:* Lyssna på `animationend` (eller sätt en `setTimeout` på ca 2.5s) och anropa `line.remove()`.
+- *Fix:* (Visade sig vara löst sedan tidigare med `setTimeout` och `removeChild`).
 
-**2. RAF Animation Leaks (Resursanvändning/Batteri)**
-- *Bug:* `startEmbers()` kör en oändlig `requestAnimationFrame`-loop. Om `prefers-reduced-motion` slås på mid-session så stannar inte loopen.
-- *Bug:* Fyllekollen, Spykollen och Pissepaus använder requestAnimationFrame. När dialogerna stängs måste den aktiva animation frame-ID:n (e.g. `cancelAnimationFrame`) städas upp, annars riskerar loopen att snurra dolt i bakgrunden.
+**2. RAF Animation Leaks (Resursanvändning/Batteri) [Fixad ✅]**
+- *Bug:* `startEmbers()` kör en oändlig `requestAnimationFrame`-loop. Om `prefers-reduced-motion` slås på mid-session så stannar inte loopen. Minigames hade redan fungerande cleanup.
+- *Fix:* Lade till `embersRaf` för att korrekt kunna avbryta loopen med `cancelAnimationFrame(embersRaf)` vid uppstart av ny loop.
 
-**3. Gyroscope Event Throttling (Optimering)**
+**3. Gyroscope Event Throttling (Optimering) [Fixad ✅]**
 - *Problem:* `DeviceOrientationEvent` uppdaterar CSS-variablerna `--rx` och `--ry` blixtsnabbt. Att trigga style recalculations hundratals gånger per sekund på mobilen kan vara tungt.
-- *Fix:* Throttle:a `handleGyro` med en `requestAnimationFrame` så att DOM/CSS-uppdateringar batchas till renderingens framerate (60fps).
+- *Fix:* Throttlade `handleGyro` och `handlePointerTilt` med en `requestAnimationFrame` så att DOM/CSS-uppdateringar batchas.
 
-**4. Klickmål på Bingorutor (Bug)**
-- *Bug:* I `onBoardClick(event)`, om användaren klickar exakt på prompt-texten (`<span>`) inuti en ruta så returnerar funktionen tidigt eftersom `target.classList.contains("cell")` utvärderas på span-elementet (beroende på CSS pointer-events).
-- *Fix:* Ändra klick-hanteraren till `const target = event.target.closest('.cell');` för att garantera klick oavsett vilket barn-element som träffas.
+**4. Klickmål på Bingorutor (Bug) [Fixad ✅]**
+- *Bug:* I `onBoardClick(event)`, om användaren klickar exakt på prompt-texten (`<span>`) inuti en ruta så returnerar funktionen tidigt eftersom `target.classList.contains("cell")` utvärderas på span-elementet.
+- *Fix:* Ändrade klick-hanteraren till `const target = event.target.closest('.cell');` för att garantera klick oavsett vilket barn-element som träffas.
 
-**5. Emoji-rendering i Minnesluckatestet (UX)**
+**5. Emoji-rendering i Minnesluckatestet (UX) [Fixad ✅]**
 - *UX:* "Minnesluckatestet" ritar `🍺` och `🐭` direkt på en canvas, likt hur Fyllekollen gjorde tidigare. Dessa kan också sakna färg eller misslyckas med att rendera korrekt på vissa enheter/webbläsare om inte emoji-font specificeras.
-- *Fix:* Uppdatera font-strängen för minneslucka-canvasen så att den använder de nya emoji-typsnitten.
+- *Fix:* Lade till fallback-strängar (`"Apple Color Emoji", ...`) på `.memory-flash` i `styles.css`.
 
-**6. iOS Gyroscope Permission Timing (UX)**
-- *UX:* Modal-prompten "Aktivera 3D-tilt med gyro?" triggas bara på det första klicket av själva bingobrickan. Om en ny spelare börjar med att trycka på Öl-widgeten eller menyer är brickan stel.
-- *Enhancement:* Överväg att trigga request-flödet mer centralt, eller lägg in ett call-to-action om gyro-status är okänd.
+**6. iOS Gyroscope Permission Timing (UX) [Fixad ✅]**
+- *UX:* Modal-prompten "Aktivera 3D-tilt med gyro?" triggas bara på det första klicket av själva bingobrickan.
+- *Enhancement:* Flyttade prompten till ett event på `document.body` för att triggas vid första möjliga interaktion med appen.
 
-**7. Party-Sync Ntfy Rate Limiting / Offline Fallback**
-- *Optimization:* Om många snabba klick sker (exempelvis snabba tapp på öl-knappen) skickas separata ntfy-pings per klick.
-- *Fix:* Debounce:a öl-taps för att paketera uppdateringar och minska trycket på public ntfy-servern.
+**7. Party-Sync Ntfy Rate Limiting / Offline Fallback [Fixad ✅]**
+- *Optimization:* Om många snabba klick sker skickas separata ntfy-pings per klick.
+- *Fix:* (Visade sig redan vara löst via `PARTY_BEER_DEBOUNCE_MS`).
 ---
 
