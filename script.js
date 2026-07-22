@@ -213,13 +213,13 @@
       id: "stygg-mus-president",
       label: "🐭 Stygg mus president 👑",
       excludedGroup: "lagget",
-      weightKg: 85,
+      weightKg: 80,
     },
     {
       id: "mouse-trap-pukie",
       label: "🤮 Mouse trap pukie 👴🏻",
       excludedGroup: "ks",
-      weightKg: 78,
+      weightKg: 80,
     },
     {
       id: "pommesansvarig",
@@ -237,7 +237,7 @@
       id: "prospect",
       label: "🛋️ Prospect TBD",
       excludedGroup: "per",
-      weightKg: 75,
+      weightKg: 70,
     },
   ];
 
