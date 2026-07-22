@@ -407,6 +407,8 @@
   let pendingCancelAction = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
+  let embersRaf = null;
+  const embersParticles = [];
   let konamiIndex = 0;
   let mazeState = null;
   let mazePointerStart = null;
@@ -1265,49 +1267,64 @@
     window.setTimeout(() => boardEl.classList.remove("deal"), 1100);
   }
 
+  let gyroRaf = null;
   function handleGyro(e) {
     if (e.beta === null || e.gamma === null) return;
+    if (gyroRaf) return;
     let ry = e.gamma; 
     let rx = e.beta - 45; 
     
     ry = Math.max(-25, Math.min(25, ry));
     rx = Math.max(-25, Math.min(25, rx));
 
-    document.querySelectorAll('.cell').forEach(cell => {
-      cell.style.setProperty('--rx', `${-rx}deg`);
-      cell.style.setProperty('--ry', `${ry}deg`);
+    gyroRaf = window.requestAnimationFrame(() => {
+      document.querySelectorAll('.cell').forEach(cell => {
+        cell.style.setProperty('--rx', `${-rx}deg`);
+        cell.style.setProperty('--ry', `${ry}deg`);
+      });
+      gyroRaf = null;
     });
   }
 
+  let pointerRaf = null;
   function handlePointerTilt(e) {
+    if (pointerRaf) return;
     const x = (e.clientX / window.innerWidth - 0.5) * 2; 
     const y = (e.clientY / window.innerHeight - 0.5) * 2;
     
     const ry = x * 15; 
     const rx = -y * 15;
     
-    document.querySelectorAll('.cell').forEach(cell => {
-      cell.style.setProperty('--rx', `${rx}deg`);
-      cell.style.setProperty('--ry', `${ry}deg`);
+    pointerRaf = window.requestAnimationFrame(() => {
+      document.querySelectorAll('.cell').forEach(cell => {
+        cell.style.setProperty('--rx', `${rx}deg`);
+        cell.style.setProperty('--ry', `${ry}deg`);
+      });
+      pointerRaf = null;
     });
   }
+
+  function askGyro() {
+    if (gyroPermissionAsked) return;
+    gyroPermissionAsked = true;
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const toast = document.getElementById("gyro-toast");
+      if (toast) toast.classList.remove("hidden");
+    } else {
+      window.addEventListener('deviceorientation', handleGyro, { passive: true });
+      window.addEventListener('pointermove', handlePointerTilt, { passive: true });
+    }
+  }
+
+  document.body.addEventListener('click', () => {
+    if (!gyroPermissionAsked) askGyro();
+  }, { passive: true });
 
   function onBoardClick(event) {
     if (!state) return;
 
-    if (!gyroPermissionAsked) {
-      gyroPermissionAsked = true;
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        const toast = document.getElementById("gyro-toast");
-        if (toast) toast.classList.remove("hidden");
-      } else {
-        window.addEventListener('deviceorientation', handleGyro, { passive: true });
-        window.addEventListener('pointermove', handlePointerTilt, { passive: true });
-      }
-    }
-
-    const target = event.target;
-    if (!(target instanceof HTMLElement) || !target.classList.contains("cell")) return;
+    const target = event.target.closest('.cell');
+    if (!target) return;
 
     if (typeof window.triggerShockwave === 'function') {
       const rect = target.getBoundingClientRect();
@@ -4622,9 +4639,10 @@
       }
 
       ctx.shadowBlur = 0;
-      window.requestAnimationFrame(frame);
+      embersRaf = window.requestAnimationFrame(frame);
     }
-    window.requestAnimationFrame(frame);
+    if (embersRaf) window.cancelAnimationFrame(embersRaf);
+    embersRaf = window.requestAnimationFrame(frame);
   }
 
   // ── Confetti ──────────────────────────────────────────────────────────────

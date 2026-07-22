@@ -1701,6 +1701,7 @@ button:focus-visible {
   max-width: 320px;
   font-size: 2rem;
   line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", emoji;
 }
 
 .memory-answer {
