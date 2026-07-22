@@ -934,22 +934,7 @@
   // ── Easter eggs ───────────────────────────────────────────────────────────
 
   function onGameTitleClick() {
-    titleClickCount += 1;
-    window.clearTimeout(titleClickTimer);
-
-    if (titleClickCount >= 5) {
-      titleClickCount = 0;
-      triggerEasterEgg(
-        "STYGG MODE",
-        "Titeln har talat. Alla måste skåla med fel hand tills nästa ruta kryssas.",
-        "stygg-mode"
-      );
-      return;
-    }
-
-    titleClickTimer = window.setTimeout(() => {
-      titleClickCount = 0;
-    }, 1400);
+    /* title click disabled */
   }
 
   function onKeyDown(event) {

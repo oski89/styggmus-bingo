@@ -197,28 +197,33 @@
   const players = [
     {
       id: "stygg-mus-president",
-      label: "🐭 Stygg mus president",
+      label: "🐭 Stygg mus president 👑",
       excludedGroup: "lagget",
+      weightKg: 85,
     },
     {
       id: "mouse-trap-pukie",
-      label: "🤮 Mouse trap pukie",
+      label: "🤮 Mouse trap pukie 👴🏻",
       excludedGroup: "ks",
+      weightKg: 78,
     },
     {
       id: "pommesansvarig",
-      label: "👨🏿 Pommesansvarig",
+      label: "👨🏿 Pommesansvarig 🍟",
       excludedGroup: "marcus",
+      weightKg: 90,
     },
     {
       id: "afc-master",
-      label: "⚽ AFC master",
+      label: "💨 AFC master TBD",
       excludedGroup: "oski",
+      weightKg: 70,
     },
     {
       id: "prospect",
-      label: "🌱 Prospect",
+      label: "🛋️ Prospect TBD",
       excludedGroup: "per",
+      weightKg: 75,
     },
   ];
 
@@ -241,31 +246,60 @@
   // wired to onExit() directly below instead, since it isn't styled .exit-btn.
   const exitButtons = document.querySelectorAll(".exit-btn");
 
-  const gameTitleEl = document.getElementById("game-title");
   const boardEl = document.getElementById("board");
   const currentPlayerEl = document.getElementById("current-player");
   const newBoardBtn = document.getElementById("new-board-btn");
   const resetBoardBtn = document.getElementById("reset-board-btn");
   const menuBtn = document.getElementById("menu-btn");
-  const topbarBackBtn = document.getElementById("topbar-back-btn");
   const beerWidgetCountEl = document.getElementById("beer-widget-count");
   const beerWidgetPlusBtn = document.getElementById("beer-widget-plus");
   const beerWidgetMinusBtn = document.getElementById("beer-widget-minus");
+  const drunkMeterLevelEl = document.getElementById("drunk-meter-level");
+  const drunkMeterPromilleEl = document.getElementById("drunk-meter-promille");
 
   const menuOverlayEl = document.getElementById("menu-overlay");
   const menuBackBtn = document.getElementById("menu-back-btn");
   const menuTitleEl = document.getElementById("menu-title");
+  const menuMulliganBtn = document.getElementById("menu-mulligan-btn");
   const menuPartyBtn = document.getElementById("menu-party-btn");
+  const menuAnalyticsBtn = document.getElementById("menu-analytics-btn");
   const menuChangePlayerBtn = document.getElementById("menu-change-player-btn");
   const menuExitBtn = document.getElementById("menu-exit-btn");
   const menuAdminBtn = document.getElementById("menu-admin-btn");
 
+  const kentaEggTriggerEl = document.getElementById("kenta-egg-trigger");
+  const slimeOverlayEl = document.getElementById("slime-overlay");
+  const analyticsOverlayEl = document.getElementById("analytics-overlay");
+  const analyticsBackBtn = document.getElementById("analytics-back-btn");
+  const analyticsChartCanvas = document.getElementById("analytics-chart-canvas");
+  const analyticsTopDrunkEl = document.getElementById("analytics-top-drunk");
+  const analyticsTotalKlunkarEl = document.getElementById("analytics-total-klunkar");
+  const analyticsTopPromptsEl = document.getElementById("analytics-top-prompts");
+
+  const mulliganBarEl = document.getElementById("mulligan-bar");
+  const mulliganInstructionEl = document.getElementById("mulligan-instruction");
+  const mulliganBadgeEl = document.getElementById("mulligan-badge");
+  const mulliganActionsEl = document.getElementById("mulligan-actions");
+  const mulliganConfirmBtn = document.getElementById("mulligan-confirm-btn");
+  const mulliganCancelBtn = document.getElementById("mulligan-cancel-btn");
+
+  let mulliganModeActive = false;
+  let selectedMulliganIndices = new Set();
+
   const partyOverlayEl = document.getElementById("party-overlay");
   const partyBackBtn = document.getElementById("party-back-btn");
+  const topbarPartyBtn = document.getElementById("topbar-party-btn");
+  const topbarPartyToggle = document.getElementById("topbar-party-toggle");
   const partyStatusDotEl = document.getElementById("party-status-dot");
   const partyStatusTextEl = document.getElementById("party-status-text");
+
+  const duelInviteOverlayEl = document.getElementById("duel-invite-overlay");
+  const duelInviteCloseBtn = document.getElementById("duel-invite-close-btn");
+  const duelInviteTextEl = document.getElementById("duel-invite-text");
+  const duelAcceptBtn = document.getElementById("duel-accept-btn");
+  const duelDeclineBtn = document.getElementById("duel-decline-btn");
   const partyRosterEl = document.getElementById("party-roster");
-  const partyToggleBtn = document.getElementById("party-toggle-btn");
+  const partyModalToggle = document.getElementById("party-modal-toggle");
   const partyFlashEl = document.getElementById("party-flash");
   const partyFlashTitleEl = document.getElementById("party-flash-title");
   const partyFlashTextEl = document.getElementById("party-flash-text");
@@ -353,10 +387,7 @@
   let pendingCancelAction = null;
   let audioCtx = null;
   let confettiAnimationFrame = null;
-  let titleClickCount = 0;
-  let titleClickTimer = null;
   let konamiIndex = 0;
-  let typedBuffer = "";
   let mazeState = null;
   let mazePointerStart = null;
   let mazeDeadline = 0;
@@ -429,7 +460,6 @@
     testMinneBtn.addEventListener("click", openMinneslucka);
 
     boardEl.addEventListener("click", onBoardClick);
-    gameTitleEl.addEventListener("click", onGameTitleClick);
     beerWidgetPlusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, 1));
     beerWidgetMinusBtn.addEventListener("click", () => adjustBeerForPlayer(activePlayerId, -1));
 
@@ -437,22 +467,53 @@
       // The admin action starts hidden every time the menu opens; only a
       // long-press on the "Meny" title reveals it (see registerAdminUnlock).
       menuAdminBtn.classList.add("hidden");
+      updateMenuMulliganButton();
       openDialog(menuOverlayEl);
     });
     // Same as backdrop/Escape — just closes the menu, no confirm.
     menuBackBtn.addEventListener("click", () => closeDialog(menuOverlayEl));
+    if (menuMulliganBtn) menuMulliganBtn.addEventListener("click", onMenuMulliganPressed);
+    if (mulliganConfirmBtn) mulliganConfirmBtn.addEventListener("click", onMulliganConfirmPressed);
+    if (mulliganCancelBtn) mulliganCancelBtn.addEventListener("click", exitMulliganMode);
     registerAdminUnlock();
     menuAdminBtn.addEventListener("click", onAdminResetPressed);
-    menuPartyBtn.addEventListener("click", () => {
-      closeDialog(menuOverlayEl);
-      openPartyOverlay();
-    });
+    if (menuPartyBtn) {
+      menuPartyBtn.addEventListener("click", () => {
+        closeDialog(menuOverlayEl);
+        openPartyOverlay();
+      });
+    }
+    if (topbarPartyBtn) topbarPartyBtn.addEventListener("click", openPartyOverlay);
+    if (topbarPartyToggle) topbarPartyToggle.addEventListener("change", onPartyToggle);
+    if (partyModalToggle) partyModalToggle.addEventListener("change", onPartyToggle);
     partyBackBtn.addEventListener("click", () => closeDialog(partyOverlayEl));
     partyOverlayEl.addEventListener("click", (e) => {
       if (e.target === partyOverlayEl) closeDialog(partyOverlayEl);
     });
-    partyToggleBtn.addEventListener("click", onPartyToggle);
     partyFlashEl.addEventListener("click", hidePartyFlash);
+
+    if (duelAcceptBtn) duelAcceptBtn.addEventListener("click", acceptDuel);
+    if (duelDeclineBtn) duelDeclineBtn.addEventListener("click", declineDuel);
+    if (duelInviteCloseBtn) duelInviteCloseBtn.addEventListener("click", () => closeDialog(duelInviteOverlayEl));
+
+    if (kentaEggTriggerEl) {
+      kentaEggTriggerEl.addEventListener("click", onGylleneMusenClick);
+    }
+
+    if (currentPlayerEl) {
+      currentPlayerEl.addEventListener("click", onPlayerNameClick);
+    }
+
+    if (menuAnalyticsBtn) {
+      menuAnalyticsBtn.addEventListener("click", () => {
+        closeDialog(menuOverlayEl);
+        renderAnalytics();
+        openDialog(analyticsOverlayEl);
+      });
+    }
+    if (analyticsBackBtn) {
+      analyticsBackBtn.addEventListener("click", () => closeDialog(analyticsOverlayEl));
+    }
 
     menuRekordBtn.addEventListener("click", () => {
       closeDialog(menuOverlayEl);
@@ -473,9 +534,6 @@
       if (e.target === recapOverlayEl) closeDialog(recapOverlayEl);
     });
     recapShareBtn.addEventListener("click", shareRecap);
-    // Quick-access shortcut to "Byt spelare" — same action as the menu entry,
-    // no confirm (switching player was never a confirmed action).
-    topbarBackBtn.addEventListener("click", showPlayerGate);
     newBoardBtn.addEventListener("click", () => {
       closeDialog(menuOverlayEl);
       onNewBoard();
@@ -664,13 +722,7 @@
   }
 
   function onBackFromPlayerSelect() {
-    // Back to the existing board if a player is already chosen, otherwise to the
-    // password gate (the player-select screen is the first stop on fresh login).
-    if (isValidPlayerId(activePlayerId)) {
-      startBingoGame();
-    } else {
-      showPasswordGate();
-    }
+    showPasswordGate();
   }
 
   // Clears the session and returns to the password gate. Saved boards and beers
@@ -740,6 +792,7 @@
       checked: [],
       bingoLinesAwarded: [],
       grandWin: false,
+      mulligansUsed: 0,
     };
   }
 
@@ -768,6 +821,7 @@
       ...candidate,
       playerId,
       checked: [...checked].sort((a, b) => a - b),
+      mulligansUsed: typeof candidate.mulligansUsed === "number" ? Math.max(0, Math.min(3, candidate.mulligansUsed)) : 0,
     };
   }
 
@@ -804,14 +858,159 @@
       valueEl.classList.add("pop");
     }
     schedulePartyBeerPublish(playerId);
-    if (delta > 0) countBeerPress();
+    if (delta > 0) {
+      logAnalyticsBeer(playerId, beers[playerId]);
+      fetchBAC(playerId, "beer_added");
+      countBeerPress();
+    } else {
+      fetchBAC(playerId, "beer_removed");
+    }
   }
 
-  // The compact beer counter in the bingo top bar.
+  const BAC_API_KEY = "mwt_live_282e06ed5a2dd91b941c_a381634eea0fedfd3b6cd051a5786b76bc017cb0";
+  const BAC_API_URL = "https://api.miniwebtool.com/v1/tools/bac-calculator/run";
+  let lastBacApiCallHour = null;
+  let playerBacCache = {};
+
+  function calculatePlayerBAC(playerId) {
+    if (!playerId) return 0;
+    const player = getPlayer(playerId) || players[0];
+    const beers = loadBeers();
+    const count = beerCountOf(beers, playerId);
+
+    if (count <= 0) {
+      const sessionKey = `styggmus-bingo-session-start-v1:${playerId}`;
+      safeRemove(sessionKey);
+      playerBacCache[playerId] = 0;
+      return 0;
+    }
+
+    const sessionKey = `styggmus-bingo-session-start-v1:${playerId}`;
+    let sessionStart = Number(safeGet(sessionKey));
+    if (!sessionStart || isNaN(sessionStart)) {
+      // Estimate session start assuming ~30 mins per beer if not set yet
+      const estimatedElapsedMs = Math.max(60000, count * 30 * 60 * 1000);
+      sessionStart = Date.now() - estimatedElapsedMs;
+      safeSet(sessionKey, String(sessionStart));
+    }
+
+    const elapsedMs = Math.max(60000, Date.now() - sessionStart);
+    const hours = Math.max(0.01, elapsedMs / (1000 * 60 * 60));
+    const weightKg = player.weightKg || 80;
+
+    // Widmark Formula (20g pure alcohol per 50cl 5% beer, r=0.68 male, 0.015%/hr metabolic elimination)
+    const gramsAlcohol = count * 20;
+    const r = 0.68;
+    const metabolicRate = 0.015;
+    const rawBac = (gramsAlcohol / (weightKg * 1000 * r)) * 100 - (metabolicRate * hours);
+    const promilleVal = Number((Math.max(0, rawBac) * 10).toFixed(2));
+    playerBacCache[playerId] = promilleVal;
+    return promilleVal;
+  }
+
+  async function fetchBAC(playerId, reason) {
+    if (!playerId) return;
+    const beers = loadBeers();
+    const count = beerCountOf(beers, playerId);
+
+    // Compute synchronous Widmark BAC promille & update UI immediately
+    const promilleVal = calculatePlayerBAC(playerId);
+    updateDrunkMeterUI(count, promilleVal);
+
+    if (count <= 0) return;
+
+    // Background call to MiniWebtool BAC Calculator API
+    try {
+      const player = getPlayer(playerId) || players[0];
+      const sessionKey = `styggmus-bingo-session-start-v1:${playerId}`;
+      const sessionStart = Number(safeGet(sessionKey)) || Date.now();
+      const hours = parseFloat(Math.max(0.01, (Date.now() - sessionStart) / 3600000).toFixed(2));
+
+      const response = await fetch(BAC_API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${BAC_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          beers: count,
+          wines: 0,
+          spirits: 0,
+          cocktails: 0,
+          weight: player.weightKg || 80,
+          weight_unit: "kg",
+          gender: "male",
+          hours: hours,
+        }),
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        const resObj = json.result || json;
+        let bacPct = null;
+        if (typeof resObj.bac === "number") bacPct = resObj.bac;
+        else if (typeof resObj.bac_percentage === "number") bacPct = resObj.bac_percentage;
+        else if (typeof resObj.bac_promille === "number") bacPct = resObj.bac_promille / 10;
+        else if (typeof resObj.value === "number") bacPct = resObj.value;
+
+        if (bacPct !== null && !isNaN(bacPct)) {
+          const apiPromille = Number((Math.max(0, bacPct) * 10).toFixed(2));
+          playerBacCache[playerId] = apiPromille;
+          updateDrunkMeterUI(count, apiPromille);
+        }
+      }
+    } catch {
+      /* Fallback already rendered synchronously */
+    }
+  }
+
+  function updateDrunkMeterUI(beersCount, promilleVal) {
+    if (activePlayerId) playerBacCache[activePlayerId] = promilleVal;
+    if (!drunkMeterLevelEl || !drunkMeterPromilleEl) return;
+    const safePromille = Math.max(0, promilleVal) || 0;
+    const promilleStr = safePromille.toFixed(2);
+    let levelKey = "nykter";
+    let levelLabel = "Nykter";
+
+    if (safePromille >= 1.8) {
+      levelKey = "overfull";
+      levelLabel = "Överfull";
+    } else if (safePromille >= 1.2) {
+      levelKey = "kalasfull";
+      levelLabel = "Kalasfull";
+    } else if (safePromille >= 0.6) {
+      levelKey = "slirig";
+      levelLabel = "Slirig";
+    } else if (safePromille >= 0.2) {
+      levelKey = "salongs";
+      levelLabel = "Salongs";
+    }
+
+    drunkMeterLevelEl.dataset.level = levelKey;
+    drunkMeterLevelEl.textContent = levelLabel;
+    drunkMeterPromilleEl.textContent = `${promilleStr} ‰`;
+  }
+
+  function checkHourlyBac() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    if (currentMinute === 0 && lastBacApiCallHour !== currentHour) {
+      lastBacApiCallHour = currentHour;
+      if (activePlayerId) fetchBAC(activePlayerId, "hourly_tick");
+    }
+  }
+
+  // Interval timer for hourly top-of-the-hour API updates
+  window.setInterval(checkHourlyBac, 60000);
+
+  // The compact beer counter & drunk meter in the bingo top bar.
   function renderBeerWidget() {
     if (!beerWidgetCountEl) return;
     const beers = loadBeers();
     beerWidgetCountEl.textContent = String(beerCountOf(beers, activePlayerId));
+    fetchBAC(activePlayerId, "render");
   }
 
   // Each added beer launches one of the five mini-games on a rotating
@@ -839,6 +1038,117 @@
     return typeof beers[playerId] === "number" ? beers[playerId] : 0;
   }
 
+  // ── Mulligan ──────────────────────────────────────────────────────────────
+
+  function getRemainingMulligans() {
+    if (!state) return 0;
+    const used = typeof state.mulligansUsed === "number" ? state.mulligansUsed : 0;
+    const bonus = typeof state.bonusMulligans === "number" ? state.bonusMulligans : 0;
+    return Math.max(0, 3 + bonus - used);
+  }
+
+  function updateMenuMulliganButton() {
+    if (!menuMulliganBtn) return;
+    const remaining = getRemainingMulligans();
+    if (remaining > 0) {
+      menuMulliganBtn.textContent = `🔄 Mulligan (${remaining} kvar)`;
+      menuMulliganBtn.disabled = false;
+    } else {
+      menuMulliganBtn.textContent = "🔄 Mulligan (0 kvar)";
+      menuMulliganBtn.disabled = true;
+    }
+  }
+
+  function onMenuMulliganPressed() {
+    closeDialog(menuOverlayEl);
+    const remaining = getRemainingMulligans();
+    if (remaining <= 0) return;
+    enterMulliganMode();
+  }
+
+  function enterMulliganMode() {
+    if (!state) return;
+    const remaining = getRemainingMulligans();
+    if (remaining <= 0) return;
+
+    mulliganModeActive = true;
+    selectedMulliganIndices = new Set();
+
+    if (mulliganBarEl) mulliganBarEl.classList.remove("hidden");
+    if (mulliganActionsEl) mulliganActionsEl.classList.remove("hidden");
+
+    updateMulliganUI();
+    renderBoard();
+  }
+
+  function exitMulliganMode() {
+    mulliganModeActive = false;
+    selectedMulliganIndices.clear();
+
+    if (mulliganBarEl) mulliganBarEl.classList.add("hidden");
+    if (mulliganActionsEl) mulliganActionsEl.classList.add("hidden");
+
+    renderBoard();
+  }
+
+  function updateMulliganUI() {
+    const used = (state && typeof state.mulligansUsed === "number") ? state.mulligansUsed : 0;
+    const remaining = Math.max(0, 3 - used);
+    const count = selectedMulliganIndices.size;
+    const totalSelected = used + count;
+
+    if (mulliganInstructionEl) {
+      if (used === 0) {
+        mulliganInstructionEl.textContent = `Välj upp till ${remaining} ${remaining === 1 ? "ruta" : "rutor"} att byta ut`;
+      } else {
+        mulliganInstructionEl.textContent = `Välj upp till ${remaining} ${remaining === 1 ? "ruta" : "rutor"} till att byta ut`;
+      }
+    }
+    if (mulliganBadgeEl) {
+      mulliganBadgeEl.textContent = `${totalSelected} / 3 vaskade`;
+    }
+    if (mulliganConfirmBtn) {
+      if (count > 0) {
+        mulliganConfirmBtn.disabled = false;
+        mulliganConfirmBtn.textContent = `Byt ${count} ${count === 1 ? "ruta" : "rutor"}`;
+      } else {
+        mulliganConfirmBtn.disabled = true;
+        mulliganConfirmBtn.textContent = "Byt rutor";
+      }
+    }
+  }
+
+  function onMulliganConfirmPressed() {
+    if (!state || selectedMulliganIndices.size === 0) return;
+    const count = selectedMulliganIndices.size;
+    const availablePool = getAvailablePrompts(state.playerId);
+    const currentPromptsOnBoard = new Set(state.board);
+
+    let candidatePrompts = availablePool.filter((p) => !currentPromptsOnBoard.has(p));
+    if (candidatePrompts.length < count) {
+      candidatePrompts = availablePool;
+    }
+
+    candidatePrompts = shuffleWithSeed(candidatePrompts, `${Date.now()}-${Math.random()}`);
+
+    let pIndex = 0;
+    selectedMulliganIndices.forEach((cellIdx) => {
+      if (candidatePrompts[pIndex]) {
+        state.board[cellIdx] = candidatePrompts[pIndex];
+        pIndex++;
+      }
+    });
+
+    state.mulligansUsed = (state.mulligansUsed || 0) + count;
+    saveState();
+
+    vibrate([20, 80, 20]);
+    playWinSound(false);
+
+    exitMulliganMode();
+    updateStatsAndWinState({ triggerEffects: false });
+  }
+
   // ── Board ─────────────────────────────────────────────────────────────────
 
   function renderBoard() {
@@ -858,6 +1168,16 @@
       button.textContent = label;
 
       if (isChecked) button.classList.add("checked");
+
+      if (mulliganModeActive) {
+        if (isChecked) {
+          button.classList.add("mulligan-disabled");
+          button.setAttribute("aria-disabled", "true");
+        } else if (selectedMulliganIndices.has(index)) {
+          button.classList.add("mulligan-selected");
+        }
+      }
+
       // Stagger index for the deal-in cascade (CSS cell-enter).
       button.style.setProperty("--cell-i", String(index));
 
@@ -879,6 +1199,31 @@
     if (!(target instanceof HTMLElement) || !target.classList.contains("cell")) return;
 
     const index = Number(target.dataset.index);
+
+    if (mulliganModeActive) {
+      // Rule #1: Checked cells cannot be mulliganed!
+      if (state.checked.includes(index)) {
+        vibrate(8);
+        return;
+      }
+
+      const remaining = getRemainingMulligans();
+      if (selectedMulliganIndices.has(index)) {
+        selectedMulliganIndices.delete(index);
+        target.classList.remove("mulligan-selected");
+        vibrate(8);
+      } else {
+        if (selectedMulliganIndices.size < remaining) {
+          selectedMulliganIndices.add(index);
+          target.classList.add("mulligan-selected");
+          vibrate(18);
+        } else {
+          vibrate([10, 50, 10]);
+        }
+      }
+      updateMulliganUI();
+      return;
+    }
 
     const checkedSet = new Set(state.checked);
     const willCheck = !checkedSet.has(index);
@@ -902,6 +1247,9 @@
     // by removing/re-adding the class across a reflow. Marking only (unmarking
     // is quiet). No-op visual under reduced motion (the keyframes are gated).
     if (willCheck) {
+      if (state && state.board && state.board[index]) {
+        logAnalyticsCheck(state.board[index]);
+      }
       target.classList.remove("stamp");
       void target.offsetWidth;
       target.classList.add("stamp");
@@ -978,28 +1326,189 @@
 
   // ── Easter eggs ───────────────────────────────────────────────────────────
 
-  function onGameTitleClick() {
-    titleClickCount += 1;
-    window.clearTimeout(titleClickTimer);
+  let playerNameClickCount = 0;
+  let playerNameClickTimer = null;
 
-    if (titleClickCount >= 5) {
-      titleClickCount = 0;
-      triggerEasterEgg(
-        "STYGG MODE",
-        "Titeln har talat. Alla måste skåla med fel hand tills nästa ruta kryssas.",
-        "stygg-mode"
-      );
+  function onPlayerNameClick(e) {
+    if (activePlayerId !== "mouse-trap-pukie") return;
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+
+    playerNameClickCount += 1;
+    vibrate(20);
+    if (playerNameClickTimer) window.clearTimeout(playerNameClickTimer);
+
+    if (playerNameClickCount >= 3) {
+      playerNameClickCount = 0;
+      triggerMouseTrapSlimeExplosion();
       return;
     }
 
-    titleClickTimer = window.setTimeout(() => {
-      titleClickCount = 0;
-    }, 1400);
+    playerNameClickTimer = window.setTimeout(() => {
+      playerNameClickCount = 0;
+    }, 1800);
+  }
+
+  function triggerMouseTrapSlimeExplosion() {
+    if (state) {
+      state.bonusMulligans = (state.bonusMulligans || 0) + 1;
+      saveState();
+      updateMenuMulliganButton();
+    }
+
+    playSlimeSound();
+    vibrate([150, 50, 150, 50, 300]);
+
+    if (slimeOverlayEl) {
+      slimeOverlayEl.classList.remove("hidden");
+      window.setTimeout(() => {
+        slimeOverlayEl.classList.add("hidden");
+      }, 3500);
+    }
+
+    launchSlimeRain(3500);
+    speakVerdict("Mouse Trap Slime Explosion! Pukie har dränkt skärmen i slem och får plus ett bonus mulligan!");
+
+    showPartyFlash(
+      "🤮 SLIME EXPLOSION!",
+      "Mouse Trap Pukie utlöste en neongrön slem-explosion! +1 Bonus Mulligan tilldelad!",
+      "Mouse Trap Slime Explosion! Pukie får plus ett bonus mulligan!"
+    );
+  }
+
+  function playSlimeSound() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sawtooth";
+    const now = audioCtx.currentTime;
+
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.42);
+  }
+
+  function launchSlimeRain(durationMs = 3500) {
+    const slimeColors = ["#39ff14", "#00ff66", "#20b2aa", "#107800"];
+    const slimeGlyphs = ["🤮", "🟢", "🧪", "🦠", "🐍", "🪰"];
+    runConfetti(durationMs, slimeColors, slimeGlyphs);
+  }
+
+  let gylleneMusenCount = 0;
+  let gylleneMusenTimer = null;
+
+  function onGylleneMusenClick(e) {
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+
+    gylleneMusenCount += 1;
+    vibrate(20);
+    if (gylleneMusenTimer) window.clearTimeout(gylleneMusenTimer);
+    if (gylleneMusenCount >= 5) {
+      gylleneMusenCount = 0;
+      triggerGylleneMusen();
+      return;
+    }
+    gylleneMusenTimer = window.setTimeout(() => {
+      gylleneMusenCount = 0;
+    }, 2400);
+  }
+
+  function triggerGylleneMusen() {
+    const boardEl = document.getElementById("board") || document.querySelector(".board");
+    if (!boardEl) return;
+
+    const isActive = boardEl.classList.contains("gyllene-musen-active") || boardEl.classList.contains("golden-egg-active");
+
+    if (isActive) {
+      boardEl.classList.remove("gyllene-musen-active", "golden-egg-active");
+      playResetChime();
+      vibrate(40);
+      speakVerdict("Gyllene Musen avaktiverad. Tillbaka till normalläge.");
+
+      showPartyFlash(
+        "🔄 NORMALLÄGE",
+        "Gyllene Musen-effekten avaktiverades. Brickan är återställd till sin vanlig stil.",
+        "Gyllene Musen avaktiverad."
+      );
+    } else {
+      boardEl.classList.add("gyllene-musen-active");
+      play8BitGoldenFanfare();
+      launchGoldGlitterRain(4500);
+      vibrate([100, 50, 100, 50, 200]);
+      speakVerdict("Gyllene Musen har låsts upp! Guld och retro-glans till Ölligan!");
+
+      showPartyFlash(
+        "👑 GYLLENE MUSEN!",
+        "Du låste upp 24k Guld-läge! Hela brickan skiner i ren guldglans.",
+        "Gyllene Musen har låsts upp! Guld och retro-glans till Ölligan!"
+      );
+    }
+  }
+
+  function playResetChime() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    const notes = [523.25, 392.00, 261.63];
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const now = audioCtx.currentTime + 0.02;
+      gain.gain.setValueAtTime(0.0001, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + i * 0.08 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.14);
+    });
+  }
+
+  function play8BitGoldenFanfare() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      const now = audioCtx.currentTime + 0.02;
+      gain.gain.setValueAtTime(0.0001, now + i * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.22, now + i * 0.09 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.14);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + i * 0.09);
+      osc.stop(now + i * 0.09 + 0.16);
+    });
+  }
+
+  function launchGoldGlitterRain(durationMs = 4500) {
+    const goldColors = ["#ffd700", "#fff8dc", "#ffb700", "#daa520", "#ffe66d"];
+    const goldGlyphs = ["👑", "✨", "🍆", "🏆", "🌟", "💰"];
+    runConfetti(durationMs, goldColors, goldGlyphs);
   }
 
   function onKeyDown(event) {
-    // While a dialog is open it owns the keyboard: Escape closes it, Tab is
-    // trapped, and other keys are swallowed so easter eggs don't fire behind it.
     if (activeDialog) {
       const mazeDir = activeDialog === fyllekollenOverlayEl ? arrowKeyToDir(event.key) : null;
       const reaktionTap =
@@ -1038,7 +1547,6 @@
     if (isTextInputTarget(event.target)) return;
 
     handleKonamiKey(event.key);
-    handleTypedEasterEgg(event.key);
   }
 
   function handleKonamiKey(rawKey) {
@@ -1049,38 +1557,12 @@
       konamiIndex += 1;
       if (konamiIndex === KONAMI_SEQUENCE.length) {
         konamiIndex = 0;
-        triggerEasterEgg(
-          "KONAMI-KUBB!",
-          "Hemlig taktik upplåst: välj någon som måste coacha nästa aktivitet som en VM-final.",
-          "konami-mode"
-        );
+        triggerGylleneMusen();
       }
       return;
     }
 
     konamiIndex = key === KONAMI_SEQUENCE[0] ? 1 : 0;
-  }
-
-  function handleTypedEasterEgg(rawKey) {
-    if (rawKey.length !== 1 || !/^[a-zåäö]$/i.test(rawKey)) return;
-
-    typedBuffer = `${typedBuffer}${rawKey.toUpperCase()}`.slice(-8);
-    if (typedBuffer.includes("DDKO")) {
-      typedBuffer = "";
-      triggerEasterEgg(
-        "DDKO REQUESTAD",
-        "Requesten är mottagen. Nästa låt måste presenteras med orimligt mycket självförtroende.",
-        "ddko-mode"
-      );
-    }
-  }
-
-  function triggerEasterEgg(title, text, className) {
-    document.body.classList.add(className);
-    window.setTimeout(() => document.body.classList.remove(className), 5200);
-    playWinSound(false);
-    runConfetti(2200);
-    showOverlay(title, text);
   }
 
   function isTextInputTarget(target) {
@@ -2493,7 +2975,7 @@
   // silently — no sensor, no net, or party-läge off just means a quiet phone.
 
   function isPartyEnabled() {
-    return safeGet(PARTY_KEY) !== "off";
+    return safeGet(PARTY_KEY) === "on";
   }
 
   function connectParty() {
@@ -2560,7 +3042,20 @@
 
   function publishPartyHello() {
     partyLastHelloAt = Date.now();
-    publishParty({ t: "hello", p: activePlayerId, c: beerCountOf(loadBeers(), activePlayerId) });
+    const bac = playerBacCache[activePlayerId] !== undefined ? playerBacCache[activePlayerId] : calculatePlayerBAC(activePlayerId);
+    publishParty({ t: "hello", p: activePlayerId, c: beerCountOf(loadBeers(), activePlayerId), b: bac });
+
+    // Sync any local mini-game records to the party network upon going online
+    const stats = loadStats();
+    const entry = stats[activePlayerId];
+    if (entry) {
+      Object.keys(entry).forEach((gameId) => {
+        const rec = entry[gameId];
+        if (rec && typeof rec.v === "number") {
+          publishParty({ t: "rekord", p: activePlayerId, g: gameId, v: rec.v });
+        }
+      });
+    }
   }
 
   // Rapid +/- taps collapse into one publish with the final count.
@@ -2569,7 +3064,8 @@
     if (partyBeerTimer) window.clearTimeout(partyBeerTimer);
     partyBeerTimer = window.setTimeout(() => {
       partyBeerTimer = null;
-      publishParty({ t: "beer", p: playerId, c: beerCountOf(loadBeers(), playerId) });
+      const bac = playerBacCache[playerId] !== undefined ? playerBacCache[playerId] : calculatePlayerBAC(playerId);
+      publishParty({ t: "beer", p: playerId, c: beerCountOf(loadBeers(), playerId), b: bac });
     }, PARTY_BEER_DEBOUNCE_MS);
   }
 
@@ -2591,7 +3087,11 @@
     if (evt.t === "hello" || evt.t === "beer") {
       const prev = partyPlayers[evt.p];
       if (!prev || atMs >= prev.at) {
-        partyPlayers[evt.p] = { count: typeof evt.c === "number" ? evt.c : prev && prev.count, at: atMs };
+        partyPlayers[evt.p] = {
+          count: typeof evt.c === "number" ? evt.c : prev && prev.count,
+          bac: typeof evt.b === "number" ? evt.b : prev && prev.bac,
+          at: atMs,
+        };
       }
       // Hello ping-pong: a fresh join announces itself; answering (at most
       // once a minute, so responses to responses die out) means a late joiner
@@ -2633,6 +3133,34 @@
         `${getPlayer(evt.p).label}: ${meta.label} — ${meta.fmt(evt.v)}`,
         `Nytt rekord! ${spokenName(evt.p)}: ${meta.speech(evt.v)}`
       );
+      return;
+    }
+
+    if (evt.t === "duel_invite" && evt.to === activePlayerId) {
+      onDuelInviteReceived(evt);
+      return;
+    }
+
+    if (evt.t === "duel_accept" && evt.to === activePlayerId) {
+      hideOverlay();
+      if (activeDuel && activeDuel.gameId) {
+        startDuelGame(activeDuel.gameId);
+      }
+      return;
+    }
+
+    if (evt.t === "duel_decline" && evt.to === activePlayerId) {
+      hideOverlay();
+      showPartyFlash("🐔 FEGIS!", `${getPlayer(evt.from).label} bager ut ur duellen! Dricker 2 straffklunkar.`, "Fegis! Drick två klunkar!");
+      activeDuel = null;
+      return;
+    }
+
+    if (evt.t === "duel_score" && activeDuel && activeDuel.duelId === evt.id) {
+      if (evt.p === activeDuel.challengerId) activeDuel.challengerScore = evt.s;
+      if (evt.p === activeDuel.targetId) activeDuel.targetScore = evt.s;
+      checkAndResolveDuel();
+      return;
     }
   }
 
@@ -2697,18 +3225,48 @@
         : partyStatus === "connecting"
           ? "Ansluter…"
           : "Avstängd";
-    partyToggleBtn.textContent = enabled ? "Stäng av party-läge" : "Slå på party-läge";
+
+    if (topbarPartyToggle) {
+      topbarPartyToggle.checked = enabled;
+    }
+    if (partyModalToggle) {
+      partyModalToggle.checked = enabled;
+    }
+    if (topbarPartyBtn) {
+      topbarPartyBtn.classList.toggle("on", enabled && partyStatus === "on");
+    }
+
+    renderPartyRoster();
   }
 
   function renderPartyRoster() {
     partyRosterEl.innerHTML = "";
+    const isOnline = isPartyEnabled() && partyStatus === "on";
+
     players.forEach((player) => {
       const seen = partyPlayers[player.id];
       const isSelf = player.id === activePlayerId;
+      const isRecentlySeen = seen && (Date.now() - seen.at <= PARTY_FRESH_MS);
+
+      // Self is highlighted ONLY when Party-länk is ON and connected.
+      // Other players are highlighted ONLY when online AND active within PARTY_FRESH_MS.
+      const isPlayerActive = isOnline && (isSelf || isRecentlySeen);
+
       const li = document.createElement("li");
-      li.dataset.seen = seen || isSelf ? "true" : "false";
+      li.dataset.seen = isPlayerActive ? "true" : "false";
+      if (isSelf) {
+        li.classList.add("party-self");
+      }
+
+      const dot = document.createElement("span");
+      dot.className = "party-player-dot party-status-dot";
+      dot.dataset.state = isPlayerActive ? "on" : "off";
+      dot.setAttribute("aria-hidden", "true");
+
       const name = document.createElement("span");
+      name.className = "party-player-name";
       name.textContent = player.label + (isSelf ? " (du)" : "");
+
       const beers = document.createElement("span");
       beers.className = "party-beers";
       const count = isSelf
@@ -2716,25 +3274,188 @@
         : seen && typeof seen.count === "number"
           ? seen.count
           : null;
-      beers.textContent = count === null ? "–" : `${count} 🍺`;
-      li.append(name, beers);
+      const bacVal = isSelf
+        ? (playerBacCache[player.id] !== undefined ? playerBacCache[player.id] : calculatePlayerBAC(player.id))
+        : (seen && typeof seen.bac === "number" ? seen.bac : calculatePlayerBAC(player.id));
+
+      if (count === null || count === 0) {
+        beers.textContent = count === null ? "–" : "0 🍺";
+      } else {
+        const bacStr = (bacVal || 0).toFixed(2);
+        beers.textContent = `${count} 🍺 (${bacStr} ‰)`;
+      }
+
+      if (!isSelf && isPlayerActive) {
+        const duelBtn = document.createElement("button");
+        duelBtn.type = "button";
+        duelBtn.className = "party-duel-btn";
+        duelBtn.textContent = "⚔️ Utmana";
+        duelBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          sendDuelInvite(player.id);
+        });
+        li.append(dot, name, beers, duelBtn);
+      } else {
+        li.append(dot, name, beers);
+      }
       partyRosterEl.appendChild(li);
     });
   }
 
+  // ── 1v1 Duel System ───────────────────────────────────────────────────────
+
+  let activeDuel = null;
+  const DUEL_GAMES = ["reaktion", "minne", "fyllekollen", "spykollen", "piss"];
+  const DUEL_GAME_NAMES = {
+    reaktion: "Reaktionskollen",
+    minne: "Minnesluckatestet",
+    fyllekollen: "Fyllekollen",
+    spykollen: "Spykollen",
+    piss: "Pissepaus",
+  };
+
+  function sendDuelInvite(targetPlayerId) {
+    if (!partyEs || !isPartyEnabled()) return;
+    const randomGame = DUEL_GAMES[Math.floor(Math.random() * DUEL_GAMES.length)];
+    const duelId = `duel-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    activeDuel = {
+      duelId,
+      challengerId: activePlayerId,
+      targetId: targetPlayerId,
+      gameId: randomGame,
+    };
+
+    closeDialog(partyOverlayEl);
+    showOverlay(
+      "⚔️ DUELL UTMANAD!",
+      `Utmaning i ${DUEL_GAME_NAMES[randomGame]} skickad till ${getPlayer(targetPlayerId).label}! Väntar på svar…`
+    );
+
+    publishParty({
+      t: "duel_invite",
+      from: activePlayerId,
+      to: targetPlayerId,
+      gameId: randomGame,
+      id: duelId,
+    });
+  }
+
+  function onDuelInviteReceived(evt) {
+    activeDuel = {
+      duelId: evt.id,
+      challengerId: evt.from,
+      targetId: activePlayerId,
+      gameId: evt.gameId,
+    };
+
+    if (duelInviteTextEl) {
+      duelInviteTextEl.textContent = `${getPlayer(evt.from).label} utmanar dig i ${DUEL_GAME_NAMES[evt.gameId]}!`;
+    }
+    openDialog(duelInviteOverlayEl);
+  }
+
+  function acceptDuel() {
+    if (!activeDuel) return;
+    closeDialog(duelInviteOverlayEl);
+    publishParty({
+      t: "duel_accept",
+      from: activePlayerId,
+      to: activeDuel.challengerId,
+      id: activeDuel.duelId,
+    });
+
+    startDuelGame(activeDuel.gameId);
+  }
+
+  function declineDuel() {
+    if (!activeDuel) return;
+    closeDialog(duelInviteOverlayEl);
+    publishParty({
+      t: "duel_decline",
+      from: activePlayerId,
+      to: activeDuel.challengerId,
+      id: activeDuel.duelId,
+    });
+    activeDuel = null;
+    showPartyFlash("🐔 BAGER UT!", "Du fegade ur duellen. Drick 2 straffklunkar!", "Fegis! Drick två klunkar!");
+  }
+
+  function startDuelGame(gameId) {
+    if (gameId === "reaktion") openReaktionskollen();
+    else if (gameId === "minne") openMinneslucka();
+    else if (gameId === "fyllekollen") openFyllekollen();
+    else if (gameId === "spykollen") openSpykollen();
+    else if (gameId === "piss") openPissepaus();
+  }
+
+  function recordDuelScore(gameId, scoreVal) {
+    if (!activeDuel) return;
+    if (activePlayerId === activeDuel.challengerId) {
+      activeDuel.challengerScore = scoreVal;
+    } else {
+      activeDuel.targetScore = scoreVal;
+    }
+
+    publishParty({
+      t: "duel_score",
+      id: activeDuel.duelId,
+      p: activePlayerId,
+      g: gameId,
+      s: scoreVal,
+    });
+
+    checkAndResolveDuel();
+  }
+
+  function checkAndResolveDuel() {
+    if (!activeDuel) return;
+    if (typeof activeDuel.challengerScore !== "number" || typeof activeDuel.targetScore !== "number") return;
+
+    const gameId = activeDuel.gameId;
+    const s1 = activeDuel.challengerScore;
+    const s2 = activeDuel.targetScore;
+
+    const lowerIsBetter = gameId === "reaktion" || gameId === "minne";
+    let challengerWon = lowerIsBetter ? s1 < s2 : s1 > s2;
+    let isTie = s1 === s2;
+
+    const amIChallenger = activePlayerId === activeDuel.challengerId;
+    const opponentId = amIChallenger ? activeDuel.targetId : activeDuel.challengerId;
+    const opponentLabel = getPlayer(opponentId).label;
+
+    if (isTie) {
+      showPartyFlash("⚔️ OAVGJORT!", `Duellen i ${DUEL_GAME_NAMES[gameId]} slutade oavgjort! Båda dricker 2 klunkar.`, "Oavgjort i duellen!");
+    } else if ((amIChallenger && challengerWon) || (!amIChallenger && !challengerWon)) {
+      showPartyFlash(
+        "👑 VINST I DUELLEN!",
+        `Du krossade ${opponentLabel} i ${DUEL_GAME_NAMES[gameId]}! ${opponentLabel} dricker 5 klunkar!`,
+        `Grym vinst! ${spokenName(opponentId)} måste dricka fem klunkar!`
+      );
+    } else {
+      showPartyFlash(
+        "💥 DU TORSKADE DUELLEN!",
+        `${opponentLabel} var bättre i ${DUEL_GAME_NAMES[gameId]}! DRICK 5 KLUNKAR!`,
+        `Du torskade duellen! Drick fem klunkar!`
+      );
+    }
+
+    activeDuel = null;
+  }
+
   // ── Admin: reset the round ────────────────────────────────────────────────
 
-  // The "Ny omgång" action is hidden until a long-press (1.3s) on the "Meny"
-  // title reveals it — so only someone who knows the trick (the spelledare)
-  // finds it. A curious tap on the title does nothing.
+  // The "Ny omgång" action is hidden until a 3-second long-press on the "Meny"
+  // title reveals it, and only when logged in as AFC Master ("afc-master").
   function registerAdminUnlock() {
     let timer = null;
     const start = () => {
+      if (activePlayerId !== "afc-master") return;
       timer = window.setTimeout(() => {
         timer = null;
-        menuAdminBtn.classList.remove("hidden");
-        vibrate(30);
-      }, 1300);
+        if (menuAdminBtn) menuAdminBtn.classList.remove("hidden");
+        vibrate([50, 40, 50]);
+      }, 3000);
     };
     const cancel = () => {
       if (timer) {
@@ -2742,13 +3463,16 @@
         timer = null;
       }
     };
-    menuTitleEl.addEventListener("pointerdown", start);
-    menuTitleEl.addEventListener("pointerup", cancel);
-    menuTitleEl.addEventListener("pointerleave", cancel);
-    menuTitleEl.addEventListener("pointercancel", cancel);
+    if (menuTitleEl) {
+      menuTitleEl.addEventListener("pointerdown", start);
+      menuTitleEl.addEventListener("pointerup", cancel);
+      menuTitleEl.addEventListener("pointerleave", cancel);
+      menuTitleEl.addEventListener("pointercancel", cancel);
+    }
   }
 
   function onAdminResetPressed() {
+    if (activePlayerId !== "afc-master") return;
     closeDialog(menuOverlayEl);
     const broadcast = partyStatus === "on";
     showConfirm({
@@ -2846,6 +3570,17 @@
   }
 
   function recordStat(gameId, value) {
+    const duelGameMap = {
+      reaktion: "reaktion",
+      fylle: "fyllekollen",
+      minne: "minne",
+      spy: "spykollen",
+      piss: "piss",
+    };
+    if (activeDuel && duelGameMap[gameId] === activeDuel.gameId) {
+      recordDuelScore(activeDuel.gameId, value);
+    }
+
     if (currentMode !== MODE_LIVE || !activePlayerId) return;
     const meta = REKORD_META[gameId];
     if (!meta || typeof value !== "number" || !isFinite(value)) return;
@@ -3016,7 +3751,7 @@
 
     // Ölligan bars
     const barLeft = 90;
-    const barMaxW = W - 340;
+    const barMaxW = W - 460;
     rows.forEach((row, i) => {
       const y = 380 + i * 128;
       ctx.textAlign = "left";
@@ -3029,9 +3764,15 @@
       ctx.shadowBlur = 18;
       ctx.fillRect(barLeft, y + 22, w, 34);
       ctx.shadowBlur = 0;
+
+      const bacVal = (row.player.id === activePlayerId
+        ? (playerBacCache[row.player.id] !== undefined ? playerBacCache[row.player.id] : calculatePlayerBAC(row.player.id))
+        : (partyPlayers[row.player.id] && typeof partyPlayers[row.player.id].bac === "number" ? partyPlayers[row.player.id].bac : calculatePlayerBAC(row.player.id))) || 0;
+
       ctx.textAlign = "right";
-      ctx.font = "900 44px 'Avenir Next', 'Segoe UI', sans-serif";
-      ctx.fillText(`${row.beers} 🍺`, W - 90, y + 54);
+      ctx.font = "900 40px 'Avenir Next', 'Segoe UI', sans-serif";
+      const recapBeerStr = row.beers > 0 ? `${row.beers} 🍺 (${bacVal.toFixed(2)} ‰)` : `0 🍺`;
+      ctx.fillText(recapBeerStr, W - 90, y + 54);
     });
 
     // Totals
@@ -3070,14 +3811,204 @@
     ctx.font = "800 30px 'Avenir Next', 'Segoe UI', sans-serif";
     ctx.fillText("oski89.github.io/styggmus-bingo", W / 2, H - 68);
 
-    // CRT finish: faint scanlines + corner vignette over the whole poster.
-    ctx.fillStyle = "rgba(0, 0, 0, 0.09)";
-    for (let y = 0; y < H; y += 6) ctx.fillRect(0, y, W, 2);
+    // CRT scanlines effect
+    const scan = ctx.createLinearGradient(0, 0, 0, H);
+    for (let y = 0; y < H; y += 8) {
+      scan.addColorStop(y / H, "rgba(0, 0, 0, 0.12)");
+      scan.addColorStop(Math.min(1, (y + 4) / H), "rgba(0, 0, 0, 0)");
+    }
+    ctx.fillStyle = scan;
+    ctx.fillRect(0, 0, W, H);
+
+    // Vignette
     const vin = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.75);
     vin.addColorStop(0, "rgba(0, 0, 0, 0)");
     vin.addColorStop(1, "rgba(0, 0, 0, 0.32)");
     ctx.fillStyle = vin;
     ctx.fillRect(0, 0, W, H);
+  }
+
+  // ── Night Analytics ─────────────────────────────────────────────────────────
+
+  const ANALYTICS_KEY = "styggmus-bingo-analytics-v1";
+
+  function loadAnalytics() {
+    return loadJSON(ANALYTICS_KEY, () => ({ beerLog: [], checkLog: {} }), isPlainObject);
+  }
+
+  function logAnalyticsBeer(playerId, count) {
+    if (!playerId) return;
+    const analytics = loadAnalytics();
+    if (!Array.isArray(analytics.beerLog)) analytics.beerLog = [];
+    analytics.beerLog.push({ p: playerId, t: Date.now(), c: count });
+    if (analytics.beerLog.length > 500) analytics.beerLog = analytics.beerLog.slice(-500);
+    safeSet(ANALYTICS_KEY, JSON.stringify(analytics));
+  }
+
+  function logAnalyticsCheck(promptText) {
+    if (!promptText) return;
+    const analytics = loadAnalytics();
+    if (!analytics.checkLog || typeof analytics.checkLog !== "object") analytics.checkLog = {};
+    analytics.checkLog[promptText] = (analytics.checkLog[promptText] || 0) + 1;
+    safeSet(ANALYTICS_KEY, JSON.stringify(analytics));
+  }
+
+  function renderAnalytics() {
+    const analytics = loadAnalytics();
+    const night = loadNight();
+    const beers = loadBeers();
+
+    let maxPlayer = players[0];
+    let maxBeers = 0;
+    players.forEach((p) => {
+      const c = beerCountOf(beers, p.id);
+      if (c > maxBeers) {
+        maxBeers = c;
+        maxPlayer = p;
+      }
+    });
+
+    const topBac = maxBeers > 0
+      ? (playerBacCache[maxPlayer.id] !== undefined ? playerBacCache[maxPlayer.id] : calculatePlayerBAC(maxPlayer.id))
+      : 0;
+
+    if (analyticsTopDrunkEl) {
+      analyticsTopDrunkEl.textContent = maxBeers > 0
+        ? `${maxPlayer.label.split(" ")[0]} (${maxBeers} 🍺 · ${topBac.toFixed(2)} ‰)`
+        : "Ingen än";
+    }
+
+    let totalKlunkar = 0;
+    if (night && night.players) {
+      Object.keys(night.players).forEach((pid) => {
+        if (night.players[pid] && typeof night.players[pid].klunkar === "number") {
+          totalKlunkar += night.players[pid].klunkar;
+        }
+      });
+    }
+    if (analyticsTotalKlunkarEl) {
+      analyticsTotalKlunkarEl.textContent = `${totalKlunkar} klunkar`;
+    }
+
+    if (analyticsTopPromptsEl) {
+      analyticsTopPromptsEl.innerHTML = "";
+      const checkLog = analytics.checkLog || {};
+      const sortedPrompts = Object.keys(checkLog)
+        .map((prompt) => ({ prompt, count: checkLog[prompt] }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+
+      if (sortedPrompts.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "Inga checkade rutor än ikväll";
+        analyticsTopPromptsEl.appendChild(li);
+      } else {
+        sortedPrompts.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = `"${item.prompt}" (${item.count} ggr)`;
+          analyticsTopPromptsEl.appendChild(li);
+        });
+      }
+    }
+
+    renderAnalyticsChart(analytics.beerLog || []);
+  }
+
+  function renderAnalyticsChart(beerLog) {
+    if (!analyticsChartCanvas) return;
+    const ctx = analyticsChartCanvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = analyticsChartCanvas.getBoundingClientRect();
+    const W = (rect.width || 380) * dpr;
+    const H = 180 * dpr;
+
+    analyticsChartCanvas.width = W;
+    analyticsChartCanvas.height = H;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const pLeft = 36 * dpr;
+    const pRight = 16 * dpr;
+    const pTop = 16 * dpr;
+    const pBottom = 26 * dpr;
+    const graphW = W - pLeft - pRight;
+    const graphH = H - pTop - pBottom;
+
+    ctx.strokeStyle = "rgba(250, 240, 255, 0.08)";
+    ctx.lineWidth = 1 * dpr;
+    for (let y = 0; y <= 4; y++) {
+      const yPos = pTop + (graphH / 4) * y;
+      ctx.beginPath();
+      ctx.moveTo(pLeft, yPos);
+      ctx.lineTo(W - pRight, yPos);
+      ctx.stroke();
+    }
+
+    const playerColors = {
+      "stygg-mus-president": "#ff2d78",
+      "mouse-trap-pukie": "#3fd99b",
+      "pommesansvarig": "#ffcf5a",
+      "afc-master": "#2de2ff",
+      "prospect": "#e280ff",
+    };
+
+    if (!beerLog || beerLog.length === 0) {
+      ctx.fillStyle = "rgba(250, 240, 255, 0.4)";
+      ctx.font = `800 ${12 * dpr}px 'Avenir Next', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("Ingen öldata registrerad än ikväll", W / 2, H / 2);
+      return;
+    }
+
+    const minTime = beerLog[0].t;
+    const maxTime = Math.max(Date.now(), beerLog[beerLog.length - 1].t + 60000);
+    const timeSpan = Math.max(300000, maxTime - minTime);
+
+    let maxBeersSeen = 1;
+    players.forEach((p) => {
+      const c = beerCountOf(loadBeers(), p.id);
+      if (c > maxBeersSeen) maxBeersSeen = c;
+    });
+
+    players.forEach((player) => {
+      const color = playerColors[player.id] || "#2de2ff";
+      const pLogs = beerLog.filter((l) => l.p === player.id);
+
+      const points = [{ t: minTime, c: 0 }];
+      pLogs.forEach((l) => points.push({ t: l.t, c: l.c }));
+      points.push({ t: maxTime, c: pLogs.length > 0 ? pLogs[pLogs.length - 1].c : 0 });
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5 * dpr;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8 * dpr;
+
+      ctx.beginPath();
+      points.forEach((pt, i) => {
+        const x = pLeft + ((pt.t - minTime) / timeSpan) * graphW;
+        const y = pTop + graphH - (pt.c / maxBeersSeen) * graphH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = color;
+      pLogs.forEach((l) => {
+        const x = pLeft + ((l.t - minTime) / timeSpan) * graphW;
+        const y = pTop + graphH - (l.c / maxBeersSeen) * graphH;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+
+    ctx.fillStyle = "rgba(250, 240, 255, 0.6)";
+    ctx.font = `800 ${10 * dpr}px 'Avenir Next', sans-serif`;
+    ctx.textAlign = "right";
+    ctx.fillText(`${maxBeersSeen}🍺`, pLeft - 4 * dpr, pTop + 10 * dpr);
   }
 
   function shareRecap() {
@@ -3148,6 +4079,11 @@
       .find((v) => v.lang && v.lang.toLowerCase().startsWith("sv"));
     if (voice) utterance.voice = voice;
     utterance.rate = 1.02;
+
+    const count = beerCountOf(loadBeers(), activePlayerId);
+    if (count >= 8) utterance.pitch = 0.75;
+    else if (count >= 5) utterance.pitch = 0.85;
+
     window.speechSynthesis.speak(utterance);
   }
 
@@ -3318,27 +4254,61 @@
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const COLORS = ["rgba(255, 45, 120,", "rgba(45, 226, 255,", "rgba(250, 255, 45,"];
+    const COLORS = [
+      { r: 255, g: 45, b: 120 },   // Neon pink
+      { r: 45, g: 226, b: 255 },   // Electric cyan
+      { r: 250, g: 255, b: 45 },   // Acid yellow
+      { r: 181, g: 45, b: 255 },   // Neon purple
+    ];
     let motes = [];
+    let sparks = [];
     let ratio = 1;
+    let pointerX = -1000;
+    let pointerY = -1000;
+    let lastPointerTime = 0;
+
+    function onPointerMove(e) {
+      pointerX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || -1000;
+      pointerY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || -1000;
+      lastPointerTime = performance.now();
+
+      // Spawn subtle interactive sparks on move
+      if (Math.random() < 0.4) {
+        const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+        sparks.push({
+          x: pointerX + (Math.random() - 0.5) * 16,
+          y: pointerY + (Math.random() - 0.5) * 16,
+          vx: (Math.random() - 0.5) * 1.8,
+          vy: -0.5 - Math.random() * 1.5,
+          life: 1.0,
+          size: 1.5 + Math.random() * 2.5,
+          color: c,
+        });
+      }
+    }
+
+    window.addEventListener("mousemove", onPointerMove, { passive: true });
+    window.addEventListener("touchmove", onPointerMove, { passive: true });
 
     function size() {
       ratio = window.devicePixelRatio || 1;
       canvas.width = Math.floor(window.innerWidth * ratio);
       canvas.height = Math.floor(window.innerHeight * ratio);
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      // Scale count to the viewport so big screens aren't sparse.
-      const target = Math.round((window.innerWidth * window.innerHeight) / 26000);
-      motes = Array.from({ length: Math.max(18, Math.min(46, target)) }, () => ({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        r: 1 + Math.random() * 2.4,
-        speed: 0.15 + Math.random() * 0.5,
-        drift: -0.3 + Math.random() * 0.6,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        alpha: 0.15 + Math.random() * 0.4,
-        phase: Math.random() * Math.PI * 2,
-      }));
+      const target = Math.round((window.innerWidth * window.innerHeight) / 20000);
+      motes = Array.from({ length: Math.max(24, Math.min(60, target)) }, () => {
+        const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+        return {
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          r: 1.2 + Math.random() * 3.2,
+          speed: 0.2 + Math.random() * 0.6,
+          drift: -0.3 + Math.random() * 0.6,
+          color: c,
+          alpha: 0.2 + Math.random() * 0.55,
+          phase: Math.random() * Math.PI * 2,
+        };
+      });
     }
     size();
     window.addEventListener("resize", size);
@@ -3349,21 +4319,83 @@
       const w = window.innerWidth;
       const h = window.innerHeight;
       ctx.clearRect(0, 0, w, h);
+
+      // Draw faint energy filaments between close motes
+      const maxDist = 95;
+      for (let i = 0; i < motes.length; i++) {
+        for (let j = i + 1; j < motes.length; j++) {
+          const dx = motes[i].x - motes[j].x;
+          const dy = motes[i].y - motes[j].y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq < maxDist * maxDist) {
+            const dist = Math.sqrt(distSq);
+            const lineAlpha = (1 - dist / maxDist) * 0.12;
+            const c1 = motes[i].color;
+            ctx.beginPath();
+            ctx.moveTo(motes[i].x, motes[i].y);
+            ctx.lineTo(motes[j].x, motes[j].y);
+            ctx.strokeStyle = `rgba(${c1.r}, ${c1.g}, ${c1.b}, ${lineAlpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw motes
       for (const m of motes) {
         m.y -= m.speed;
-        m.x += m.drift + Math.sin(t + m.phase) * 0.2;
-        if (m.y < -6) {
-          m.y = h + 6;
+        m.x += m.drift + Math.sin(t + m.phase) * 0.25;
+
+        // Pointer repulsion
+        const dx = m.x - pointerX;
+        const dy = m.y - pointerY;
+        const pDistSq = dx * dx + dy * dy;
+        if (pDistSq < 10000 && pDistSq > 0) {
+          const pDist = Math.sqrt(pDistSq);
+          const force = (1 - pDist / 100) * 1.5;
+          m.x += (dx / pDist) * force;
+          m.y += (dy / pDist) * force;
+        }
+
+        if (m.y < -10) {
+          m.y = h + 10;
           m.x = Math.random() * w;
         }
-        const twinkle = m.alpha * (0.6 + 0.4 * Math.sin(t * 2 + m.phase));
+        if (m.x < -10) m.x = w + 10;
+        if (m.x > w + 10) m.x = -10;
+
+        const twinkle = m.alpha * (0.65 + 0.35 * Math.sin(t * 2.5 + m.phase));
+        const c = m.color;
+
         ctx.beginPath();
         ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
-        ctx.fillStyle = m.color + twinkle + ")";
-        ctx.shadowColor = m.color + "0.9)";
-        ctx.shadowBlur = 8;
+        ctx.fillStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${twinkle})`;
+        ctx.shadowColor = `rgba(${c.r}, ${c.g}, ${c.b}, 0.85)`;
+        ctx.shadowBlur = 10;
         ctx.fill();
       }
+
+      // Draw pointer sparks
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const s = sparks[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.life -= 0.035;
+
+        if (s.life <= 0) {
+          sparks.splice(i, 1);
+          continue;
+        }
+
+        const c = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${s.life})`;
+        ctx.shadowColor = `rgba(${c.r}, ${c.g}, ${c.b}, 0.9)`;
+        ctx.shadowBlur = 12;
+        ctx.fill();
+      }
+
       ctx.shadowBlur = 0;
       window.requestAnimationFrame(frame);
     }
@@ -3372,7 +4404,7 @@
 
   // ── Confetti ──────────────────────────────────────────────────────────────
 
-  function runConfetti(durationMs) {
+  function runConfetti(durationMs, customColors, customGlyphs) {
     if (!(confettiCanvas instanceof HTMLCanvasElement)) return;
     if (prefersReducedMotion()) return;
     resizeConfettiCanvas();
@@ -3386,9 +4418,9 @@
     // CSS pixels.
     const W = window.innerWidth;
     const H = window.innerHeight;
-    const colors = ["#ff2d78", "#2de2ff", "#faff2d", "#ff9dc0", "#b26bff"];
+    const colors = customColors || ["#ff2d78", "#2de2ff", "#faff2d", "#ff9dc0", "#b26bff"];
     // Casino confetti: card suits and the odd 🍺/🎲 tumbling among neon chips.
-    const GLYPHS = ["♠", "♥", "♦", "♣", "🍺", "🎲"];
+    const GLYPHS = customGlyphs || ["♠", "♥", "♦", "♣", "🍺", "🎲"];
     const SHAPES = ["rect", "circle", "glyph"];
     const pieces = Array.from({ length: 130 }, () => {
       const shape = randomItem(SHAPES);

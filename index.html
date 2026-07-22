@@ -16,6 +16,9 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐭</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Outfit:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -74,29 +77,40 @@
         <div id="player-select" class="player-select hidden">
           <h2>Vem är du?</h2>
           <div class="player-buttons" aria-label="Välj spelare">
-            <button type="button" data-player-id="stygg-mus-president">🐭 Stygg mus president</button>
-            <button type="button" data-player-id="mouse-trap-pukie">🤮 Mouse trap pukie</button>
-            <button type="button" data-player-id="pommesansvarig">👨🏿 Pommesansvarig</button>
-            <button type="button" data-player-id="afc-master">⚽ AFC master</button>
-            <button type="button" data-player-id="prospect">🌱 Prospect</button>
+            <button type="button" data-player-id="stygg-mus-president">🐭 Stygg mus president 👑</button>
+            <button type="button" data-player-id="mouse-trap-pukie">🤮 Mouse trap pukie 👴🏻</button>
+            <button type="button" data-player-id="pommesansvarig">👨🏿 Pommesansvarig 🍟</button>
+            <button type="button" data-player-id="afc-master">💨 AFC master TBD</button>
+            <button type="button" data-player-id="prospect">🛋️ Prospect TBD</button>
           </div>
           <button id="reset-all-btn" class="reset-all-btn" type="button">← Tillbaka</button>
         </div>
-        <p class="version-line">Stygg Mus 2026</p>
       </div>
     </section>
 
     <!-- Bingo app -->
     <main id="app" class="app hidden">
       <header class="bingo-topbar">
-        <button id="topbar-back-btn" class="back-btn" type="button" aria-label="Byt spelare">←</button>
-        <h1 id="game-title" class="bingo-topbar-title">Stygg Mus Bingo 🍆🐭🎲</h1>
-        <button id="menu-btn" class="menu-btn" type="button" aria-label="Meny">⋮</button>
+        <h1 id="game-title" class="bingo-topbar-title">Stygg Mus Bingo <span id="kenta-egg-trigger" style="cursor:pointer;" title="Gyllene Musen">🍆</span>🐭🎲</h1>
+        <div class="topbar-controls">
+          <div class="party-quick-widget" title="Party-länk (live-sync)">
+            <button id="topbar-party-btn" class="party-wifi-btn" type="button" aria-label="Party-länk info & Ölligan">🌐</button>
+            <label class="apple-switch" aria-label="Slå på/av Party-länk">
+              <input id="topbar-party-toggle" type="checkbox" />
+              <span class="apple-switch-slider"></span>
+            </label>
+          </div>
+          <button id="menu-btn" class="menu-btn" type="button" aria-label="Meny">⋮</button>
+        </div>
       </header>
 
       <section class="stats" aria-live="polite">
         <div class="stat" aria-label="Spelare">
           <span id="current-player" class="stat-value">-</span>
+        </div>
+        <div id="drunk-meter-widget" class="drunk-meter-widget" title="Promillekalkylator & berusningsnivå">
+          <span id="drunk-meter-level" class="drunk-meter-level" data-level="nykter">Nykter</span>
+          <span id="drunk-meter-promille" class="drunk-meter-promille">0.0 ‰</span>
         </div>
         <div class="beer-widget" role="group" aria-label="Ölräknare">
           <button id="beer-widget-minus" class="beer-widget-btn" type="button" aria-label="Ta bort en öl">−</button>
@@ -105,8 +119,21 @@
         </div>
       </section>
 
+      <section id="mulligan-bar" class="mulligan-bar hidden" aria-label="Mulligan-läge">
+        <div class="mulligan-info">
+          <div class="mulligan-title">🔄 Mulligan-läge</div>
+          <div id="mulligan-instruction" class="mulligan-instruction">Välj upp till 3 rutor att byta ut</div>
+        </div>
+        <div id="mulligan-badge" class="mulligan-badge">0 / 3 vaskade</div>
+      </section>
+
       <section class="board-wrap" aria-label="Bingobricka">
         <div id="board" class="board" role="grid" aria-label="Bingobricka 4 gånger 4"></div>
+      </section>
+
+      <section id="mulligan-actions" class="mulligan-actions hidden">
+        <button id="mulligan-confirm-btn" class="primary-btn" type="button" disabled>Byt rutor</button>
+        <button id="mulligan-cancel-btn" class="secondary-btn" type="button">Avbryt</button>
       </section>
     </main>
 
@@ -177,17 +204,52 @@
           <h2 id="menu-title" class="menu-title">Meny</h2>
         </div>
         <div class="menu-actions">
-          <button id="new-board-btn" class="secondary-btn" type="button">Ny bricka</button>
-          <button id="reset-board-btn" class="secondary-btn" type="button">Nollställ bricka</button>
-          <button id="menu-party-btn" class="secondary-btn" type="button">Party-länk</button>
-          <button id="menu-rekord-btn" class="secondary-btn" type="button">Rekord</button>
-          <button id="menu-recap-btn" class="secondary-btn" type="button">Kvällens recap</button>
-          <button id="menu-change-player-btn" class="secondary-btn" type="button">Byt spelare</button>
-          <button id="menu-exit-btn" class="secondary-btn" type="button">Avsluta</button>
+          <button id="menu-mulligan-btn" class="secondary-btn" type="button">🔄 Mulligan (byt rutor)</button>
+          <button id="new-board-btn" class="secondary-btn" type="button">🎲 Ny bricka</button>
+          <button id="reset-board-btn" class="secondary-btn" type="button">🧹 Nollställ bricka</button>
+          <button id="menu-rekord-btn" class="secondary-btn" type="button">🏆 Rekord</button>
+          <button id="menu-recap-btn" class="secondary-btn" type="button">🖼️ Kvällens recap</button>
+          <button id="menu-analytics-btn" class="secondary-btn" type="button">📊 Kvällens statistik</button>
+          <button id="menu-change-player-btn" class="secondary-btn" type="button">👤 Byt spelare</button>
+          <button id="menu-exit-btn" class="secondary-btn" type="button">🚪 Avsluta</button>
           <!-- Admin-only: hidden until a long-press on the "Meny" title reveals
                it (see the long-press wiring in script.js). Resets the whole
                round for every connected phone. -->
-          <button id="menu-admin-btn" class="secondary-btn menu-admin-btn hidden" type="button">🔄 Ny omgång (nollställ allt)</button>
+          <button id="menu-admin-btn" class="secondary-btn menu-admin-btn hidden" type="button">⚠️ Ny omgång (nollställ allt)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kvällens statistik: Night Analytics & timeline chart -->
+    <div id="analytics-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="analytics-title">
+      <div class="overlay-card analytics-card">
+        <div class="menu-header">
+          <button id="analytics-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
+          <h2 id="analytics-title" class="menu-title">📊 Kvällens statistik</h2>
+        </div>
+        <div class="analytics-chart-wrap">
+          <h3 class="analytics-subtitle">Ölkonsumtion över tid</h3>
+          <canvas id="analytics-chart-canvas" class="analytics-chart-canvas" aria-label="Ölförbrukning över tid"></canvas>
+        </div>
+        <div class="analytics-grid">
+          <div class="analytics-metric">
+            <span class="analytics-metric-icon">🍻</span>
+            <div class="analytics-metric-info">
+              <span class="analytics-metric-label">Öl-ledare & Promille</span>
+              <span id="analytics-top-drunk" class="analytics-metric-val">–</span>
+            </div>
+          </div>
+          <div class="analytics-metric">
+            <span class="analytics-metric-icon">🍷</span>
+            <div class="analytics-metric-info">
+              <span class="analytics-metric-label">Utdelade klunkar</span>
+              <span id="analytics-total-klunkar" class="analytics-metric-val">–</span>
+            </div>
+          </div>
+        </div>
+        <div class="analytics-prompts-section">
+          <h3 class="analytics-subtitle">Mest checkade rutor</h3>
+          <ol id="analytics-top-prompts" class="analytics-top-prompts"></ol>
         </div>
       </div>
     </div>
@@ -221,9 +283,13 @@
     <!-- Party-länk overlay (live sync between phones) -->
     <div id="party-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="party-title">
       <div class="overlay-card party-card">
-        <div class="menu-header">
+        <div class="menu-header party-header">
           <button id="party-back-btn" class="back-btn" type="button" aria-label="Stäng">←</button>
           <h2 id="party-title" class="party-title">Party-länk</h2>
+          <label class="apple-switch party-modal-switch" aria-label="Slå på/av Party-länk">
+            <input id="party-modal-toggle" type="checkbox" />
+            <span class="apple-switch-slider"></span>
+          </label>
         </div>
         <p class="party-status">
           <span id="party-status-dot" class="party-status-dot" data-state="off" aria-hidden="true"></span>
@@ -231,8 +297,21 @@
         </p>
         <ul id="party-roster" class="party-roster"></ul>
         <p class="party-hint">Bingo och ölräkning sänds live till alla anslutna mobiler i sällskapet.</p>
-        <div class="menu-actions">
-          <button id="party-toggle-btn" class="secondary-btn" type="button">Stäng av party-läge</button>
+      </div>
+    </div>
+
+    <!-- 1v1 Duel Invite Overlay -->
+    <div id="duel-invite-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="duel-invite-title">
+      <div class="overlay-card duel-card">
+        <div class="menu-header">
+          <button id="duel-invite-close-btn" class="back-btn" type="button" aria-label="Stäng">✕</button>
+          <h2 id="duel-invite-title" class="menu-title">⚔️ DUELL-UTMANING!</h2>
+        </div>
+        <p id="duel-invite-text" class="duel-invite-text">Oski utmanar dig i Spykollen!</p>
+        <p class="duel-stake-notice">🔥 Förloraren måste dricka 5 klunkar!</p>
+        <div class="confirm-actions">
+          <button id="duel-accept-btn" class="primary-btn" type="button">⚔️ Anta utmaningen</button>
+          <button id="duel-decline-btn" class="secondary-btn" type="button">🐔 Bager ut (drick 2 klunkar)</button>
         </div>
       </div>
     </div>
@@ -362,6 +441,12 @@
       </div>
     </div>
 
+    <!-- Mouse Trap Slime Explosion overlay -->
+    <div id="slime-overlay" class="slime-overlay hidden" aria-hidden="true">
+      <div class="slime-drip-top"></div>
+      <div class="slime-splat-center">🤮</div>
+    </div>
+
     <!-- Party flash: incoming bingo takeover from another phone. Deliberately
          NOT a dialog — it must be able to appear over any open dialog without
          fighting the focus-trap/close routing, so it's a plain fixed layer. -->
@@ -373,7 +458,15 @@
       </div>
     </div>
 
-    <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
-    <script src="./script.js"></script>
+    <script src="./script.js?v=19"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var registration of registrations) {
+            registration.update();
+          }
+        });
+      }
+    </script>
   </body>
 </html>

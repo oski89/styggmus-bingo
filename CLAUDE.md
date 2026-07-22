@@ -56,12 +56,12 @@ keys, `PARTY_TOPIC = "dwarf-bingo-forge-v1"`, `CACHE_NAME = "dwarf-bingo-v1"`.
 
 Single-page vanilla JS app with no dependencies, no bundler, and no build step. Three source files plus PWA assets and markdown docs:
 
-- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (ny bricka / nollställ / party / rekord / recap / byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#party-overlay`, `#rekord-overlay`, `#recap-overlay`, `#confirm-overlay` (styled `confirm()` replacement), the five mini-game overlays, plus non-dialog layers `#party-flash` and `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also carries an inline SVG data-URI favicon (🐭) so `/favicon.ico` doesn't 404 on a plain static server, plus the PWA wiring: `theme-color`, the `apple-mobile-web-app-*` metas, `<link rel="manifest">`, and an `apple-touch-icon`.
-- `styles.css` — all styling, mobile-first with CSS custom properties and `safe-area-inset` support; `@media (prefers-reduced-motion: reduce)` disables animations.
-- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Board, Player helpers, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Pissepaus (tilt-aiming), Win detection, Bingo rewards, Party-länk, Admin, Rekord, Kvällens recap, Kommentatorn, Celebrations, Dialog helpers, Ambient embers, Confetti, Audio, Utilities, Storage.
+- `index.html` — all static markup. One `#access-screen` (password + player select) and two `<main>` "screens": `#app` (the bingo board — the only screen a logged-in player sees) and `#test-screen` (mini-game launcher, `MGT` password only). Plus dialog overlays — `#overlay` (easter-egg messages), `#reward-overlay` (bingo mini-game intro + klunkar payout), `#menu-overlay` (Mulligan / ny bricka / nollställ / rekord / recap / byt spelare / avsluta, opened from the bingo top bar's ⋮ button), `#party-overlay` (Ölligan roster + top Apple toggle switch), `#mulligan-bar` & `#mulligan-actions` (Mulligan field replacement UI), `#rekord-overlay`, `#recap-overlay`, `#confirm-overlay` (styled `confirm()` replacement), the five mini-game overlays, plus non-dialog layers `#party-flash` and `<canvas id="confetti">`. SVG icons are defined once in a `<svg class="svg-sprite">` and referenced via `<use href="#…">` (inline `style` fills, not classes, so they survive `<use>` cloning in Firefox). The `<head>` also loads Google Fonts (`Orbitron`, `Outfit`, `Plus Jakarta Sans`), carries an inline SVG data-URI favicon (🐭), plus PWA wiring: `theme-color`, `apple-mobile-web-app-*` metas, `<link rel="manifest">`, and an `apple-touch-icon`.
+- `styles.css` — all styling, mobile-first with CSS custom properties, 3D glassmorphism, glowing titles, Apple switch sliders, and `safe-area-inset` support; `@media (prefers-reduced-motion: reduce)` disables animations.
+- `script.js` — the entire app in one IIFE. Sections are marked with `── … ──` banner comments: DOM-refs, Event listeners, Access flow, State, Beer state, Board, Player helpers, Mulligan, Easter eggs, Fyllekollen (swipe maze), Reaktionskollen (reaction test), Minnesluckatestet (memory test), Spykollen (dodge game), Pissepaus (tilt-aiming), Win detection, Bingo rewards, Party-länk, Admin, Rekord, Kvällens recap, Kommentatorn, Celebrations, Dialog helpers, Ambient constellation particles, Confetti, Audio, Utilities, Storage.
 - `manifest.webmanifest`, `sw.js`, `icons/` — the PWA layer (see PWA & device feedback below).
 
-UI language is Swedish.
+UI language is Swedish (`sv-SE`).
 
 ### Visual identity ("Neonklubben")
 
@@ -74,16 +74,15 @@ are semantic and deliberately kept out of the theme palette. Confetti uses the
 neon set in `runConfetti`.
 
 The big titles (login `h1`, board `.bingo-topbar-title`) get a **neon-tube**
-treatment — a white-hot core (`-webkit-text-stroke` + tight white shadow)
+treatment — styled in `Orbitron` with a white-hot core (`-webkit-text-stroke` + tight white shadow)
 wrapped in layered pink halos, plus a faulty-tube `neon-title-flicker`
-keyframe (behind `prefers-reduced-motion`). The **board cells** are dimensional
+keyframe (behind `prefers-reduced-motion`). The **board cells** are 3D dimensional
 glass: a top highlight, a purple body, and a magenta under-glow so unlit cells
 read as lit glass rather than flat black. A **checked** cell becomes hot-pink
 glass with a glowing cyan tube rim and a 🐭 paw emblem stamped in the corner
 (`::after`). `.board-wrap` is a bright pink→cyan→yellow neon-tube edge. Ambient
-**embers** (`#embers` canvas inside `.page-bg`, driven by `startEmbers`) drift
-slow neon motes above the art and behind content; the rAF loop is skipped
-entirely under reduced motion.
+**constellation particles** (`#embers` canvas inside `.page-bg`, driven by `startEmbers`) drift
+neon motes with dynamic touch/mouse cursor repulsion and energy filaments.
 
 **Tactile feedback (all behind `prefers-reduced-motion`):** marking a cell adds
 a transient `.stamp` class (re-triggered via reflow in `onBoardClick`, cleared
@@ -96,80 +95,20 @@ after 460ms) that runs a scale-pop (`cell-stamp`), an expanding cyan spark ring
 (`runConfetti`) tumbles casino shapes — neon chips (rect/circle) plus card-suit
 and 🍺/🎲 glyphs — with per-piece glow.
 
-**Motion & scenography (all gated behind `prefers-reduced-motion`):** dialogs
-open with a neon-sign `dialog-ignite` flicker inside a full pink→cyan→yellow
-neon-tube frame; boards **deal in** cell-by-cell (`board.deal` + per-cell
-`--cell-i` stagger, class cleared ~1.1s later in `renderBoard`); the beer
-counter pops (`beer-widget-value.pop`, re-triggered in `adjustBeerForPlayer`);
-mini-game countdowns pulse (`countdown-pop`) and the Reaktionskollen 🍺 throbs
-(`target-pulse`). The mini-game canvases are scenography, not flat stages:
-`drawMaze` renders **neon-tube walls** (cyan glow) over radial beacon glow-pads
-under the 🐭/🍺; `drawSpy` and `drawPiss` share `drawNeonFloor` (a pink
-synthwave perspective grid) with a glowing couch / a pulsing cyan target ring
-on the toilet; `renderRecap` finishes the poster with CRT scanlines + a
-vignette.
-
-`.page-bg` carries the **neon wall art**: `art/neonklubben-bg.webp`, a full
-illustration of the mouse in cap and leather jacket at the casino table
-(BINGO/SLOTS/STYGG MUSS signs, neon cards, dice, chips). It renders through
-`img.page-bg-img` — `object-fit: cover` center for wide screens, dimmed
-(`opacity` ≈ 0.55) with a vertical vignette `mask-image` so content stays
-legible. On phones (`max-width: 680px`) the wide crop would bury the mouse's
-face behind the board/login panel, so the image is instead bottom-anchored and
-slid down (`bottom: -42%; height: 112%`) to park the grin in the free band
-under the board, with a top-fade mask hiding the image's upper seam. The image
-is part of the service-worker shell (`sw.js` SHELL list — keep in sync, bump
-`CACHE_NAME` when it changes). The `.stat` and `.beer-widget` backgrounds are
-near-opaque on purpose — art must not bleed through and read as stray borders.
-
 ### Screen flow
 
 `renderAccessFlow()` (called once on load) decides the entry point:
 password gate → player gate → **bingo** (`#app`) directly (or straight to
-`#test-screen` in test mode) — bingo is the only screen a live player ever
-sees; there is no separate dashboard or app launcher. The bingo layout, top to
-bottom: `.bingo-topbar` (a flat 3-item flex row — the ← back button, then the
-title, then the ⋮ menu button at the opposite end, no longer grouped/stacked
-together), `.stats` (the player name box — no visible "Spelare" label, just
-`aria-label="Spelare"` on the `.stat` div for screen readers — and the compact
-−/🍺/+ beer widget as its second item), then `.board-wrap`. The ← button (`topbar-back-btn`) is a no-confirm
-shortcut straight to `showPlayerGate()` — the same action as the menu's "Byt
-spelare", just one tap instead of opening the menu first; the title is sized
-(`font-size: 1.05rem`) to fit one line down to ~375px even flanked by two
-separate 38px buttons, with wrapping still allowed (not nowrap+ellipsis) as a
-fallback at narrower widths (e.g. 320px) instead of clipping the trailing
-emoji off-screen. There is no Fält/Rader
-marked-count or bingo-line-count display — `updateStatsAndWinState` still
-computes them internally (for win/reward detection) but doesn't render them
-anywhere. Beer counting lives inline in that widget (`beer-widget-*` →
-`adjustBeerForPlayer`, so the `+` still drives the mini-game rotation; there is
-no standalone beer-counter screen or cross-player leaderboard). "Ny bricka",
-"Nollställ bricka", switching player, and logging out all live behind the ⋮
-**menu button** in the
-top bar (`menu-btn` → opens `#menu-overlay`, `.menu-actions` in that order):
-"Ny bricka" closes the menu and calls `onNewBoard()` (still confirms — it wipes
-the current marks and reshuffles a new board); "Nollställ bricka" closes the
-menu and calls `onResetBoard()` (confirms, then clears `state.checked` /
-`bingoLinesAwarded` / `grandWin` on the *same* board — prompts don't change);
-"Party-länk" / "Rekord" / "Kvällens recap" open their respective overlays;
-"Byt spelare" closes the menu and calls `showPlayerGate()`. "Avsluta" in the
-menu (`menuExitBtn`) is wired straight to `onExit()`, same as `#test-screen`'s
-own Avsluta button (auto-wired via the generic `exitButtons` NodeList,
-selector `.exit-btn` — the menu's Avsluta isn't styled `.exit-btn` itself, so
-it needs its own explicit listener but shares the same confirm-then-
-`performExit()` flow). A hidden admin button ("Ny omgång") is revealed by
-long-pressing the "Meny" title. All menu action buttons share plain
-`.secondary-btn` styling (`.menu-actions .secondary-btn` re-asserts it over
-the generic `.overlay-card button` neon-pink default) — no
-`.primary-btn`/`.exit-btn` visual distinction between them. The menu header (`.menu-header`) also has a
-← `back-btn` next to the "Meny" title (`menu-back-btn` → `closeDialog`, no
-confirm — identical to backdrop/Escape, just a visible way to do it); its own
-`.menu-header .back-btn` rule re-asserts the neutral circular look over the
-same neon-pink `.overlay-card button` default for the same reason. `onExit()`
-defensively closes whatever dialog is currently open before showing the exit
-confirmation.
-`hideAllScreens()` + `…El.classList.remove("hidden")` is
-the show/hide mechanism for the two top-level screens — there is no router.
+`#test-screen` in test mode) — bingo is the only screen a logged-in player sees. The bingo layout, top to
+bottom: `.bingo-topbar` (header containing title `Stygg Mus Bingo 🍆🐭🎲` in `Orbitron` neon bold, flanked on the right by `.topbar-controls` with the `🌐` Party-länk network button + Apple switch slider, and the ⋮ menu button), `.stats` (a continuous pill-shaped glass capsule bar containing `#current-player` on the left, `#drunk-meter-widget` in the center with live BAC `0.0 ‰` and status badge, and the compact −/🍺/+ beer widget `#beer-widget` on the right), `#mulligan-bar` (when Mulligan mode is active), then `.board-wrap`.
+
+The player select screen (`#player-select`) "Vem är du?" contains player choice buttons and a `← Tillbaka` button that returns to the password login gate.
+
+The ⋮ **menu button** in the top bar (`menu-btn` → opens `#menu-overlay`, `.menu-actions` grouped logically):
+1. **Board Actions:** `🔄 Mulligan (byt rutor)`, `🎲 Ny bricka`, `🧹 Nollställ bricka`
+2. **Social & Stats:** `🏆 Rekord`, `🖼️ Kvällens recap`, `📊 Kvällens statistik`
+3. **Session:** `👤 Byt spelare`, `🚪 Avsluta`
+4. **Admin (hidden):** `⚠️ Ny omgång (nollställ allt)` (unlocked only by `💨 AFC master TBD` holding "Meny" for 3 seconds).
 
 ### Auth & modes
 
@@ -177,9 +116,7 @@ Two passwords map to two modes (`PASSWORDS` in `script.js`): `SMB` → `live`,
 `MGT` → `test`. **Test mode** skips the player gate and shows
 `#test-screen`, a menu whose five tiles launch each mini-game
 (`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`/
-`openPissepaus`) directly for testing, with no descriptive text under each tile — just icon
-and name (see Win detection & bingo rewards for where the emoji descriptions
-now live). Auth and the active mode are session-only
+`openPissepaus`) directly for testing. Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
 clears them and returns to the password gate.
 
@@ -188,334 +125,93 @@ clears them and returns to the password gate.
 Each player gets their own bingo board stored under
 `styggmus-bingo-board-v2:<playerId>` in `localStorage`. The board is a 16-element array (`BOARD_SIZE` 4 × 4, `CELL_COUNT`
 16) of prompt strings shuffled from a seeded PRNG (mulberry32 + djb2-style hash,
-seeded `<uuid>-<playerId>`) — no free cell, nothing pre-checked. Checked indexes,
-awarded bingo lines, and grand-win status are persisted alongside the board.
-Loaded state is validated (`isValidState`); a stored board whose length or prompts
-no longer match (e.g. an old 5×5 board) is discarded for a fresh one.
+seeded `<uuid>-<playerId>`). State schema:
+```json
+{
+  "id": "<uuid>",
+  "playerId": "<playerId>",
+  "createdAt": "<iso-timestamp>",
+  "board": ["prompt1", "prompt2", ...],
+  "checked": [0, 2, 5],
+  "bingoLinesAwarded": [0],
+  "grandWin": false,
+  "mulligansUsed": 1
+}
+```
 
-Beer counts are a separate `localStorage` map, keyed by player id:
-`styggmus-bingo-beers-v1` (never below 0).
-
+Beer counts are stored under `styggmus-bingo-beers-v1` in `localStorage`.
 Player selection persists under `styggmus-bingo-player-v1`.
 
 ### Players & prompt filtering
 
 There are 5 players (`players`) and 5 prompt groups (`promptGroups`), one group
-per real-life person × 8 prompts = 40 total. Each player has an `excludedGroup`
-(typically their own) that is removed before the board is built, leaving 32
-prompts; the first 16 of the shuffle fill the 16 cells.
+per real-life person × 8 prompts = 40 total. Player labels, emojis & weights:
+- `stygg-mus-president`: `🐭 Stygg mus president 👑` (85 kg)
+- `mouse-trap-pukie`: `🤮 Mouse trap pukie 👴🏻` (78 kg)
+- `pommesansvarig`: `👨🏿 Pommesansvarig 🍟` (90 kg)
+- `afc-master`: `💨 AFC master TBD` (70 kg)
+- `prospect`: `🛋️ Prospect TBD` (75 kg)
+
+Each player has an `excludedGroup` that is removed before the board is built.
+
+### Promillekalkylator & BAC API
+
+Calculates real-time Blood Alcohol Content (`0.00 ‰`) using the MiniWebtool BAC Calculator API (`https://api.miniwebtool.com/v1/tools/bac-calculator/run`).
+- Inputs: beer count, player weight (`weightKg`), elapsed drinking duration (tracked via `styggmus-bingo-session-start-v1:<playerId>`).
+- Rate limiting: API calls execute when a beer is tapped and on top of each full hour (`:00` minutes).
+- Widmark formula fallback: computes local BAC if offline or API is unreachable.
+
+### Mulligan Mode (Byt rutor)
+
+Allows players to replace up to 3 unchecked bingo fields per board:
+- Accessed via `🔄 Mulligan (byt rutor)` in the menu.
+- Displays remaining budget in menu, e.g. **`🔄 Mulligan (3 kvar)`** (disabled when 0).
+- Activates top `#mulligan-bar` banner & bottom `#mulligan-actions` control bar (`Byt X rutor` / `Avbryt`).
+- Unchecked cells toggle purple neon selection glow (`.mulligan-selected`).
+- Checked cells are disabled (`.mulligan-disabled` with `cursor: not-allowed`).
+- Badge counter tracks total vaskade out of 3: `1 / 3 vaskade`, `2 / 3 vaskade`, `3 / 3 vaskade`.
+- Confirming replaces selected prompts with fresh valid prompts from the player pool and increments `state.mulligansUsed`.
 
 ### Win detection & bingo rewards
 
-`getWinningLines()` checks 4 rows + 4 columns + 2 diagonals. New bingo lines (not
-already in `bingoLinesAwarded`), instead of a fixed prize, launch a
-**bingo reward** (`startBingoReward`): a random mini-game whose result
-decides how many "klunkar" (sips) you get to hand out to everyone. Filling all 16
-cells triggers `startGrandReward` once — all five games in a random row, klunkar
-summed. A grand win supersedes the single-line reward for the same check (filling
-the last cell also completes lines), so only one flow runs. Sound is synthesized
-with the Web Audio API; confetti is canvas-drawn and skipped under
-`prefers-reduced-motion`.
-
-The reward flow lives in the **Bingo rewards** section. `rewardSession`
-({ mode, queue, idx, total, breakdown, currentOverlay, resolved }) drives it; the
-`REWARD_GAMES` registry maps each game id to its open-fn, overlay, close
-button, label, and a short `blurb` (a one-line emoji description, e.g.
-"Led 🐭 till 🍺" — this used to live only on the test-screen tiles as
-`.app-tile-desc`; it's now the live-mode player's preview instead). `showRewardIntro`
-opens the shared `#reward-overlay` and renders that preview before the player
-commits: for a single line it names the one game they're about to get
-(`.reward-game-preview`); for a grand win it lists all five, in the session's
-actual play order (`.reward-game-list`) (intro → "Spela"/"Kör alla fem"). The
-same blurb text also sits as a permanent, always-visible line inside each
-mini-game's own overlay (`.minigame-blurb`, shared by Reaktionskollen/
-Minnesluckatestet/Spykollen/Pissepaus; Fyllekollen already has an equivalent standing
-line via `.fyllekollen-text` — `.minigame-blurb` matches its size, both
-inheriting the plain `.overlay-card p` look rather than a small muted
-caption), so it's visible no matter how the game was opened — reward flow,
-beer-counter cadence, or the test menu — not just from the reward intro.
-Each game's `*-instruction` element only carries phase-specific status text
-now ("Vänta på ölen…", "TRYCK!", "Håll koll!", "Undvik spyorna!", …) — the
-redundant lead-in/result captions that used to sit there ("Gör dig redo…",
-"Din reaktionstid", "Facit", "Nedspydd!") were dropped since the blurb and
-the result headline already cover that ground; it goes empty (not removed —
-`min-height` on the element keeps the layout stable) during the countdown and
-on the result screen. Every verdict `message` across all the games line-breaks
-before its trailing "Fortsätt dricka." (via a literal `<br>` in the string,
-rendered through `innerHTML`) so it reads as its own line under the
-verdict-specific sentence. `startCurrentRewardGame` opens the next game;
-each game's terminal result calls `recordRewardResult(gameId, klunkar, verdict)`
-(a no-op outside a session, so the beer-counter rotation and test menu are
-unchanged), which rounds klunkar to nearest (≥ 0) and relabels the close button
-to "Nästa spel"/"Klar". None of the mini-games has a retry/"play again"
-button (removed — closing and reopening is the only way to run another round).
-Closing the
-game (button/Escape/backdrop) runs `advanceRewardAfterGame` via `closeDialog`
-(unfinished = 0); after the last game `showRewardPayout` reveals the breakdown +
-total. Klunkar per game: Fyllekollen = `MAZE_KLUNK_MAX` × share of the clock left
-at the goal, so max is `MAZE_KLUNK_MAX` (8) and timeout = 0;
-Reaktionskollen = `(KLUNK_REAKTION_BASE_MS − ms) / KLUNK_REAKTION_DIV` capped at
-`KLUNK_REAKTION_MAX` (10), false start = 0; Minnesluckatestet =
-`KLUNK_MINNE_BASE − total deviation`;
-Spykollen = `KLUNK_SPY[cls]` (Nykter 6 / Salongsberusad 4 / Full som ett ägg 2);
-Pissepaus = toilets hit, capped at `KLUNK_PISS_MAX` (10).
-
-### Dialogs
-
-All overlays go through `openDialog()`/`closeDialog()`, which track
-`activeDialog`, move focus into the dialog, trap Tab, close on Escape/backdrop,
-and restore focus on close (`onKeyDown` routes keyboard events while a dialog is
-open). `showConfirm()` is the styled stand-in for `window.confirm()` — its
-`onConfirm` runs only on the accept button; an optional `onCancel` runs instead
-for any other dismissal (Avbryt, Escape, backdrop). `closeDialog()` detects a
-genuine cancel by checking whether `pendingConfirmAction` is still set when it
-runs (`onConfirmAccept()` already nulls it before calling `closeDialog()`, so a
-non-null value there means the accept button wasn't the trigger), and invokes
-the saved `pendingCancelAction` only as the very last step — after this
-dialog's own teardown/focus-restore — so a cancel handler that opens another
-dialog (e.g. the menu's Ny bricka/Nollställ bricka/Avsluta confirms all pass
-`onCancel: () => openDialog(menuOverlayEl)`, returning you to the menu instead
-of the bare board) gets a clean, uncontested focus capture.
-
-### Easter eggs
-
-Three hidden triggers (handled in the Easter eggs section, suppressed while a
-dialog is open or a text field is focused): 5 rapid `#game-title` clicks →
-"STYGG MODE", Konami code → "KONAMI-KUBB!", typing "DDKO" → "DDKO REQUESTAD".
-Each adds a temporary `body` class, plays a sound, and runs confetti.
-
-### Fyllekollen (swipe maze mini-game)
-
-The five beer-counter mini-games rotate on a fixed `MINIGAME_CYCLE` (5) beat in
-`countBeerPress`, keyed off the running count of beers added (`beerAddedTotal`,
-session-only; only `+` presses count): **Reaktionskollen** on beers `1+5n`,
-**Minnesluckatestet** on `2+5n`, **Fyllekollen** on `3+5n`, **Spykollen** on
-`4+5n`, **Pissepaus** on `5+5n` (`%5 === 0`). Exactly one fires per added
-beer, so they never collide; none fires while another dialog is up. All five are
-also launchable directly from the test-mode menu (`#test-screen`).
-
-**Fyllekollen** is a perfect maze (recursive backtracker, `MAZE_COLS`×`MAZE_ROWS`)
-rendered to `#maze-canvas` in the `#fyllekollen-overlay` dialog. Move the mouse
-🐭 one cell per swipe (pointer events on the canvas, `touch-action: none`) or per
-arrow key — arrow keys are routed in `onKeyDown` while that dialog is active. It
-is **timed**: the limit is the shortest-path step count (`mazeDistance`, BFS) ×
-`MAZE_MS_PER_STEP` (800ms), shown as a `#maze-timer` countdown that turns red in
-the last third. The round ends in the same three-tier verdict as the other
-mini-games, shown inline in the `#maze-result` panel (`showMazeResult`): reaching
-🍺 maps by the share of the clock still left (`mazeLevel`) — `>=
-MAZE_SOBER_MIN_FRACTION` (0.35) → red "Nykter" + `signalSoberAlarm`, below → yellow
-"Salongsberusad" — while *running out of time* is the goal of a drinking game, so
-`onMazeTimeout` gives green "Full som ett ägg" + `signalDrunkCelebration`. A
-fresh maze is built each time the dialog opens (`buildNewMaze`, which clears the
-verdict effects and hides the result) — there is no in-dialog restart button.
-The maze timer is cleared on solve, time-out, and in `closeDialog`;
-`stopVerdictEffects` runs on restart and in `closeDialog`.
-
-### Reaktionskollen (reaction-test mini-game)
-
-**Reaktionskollen** (`#reaktion-overlay`): a 5-second countdown, then a blank
-"waiting" phase for a random 100ms–5s, then a 🍺 appears and a `performance.now()`
-clock starts. The first tap (pointerdown on `#reaktion-stage`, or Space) stops
-it; tapping during "waiting" is a false start. The reaction time in ms maps to a
-three-tier "how drunk are you" verdict (`reaktionLevel`): `< REAKTION_GREEN_MAX`
-(350) → red "Nykter", `<= REAKTION_YELLOW_MAX` (550) → yellow "Salongsberusad",
-else green "Full som ett ägg". Because this is a drinking game, the two extreme
-tiers swap the usual emphasis and are shared by all three mini-games. *Sober is
-the bad result*: the "Nykter" tier carries `alarm: true` → `signalSoberAlarm()`
-(a flashing red `.sober-alarm` overlay class plus a `playAlarmSound()` klaxon).
-*Properly drunk is the goal*: the "Full som ett ägg" tier carries `celebrate:
-true` → `signalDrunkCelebration()` (a flashing green `.drunk-celebrate` overlay
-class, `runConfetti` lifted in front via `.confetti--front`, and a
-`playPartySound()` fanfare). Both replace the normal win chime and are torn down
-by `stopVerdictEffects()` (→ `stopSoberAlarm()` + `stopDrunkCelebration()`) on
-round restart and in `closeDialog`. A `reaktionPhase` state machine drives the
-round; its two timers are cleared in `closeDialog` so a queued tick can't fire
-into a closed dialog.
-
-### Minnesluckatestet (memory / flash-count mini-game)
-
-**Minnesluckatestet** (`#memory-overlay`), on beers `2+5n`: a 5s countdown, then
-X 🍺 + Y 🐭 (each `MINNE_MIN`..`MINNE_MAX`, 1–10) flash shuffled for
-`MINNE_FLASH_MS` (4000ms), then the player dials the two counts on iOS-style scroll
-wheels (`.memory-wheel-scroll`, CSS `scroll-snap`; value read from `scrollTop /
-MINNE_WHEEL_ITEM_H`) and submits. Accuracy (2/1/0 of the two counts correct) maps
-to the same verdict tiers (2 → red "Nykter" + alarm, 1 → yellow, 0 → green
-"Full som ett ägg" + celebration), shown with the facit. A `memoryPhase` state
-machine drives it; its countdown/flash timers are cleared in `closeDialog`.
-
-### Spykollen (dodge mini-game)
-
-**Spykollen** (`#spy-canvas` in `#spykollen-overlay`), on beers `4+5n`: a
-`requestAnimationFrame` arcade game. A row of 🤢 along the top
-drop 🤮 in bursts of 1–`SPY_MAX_BURST` (3) from distinct columns (never all, so a
-dodge gap always exists); the player steers a canvas-drawn couch (footprint =
-hitbox exactly, clamped fully on-stage; `drawCouch`/`roundRectPath`) with
-on-screen ◀ ▶ buttons (held; `pointerdown`/`pointerup` set `spyMoveDir`) or arrow
-keys (routed in `onKeyDown` + a `keyup` handler). Difficulty ramps each second (faster fall via
-`SPY_BASE_FALL`/`SPY_FALL_RAMP`, tighter spawns via `SPY_BASE_SPAWN_MS`/
-`SPY_SPAWN_RAMP`) so a round lands ~10–30s; one hit ends it. Dodged count maps to
-the verdict (`spyLevel`: ≥`SPY_GREEN_MIN` 15 → red "Nykter" + alarm /
-≥`SPY_YELLOW_MIN` 6 → yellow / below → green "Full som ett ägg" + celebration).
-A `spyPhase` state machine drives it; the rAF + countdown timer are
-cancelled in `stopSpyGame`, called from `closeDialog`. Collisions use a
-crossing test at the couch line to avoid tunnelling at high speeds.
-
-### Pissepaus (tilt-aiming mini-game)
-
-**Pissepaus** (`#piss-canvas` in `#pissepaus-overlay`), on beers `5+5n`: aim
-the pee stream from the 🍆 at the bottom onto the 🚽 that spawns one at a time
-(each hit respawns the next — never two at once; `spawnPissToilet` also
-resamples so a fresh toilet never lands right on the stream tip). Steering is
-**device tilt**: `gamma` ±`PISS_TILT_MAX_DEG` (30°) sweeps left/right across
-the full width, `beta` maps device-upright (90°) → shortest stream and
-device-flat (0°) → longest, so the whole stage is reachable. Pointer-drag on
-the canvas and arrow keys (routed in `onKeyDown`) are the sensor-less
-fallbacks. The steered value is a *target*: the tip glides toward it at
-`PISS_AIM_SPEED` (0.8 stage-heights/s) rather than teleporting — this is what
-stops tap-the-toilet cheesing via the pointer fallback and gives each respawn
-a travel-time cooldown (a frame-perfect chaser maxes out around ~17 hits).
-The round is `PISS_ROUND_MS` (10s) with a tenth-second countdown and 🚽
-counter in the `.piss-hud` row. It starts from an explicit **"Starta" button**
-because iOS only grants `deviceorientation` access via
-`DeviceOrientationEvent.requestPermission()` from inside a user gesture
-(`onPissStart`; denied/absent sensors just leave the fallbacks). Hits map to
-the verdict (`pissLevel`: ≥`PISS_NYKTER_MIN` 8 → red "Nykter" + alarm /
-≥`PISS_SALONG_MIN` 4 → yellow / below → green "Full som ett ägg" +
-celebration); reward klunkar = hits capped at `KLUNK_PISS_MAX` (10). A
-`pissPhase` state machine drives it; `stopPissGame` (also called from
-`closeDialog`) cancels the rAF + countdown and removes the `deviceorientation`
-listener. The canvas exposes `data-state` and `data-toilet-x/y` for the
-Playwright suite — one-toilet-at-a-time makes a single coordinate pair the
-full spawn state.
+`getWinningLines()` checks 4 rows + 4 columns + 2 diagonals. New bingo lines launch a random mini-game from `REWARD_GAMES`. Filling all 16 cells triggers `startGrandReward` once (all five games in sequence). Sound is synthesized with Web Audio API; confetti is canvas-drawn.
 
 ### Party-länk (live sync between phones)
 
-Every phone in live mode auto-joins one shared pub/sub topic on **ntfy.sh**
-(free public relay, no account/library — see the `PARTY_*` constants; the
-topic is public-by-obscurity, fine for a party game, never send anything
-sensitive). The whole transport lives in the **Party-länk** section of
-script.js so it can be swapped (e.g. for Firebase) in one place: publishing is
-fire-and-forget `fetch` POSTs, receiving is one auto-reconnecting
-`EventSource` on `/sse?since=45m` — the `since` replay warms the roster for
-late joiners, and a rate-limited (60s) hello ping-pong covers joins beyond
-that window. Own events are ignored via a per-session `partyDeviceId`.
-
-Three event types: `hello` (presence + beer count; sent on connect and as
-ping-pong answers), `beer` (rapid ± taps debounce into one publish with the
-final count from `adjustBeerForPlayer`), and `bingo` (published in
-`showRewardPayout` where the klunkar total exists). Incoming beer/hello events
-feed `partyPlayers`, rendered as the "Ölligan" roster in `#party-overlay`
-(menu → Party-länk: status dot, per-player beer counts, on/off toggle stored
-under `styggmus-bingo-party-v1`, default on). An incoming **bingo** takes over
-the receiving phone via `#party-flash` — deliberately NOT a dialog (it must
-appear over any open dialog without fighting the focus-trap/close routing;
-plain fixed layer at z 50, tap or `PARTY_FLASH_MS` to dismiss) — with
-fanfare, vibration, lifted confetti, and `speakVerdict`. Replayed events
-older than `PARTY_FRESH_MS` never flash; a player's own win never flashes on
-their own phone. `connectParty()` runs from `startBingoGame` (idempotent),
-`disconnectParty()` from `performExit`. Everything degrades silently offline
-(EventSource retries; publishes are catch-and-drop). The sandbox CI network
-blocks ntfy.sh, so the Playwright suite stubs the transport
-(EventSource/fetch bridged over a BroadcastChannel with localStorage-backed
-replay) — live end-to-end needs real devices.
+Every phone in live mode joins one shared pub/sub topic on **ntfy.sh** (`PARTY_SERVER` = `https://ntfy.sh`, `PARTY_TOPIC` = `styggmus-bingo-neonklubben-v1`).
+- **Toggle Control:** Accessible directly on the bingo top bar (`.party-quick-widget` with `🌐` network globe button + Apple switch slider) and inside `#party-overlay` header (with back button `←` on top-left and Apple switch slider on top-right).
+- **Default State:** Offline by default (`isPartyEnabled()` returns `safeGet(PARTY_KEY) === "on"`).
+- **Roster LED Status & BAC:** Each player row in `#party-roster` has a status light (`.party-status-dot`) and displays their beer count plus calculated BAC Promille (`5 🍺 (1.25 ‰)`).
+- **Self & Remote Filtering:** Active player (`(du)`) has a distinct neon-cyan highlight (`.party-self`). Remote players are highlighted (`data-seen="true"`) ONLY when online and sending fresh active pings (`<= PARTY_FRESH_MS`, 2 minutes). Replayed messages from ancient history (`since`) do not mark offline players active.
+- **Offline Record Syncing:** When turning Party-länk ON (`connectParty()`), `publishPartyHello()` automatically broadcasts local mini-game records (`loadStats()`) to update all connected devices' Hall of Fame.
+- **1v1 Duels:** Tap "⚔️ Utmana" on any online player row in `#party-roster` to challenge them. Uses SSE event types `duel_invite`, `duel_accept`, `duel_decline`, and `duel_score`. Both players play the assigned mini-game, scores are compared, and the loser receives a 5-klunk penalty screen takeover!
 
 ### Rekord (Hall of Fame), Kvällens recap & Kommentatorn
 
-**Rekord**: all-time per-player mini-game records under `styggmus-bingo-stats-v1`
-(`stats[playerId][gameId] = { v, at }`; direction per game in `REKORD_META` —
-reaktion lower-is-better, the rest higher). Every game's terminal result calls
-`recordStat`; a first-ever result seeds silently, a genuine improvement fires
-the **NYTT REKORD takeover** (reuses `showPartyFlash`, delayed 1.4s so the
-round's verdict effects land first) and broadcasts a party `rekord` event.
-`applyRemoteRecord` stores incoming records if better, converging every
-phone's list; menu → Rekord (`#rekord-overlay`) shows best-per-game + holder.
-Records apply only in live mode with a chosen player — test mode never records.
-
-**Kvällens recap**: menu → Kvällens recap renders a shareable 1080×1350 neon
-poster on `#recap-canvas` (`renderRecap`): Ölligan beer bars (own count local,
-others from the party roster), tonight's bingo/grand/klunkar totals, and
-"Kvällens Fyllo". Tonight's tallies live under `styggmus-bingo-night-v1`,
-bumped in `showRewardPayout` (own) and from party `bingo` events (others),
-deduped by a shared event id (own device id changes on reload, so the payout
-publishes an `id` that both the local bump and every receiver key on); the
-night resets after `NIGHT_RESET_MS` (18h) of quiet. "Dela bilden" uses
-`navigator.share({ files })` with an `<a download>` fallback.
-
-**Kommentatorn**: a sportscaster voice (`sayCommentary`) with deliberately few,
-deterministic triggers — a line one-cell-from-bingo (unawarded 3/4 line),
-15/16 marked, beer milestones every 5th (`kommentatorBeerLine`), and
-Reaktionskollen false starts. Global `KOMMENTATOR_COOLDOWN_MS` (20s), never
-speaks over ongoing speech (verdict shouts always win), live mode only.
-Line pools live in `KOMMENTATOR`; `getAllBoardLines()` (also feeding
-`getWinningLines`) powers the near-bingo detection.
+- **Rekord**: All-time per-player mini-game records under `styggmus-bingo-stats-v1`. Works offline locally; broadcasts via party `rekord` events when online.
+- **Kvällens recap**: Menu → Kvällens recap renders a shareable 1080×1350 poster on `#recap-canvas` (`renderRecap`) displaying beer counts and BAC Promille (`5 🍺 (1.25 ‰)`).
+- **Kvällens statistik (Night Analytics)**: Menu → Kvällens statistik renders an interactive timeline line chart on `#analytics-chart-canvas` tracking beer consumption over time for all 5 players, plus summary metrics for lead BAC player, total klunkar handed out, and top 3 checked prompts.
+- **Kommentatorn**: Sportscaster voice (`sayCommentary`) for 1-cell-from-bingo, 15/16 marked, beer milestones every 5th, and false starts.
 
 ### Admin: reset the round
 
-A hidden spelledare-only action to start a fresh round. The menu's
-`#menu-admin-btn` ("Ny omgång (nollställ allt)", danger-red) is hidden every
-time the menu opens and only revealed by a **long-press (1.3s) on the "Meny"
-title** (`registerAdminUnlock`) — so a curious tap finds nothing. Pressing it
-closes the menu and opens a `showConfirm`; accepting calls `performRoundReset`,
-which `safeRemove`s the stats/night/beers keys and every player's board key,
-resets `partyPlayers`/`beerAddedTotal`, and rebuilds a fresh board in place.
-When party-läge is on it also `publishParty({ t: "reset", id })` so every
-connected phone runs the same wipe; the wording in the confirm reflects
-local-only vs all-phones. Receivers handle the `reset` event **before** the
-player guard in `onPartyEvent` (a reset isn't tied to a player), only act on
-fresh events (`PARTY_FRESH_MS`) and dedupe by id via `partySeenResets` (so a
-`since` replay can't wipe a late-joiner), and show a quiet
-`showPartyFlash(..., { quiet: true })` notice (no confetti/fanfare). The admin's
-own broadcast is ignored on their own phone via `partyDeviceId` + the id being
-pre-seeded into `partySeenResets`. Session auth, the chosen player, and the
-party on/off preference are kept. Only wired in root (not demo/dwarf).
+Restricted exclusively to **`💨 AFC master TBD`** (`activePlayerId === "afc-master"`). Revealed by a **3-second long-press on the "Meny" title** (`registerAdminUnlock`). Pressing `#menu-admin-btn` opens a confirmation modal and executes `performRoundReset()`.
+
+### Easter Eggs
+
+- **Gyllene Musen**: 5 quick taps on 🍆 in title (`#kenta-egg-trigger`) or Konami sequence (`↑ ↑ ↓ ↓ ← → ← → B A`) toggles `.gyllene-musen-active` (3D gold mirror cards), gold glitter rain, and 8-bit retro arcade fanfare.
+- **Mouse Trap Slime Explosion**: 3 quick taps on `#current-player` as `Mouse Trap Pukie 👴🏻` triggers a green neon slime explosion overlay (`#slime-overlay`), squelch sound effect, and awards +1 bonus mulligan.
 
 ### PWA & device feedback
 
-The app is an installable PWA: `manifest.webmanifest` (standalone, portrait,
-`start_url: "./"` — everything relative so the GitHub Pages subpath works) and
-`sw.js`, an app-shell service worker registered at the end of the IIFE init.
-The worker is **network-first with cache fallback** so a fresh deploy reaches
-players on next load but the app still opens fully offline; it pre-caches the
-shell (HTML/CSS/JS/manifest/icons) on install and runtime-caches successful
-same-origin GETs. Bump `CACHE_NAME` in `sw.js` if the shell file list changes.
-Icons live in `icons/` (192/512 PNG + `apple-touch-icon.png`), generated from a
-canvas drawing of 🐭 in a glowing pink neon ring on the purple app background —
-regenerate at the same sizes if rebranding.
-
-Three device-feedback layers, all guarded no-ops where unsupported:
-
-- **Haptics** — the `vibrate(pattern)` helper (Utilities). Call sites: cell
-  mark/unmark (18/8ms) in `onBoardClick`, the 🍺 appearing in
-  `showReaktionTarget` (35ms), the hit jolt in `onSpyHit` (90ms — the red/green
-  verdict signals replace it, yellow keeps it), bingo/grand-win reward starts,
-  and strong patterns in `signalSoberAlarm`/`signalDrunkCelebration`. Android
-  Chrome uses the real Vibration API. **iOS Safari has no Vibration API**, so
-  `vibrate()` falls back to `.click()`ing a hidden `<input switch>`
-  (`#haptic-tick`) whose toggle fires a subtle system haptic on iOS 17.4+ — a
-  single light tick, no patterns, and only when the call sits inside a tap
-  (cell mark qualifies; timer-driven cues like the alarm do not). The switch is
-  opacity-0 but **must stay rendered** (`display:none` suppresses the haptic).
-- **Screen wake lock** — `acquireWakeLock()` in `openDialog`,
-  `releaseWakeLock()` at the very end of `closeDialog` (only when no dialog
-  remains — reward routing may already have opened the next one). The browser
-  force-releases on tab hide, so a `visibilitychange` listener re-acquires
-  while a dialog is up.
-- **Speech** — `speakVerdict(text)` (Audio section) shouts "Nykter!" /
-  "Full som ett ägg!" with a `sv-SE` voice from the two verdict signal
-  functions; `stopVerdictEffects()` cancels any ongoing utterance so a closed
-  dialog can't keep talking.
+Installable PWA (`manifest.webmanifest`, `sw.js`). Includes Web Haptics (`vibrate()`, with iOS `<input switch id="haptic-tick">` fallback), Screen Wake Lock (`acquireWakeLock()`), and Web Speech Synthesis (`speakVerdict()`).
 
 ### Storage safety
 
-Every Web Storage call is wrapped (`safeGet`/`safeSet`/`tryStorage`/`loadJSON`)
-so private mode or quota errors degrade to a fallback instead of throwing. Use
-these helpers rather than touching `localStorage`/`sessionStorage` directly.
+All storage operations use safety wrappers (`safeGet`, `safeSet`, `loadJSON`).
 
 ## Conventions
 
-- Plain ES (no modules/transpiler) inside one IIFE; keep the `── section ──`
-  banner organization when adding code.
-- Reference DOM nodes through the cached refs in the DOM-refs section.
-- Persist through the storage helpers (`safeGet`/`safeSet`/`loadJSON`, etc.).
-- Match the existing accessibility patterns (ARIA roles/labels, focus management)
-  when adding interactive UI.
+- Plain ES (no modules/transpiler) inside one IIFE; keep `── section ──` banner comments.
+- Reference DOM nodes through cached refs in DOM-refs section.
+- Persist through storage helpers (`safeGet`/`safeSet`/`loadJSON`).
