@@ -1129,12 +1129,8 @@
     fetchBAC(activePlayerId, "render");
   }
 
-  // Each added beer launches one of the five mini-games on a rotating
-  // MINIGAME_CYCLE-beer cycle: Reaktionskollen on 1+5n, Minnesluckatestet on
-  // 2+5n, Fyllekollen on 3+5n, Spykollen on 4+5n, Pissepaus on 5+5n. Exactly
-  // one fires per beer, so they never collide. Only increments count — removing
-  // a beer doesn't. The counter is session-only; nothing fires while a dialog
-  // is already open.
+  // Each added beer or single bingo reward launches a mini-game from a shuffled
+  // 6-game bag deck: no mini-game repeats until all 6 have been played once.
   function countBeerPress() {
     beerAddedTotal += 1;
     const count = beerCountOf(loadBeers(), activePlayerId);
@@ -1142,12 +1138,11 @@
       sayCommentary(kommentatorBeerLine(count, spokenName(activePlayerId)));
     }
     if (activeDialog) return;
-    const slot = beerAddedTotal % MINIGAME_CYCLE;
-    if (slot === 1) openReaktionskollen();
-    else if (slot === 2) openMinneslucka();
-    else if (slot === 3) openFyllekollen();
-    else if (slot === 4) openSpykollen();
-    else openPissepaus();
+    const gameId = getNextMinigameId();
+    const g = REWARD_GAMES[gameId];
+    if (g && typeof g.open === "function") {
+      g.open();
+    }
   }
 
   function beerCountOf(beers, playerId) {
@@ -3337,11 +3332,26 @@ ctx.restore();
   };
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
+  // Minigame deck randomizer: guarantees all 6 minigames are played in random
+  // order before any minigame can repeat.
+  let minigameDeck = [];
+
+  function getNextMinigameId() {
+    if (minigameDeck.length === 0) {
+      minigameDeck = REWARD_GAME_IDS.slice();
+      for (let i = minigameDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [minigameDeck[i], minigameDeck[j]] = [minigameDeck[j], minigameDeck[i]];
+      }
+    }
+    return minigameDeck.pop();
+  }
+
   function startBingoReward() {
     playWinSound(false);
     runConfetti(1800);
     vibrate([60, 50, 60]);
-    rewardSession = newRewardSession("single", [randomItem(REWARD_GAME_IDS)]);
+    rewardSession = newRewardSession("single", [getNextMinigameId()]);
     showRewardIntro();
   }
 

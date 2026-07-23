@@ -37,7 +37,7 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 ### Ölräknare, Promille & Minigames
 - Inline ölräknare (−/🍺/+) per spelare.
 - **Promillekalkylator (Realistic BAC):** Beräknar reell promille (`0.00 ‰`) via MiniWebtool BAC Calculator API baserat på antal öl, spelarens vikt (kg) och tid sedan första ölen. Rate-limited vid öl-taps och heltimmar med lokal Widmark-formel som fallback.
-- Varje tillagd öl roterar igenom de sex spelen:
+- Varje tillagd öl eller enkelbingo drar ett minispel från en slumpmässigt blandad kortlek med alla sex spel: inget minispel upprepas förrän alla 6 spel har spelats en gång:
   1. **Reaktionskollen** — tryck när 🍺 dyker upp
   2. **Minnesluckatestet** — räkna 🍺 och 🐭
   3. **Fyllekollen** — led 🐭 till 🍺 i en timed maze
