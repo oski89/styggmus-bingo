@@ -3506,7 +3506,7 @@ ctx.restore();
             return `<li><strong>${g.label}</strong> — ${g.blurb}</li>`;
           })
           .join("")}</ul>`
-      : `<p class="reward-game-preview"><strong>${REWARD_GAMES[rewardSession.queue[0]].label}</strong> — ${REWARD_GAMES[rewardSession.queue[0]].blurb}</p>`;
+      : "";
     rewardBodyEl.innerHTML =
       (grand
         ? `<p class="reward-lead">Spela alla fem spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
