@@ -26,7 +26,7 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 *Spelarna visas i toppbaren med en komprimerad emojiversion (t.ex. `💨🥷`) för att spara utrymme.*
 
 ### Visuella Uppgraderingar & Easter Eggs
-- **Hyper-Realistisk 3D Tilt Fysik:** Gyro/touch orientation på bingorutor så reflektioner och metallic light sweeps rör sig med telefonens lutning.
+- **Hyper-Realistisk 3D Tilt Fysik (Skak-aktiverad):** När man skakar mobilen aktiveras 3D-lutning och en fjädrande 3D-vobblingsanimation under 2 sekunder. Reflektioner och metallic light sweeps följer telefonens gyro.
 - **Plasma Arc:** Animerade glowing plasma-lasrar förbinder rutorna i en vinnande rad innan partikel-fyrverkerierna exploderar.
 - **Vatten/Partikel Shockwave Engine:** Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
 - **Gyllene Musen (Konami Code):** 5 taps på `🍆` eller `↑ ↑ ↓ ↓ ← → ← → B A` för 3D-guldbricka & 8-bit glitterfanfar.

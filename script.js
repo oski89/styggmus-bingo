@@ -536,6 +536,13 @@
           DeviceOrientationEvent.requestPermission().then(permissionState => {
             if (permissionState === 'granted') {
               window.addEventListener('deviceorientation', handleGyro, { passive: true });
+              if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission().then(mState => {
+                  if (mState === 'granted') window.addEventListener('devicemotion', handleMotion, { passive: true });
+                }).catch(() => {});
+              } else {
+                window.addEventListener('devicemotion', handleMotion, { passive: true });
+              }
             }
           }).catch(console.error);
         }
@@ -1267,8 +1274,53 @@
     window.setTimeout(() => boardEl.classList.remove("deal"), 1100);
   }
 
+  let shakeTiltActive = false;
+  let shakeTiltTimer = null;
+  let lastAcc = { x: 0, y: 0, z: 0 };
+  let lastShakeTime = 0;
+
+  function triggerShakeTilt() {
+    shakeTiltActive = true;
+    if (shakeTiltTimer) window.clearTimeout(shakeTiltTimer);
+    
+    document.querySelectorAll('.cell').forEach((cell, idx) => {
+      cell.classList.remove('shake-wobble');
+      void cell.offsetWidth;
+      cell.style.animationDelay = `${(idx % 4) * 0.05}s`;
+      cell.classList.add('shake-wobble');
+    });
+
+    shakeTiltTimer = window.setTimeout(() => {
+      shakeTiltActive = false;
+      shakeTiltTimer = null;
+      document.querySelectorAll('.cell').forEach(cell => {
+        cell.classList.remove('shake-wobble');
+        cell.style.setProperty('--rx', '0deg');
+        cell.style.setProperty('--ry', '0deg');
+      });
+    }, 2200);
+  }
+
+  function handleMotion(e) {
+    const acc = e.accelerationIncludingGravity || e.acceleration;
+    if (!acc) return;
+    const deltaX = Math.abs((acc.x || 0) - lastAcc.x);
+    const deltaY = Math.abs((acc.y || 0) - lastAcc.y);
+    const deltaZ = Math.abs((acc.z || 0) - lastAcc.z);
+    lastAcc = { x: acc.x || 0, y: acc.y || 0, z: acc.z || 0 };
+
+    if (deltaX + deltaY + deltaZ > 22) {
+      const now = Date.now();
+      if (now - lastShakeTime > 1200) {
+        lastShakeTime = now;
+        triggerShakeTilt();
+      }
+    }
+  }
+
   let gyroRaf = null;
   function handleGyro(e) {
+    if (!shakeTiltActive) return;
     if (e.beta === null || e.gamma === null) return;
     if (gyroRaf) return;
     let ry = e.gamma; 
@@ -1288,6 +1340,7 @@
 
   let pointerRaf = null;
   function handlePointerTilt(e) {
+    if (!shakeTiltActive) return;
     if (pointerRaf) return;
     const x = (e.clientX / window.innerWidth - 0.5) * 2; 
     const y = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -1312,6 +1365,7 @@
       if (toast) toast.classList.remove("hidden");
     } else {
       window.addEventListener('deviceorientation', handleGyro, { passive: true });
+      window.addEventListener('devicemotion', handleMotion, { passive: true });
       window.addEventListener('pointermove', handlePointerTilt, { passive: true });
     }
   }

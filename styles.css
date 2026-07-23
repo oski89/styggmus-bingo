@@ -979,6 +979,20 @@ button:focus-visible {
   transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
+@keyframes shakeWobble3D {
+  0% { transform: translateZ(0) rotateX(0deg) rotateY(0deg) scale(1); }
+  15% { transform: translateZ(14px) rotateX(16deg) rotateY(-18deg) scale(1.03); }
+  30% { transform: translateZ(20px) rotateX(-14deg) rotateY(16deg) scale(1.04); }
+  45% { transform: translateZ(12px) rotateX(10deg) rotateY(-12deg) scale(1.02); }
+  60% { transform: translateZ(6px) rotateX(-8deg) rotateY(8deg) scale(1.01); }
+  75% { transform: translateZ(2px) rotateX(4deg) rotateY(-4deg) scale(1.005); }
+  100% { transform: translateZ(0) rotateX(0deg) rotateY(0deg) scale(1); }
+}
+
+.cell.shake-wobble {
+  animation: shakeWobble3D 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
 .cell::before {
   content: "";
   position: absolute;
