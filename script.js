@@ -3103,6 +3103,7 @@
 
   function startGrandReward() {
     playWinSound(true);
+    playDDKOSong();
     runConfetti(3400);
     vibrate([80, 60, 80, 60, 80, 60, 300]);
     document.body.classList.add("champion");
@@ -3356,6 +3357,7 @@
       // genuinely-live bingos flash.
       if (Date.now() - atMs > PARTY_FRESH_MS) return;
       if (evt.p === activePlayerId) return; // it's this player's own win
+      if (grand) playDDKOSong();
       const label = getPlayer(evt.p).label;
       showPartyFlash(
         grand ? "🏆 HELA BRICKAN!" : "🎉 BINGO!",
@@ -4799,6 +4801,20 @@
   }
 
   // ── Audio ─────────────────────────────────────────────────────────────────
+
+  let currentDDKOAudio = null;
+  function playDDKOSong() {
+    try {
+      if (currentDDKOAudio) {
+        currentDDKOAudio.pause();
+        currentDDKOAudio.currentTime = 0;
+      }
+      currentDDKOAudio = new Audio("assets/audio/DDKO.mp3");
+      currentDDKOAudio.play().catch(() => {});
+    } catch {
+      /* fallback */
+    }
+  }
 
   function playWinSound(isGrandWin) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
