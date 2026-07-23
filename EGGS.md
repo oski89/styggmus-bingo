@@ -40,3 +40,10 @@ En komplett guide över alla dolda easter eggs, hemliga koder och interaktiva ef
 ### 6. 📱 Skak-aktiverad 3D Tilt Fysik
 - **Aktivering:** Skaka telefonen fysiskt.
 - **Effekt:** Aktiverar 3D-lutningsläget i 2,2 sekunder. Bingorutorna utför en fjädrande 3D-rotation (`@keyframes shakeWobble3D`) samtidigt som telefonens gyroskop i realtid lutar korten och flyttar ljusreflektionerna.
+
+---
+
+### 7. ⚔️ Utmana & Duel-läge (1v1 Live Battles & Straffklunkar)
+- **Aktivering:** Öppna Party-modalen (🌐-globen) när du är ansluten till party-nätverket och klicka på knappen **"⚔️ Utmana"** bredvid valfri online-spelare i Ölligans roster.
+- **Effekt:** Ett live duell-anrop skickas direkt till motståndarens telefon via SSE (`ntfy.sh`). Om de accepterar tävlar ni båda live i ett slumpmässigt utvalt minispel.
+- **Straffklunkar Takeover:** Poängen jämförs i realtid när båda spelat klart. Förloraren drabbas av en oundviklig skärm-takeover som tvingar dem att dricka straffklunkar (eller 2 straffklunkar om de fegade och nekade duellen)!
