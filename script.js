@@ -27,7 +27,7 @@
   // Time budget per shortest-path step. The whole maze is visible so a sharp
   // player can plan the route; 800ms/step keeps a median (~30-step) maze ~24s and
   // makes finishing feasible after the inevitable wrong turns.
-  const MAZE_MS_PER_STEP = 800;
+  const MAZE_MS_PER_STEP = 400;
   // Solving the maze maps to a three-tier verdict by the share of the clock still
   // left at the finish: ≥ this fraction → "Nykter" (too sober — alarm), below it →
   // "Salongsberusad". Running out of time → "Full som ett ägg" (drunk — celebrate).
@@ -43,7 +43,7 @@
   const REAKTION_YELLOW_MAX = 550; // <= this → "Salongsberusad"; above → "Full som ett ägg"
   // Minnesluckatestet (memory / flash-count test): flashes X 🍺 + Y 🐭 for a blink,
   // then the player dials in the counts (each MINNE_MIN..MINNE_MAX).
-  const MINNE_FLASH_MS = 4000;
+  const MINNE_FLASH_MS = 2000;
   const MINNE_MIN = 1;
   const MINNE_MAX = 10;
   const MINNE_WHEEL_ITEM_H = 40; // px per wheel row; matches .memory-wheel-opt height
@@ -350,6 +350,7 @@
   const mazeTimerEl = document.getElementById("maze-timer");
   const mazeResultEl = document.getElementById("maze-result");
   const fyllekollenCloseBtn = document.getElementById("fyllekollen-close-btn");
+  const mazeStartBtn = document.getElementById("maze-start-btn");
 
   const reaktionOverlayEl = document.getElementById("reaktion-overlay");
   const reaktionInstructionEl = document.getElementById("reaktion-instruction");
@@ -358,6 +359,7 @@
   const reaktionTargetEl = document.getElementById("reaktion-target");
   const reaktionResultEl = document.getElementById("reaktion-result");
   const reaktionCloseBtn = document.getElementById("reaktion-close-btn");
+  const reaktionStartBtn = document.getElementById("reaktion-start-btn");
 
   const memoryOverlayEl = document.getElementById("memory-overlay");
   const memoryInstructionEl = document.getElementById("memory-instruction");
@@ -370,6 +372,7 @@
   const memorySubmitBtn = document.getElementById("memory-submit-btn");
   const memoryResultEl = document.getElementById("memory-result");
   const memoryCloseBtn = document.getElementById("memory-close-btn");
+  const memoryStartBtn = document.getElementById("memory-start-btn");
 
   const spykollenOverlayEl = document.getElementById("spykollen-overlay");
   const spykollenInstructionEl = document.getElementById("spykollen-instruction");
@@ -381,6 +384,7 @@
   const spyRightBtn = document.getElementById("spy-right-btn");
   const spyCloseBtn = document.getElementById("spy-close-btn");
   const testSpykollenBtn = document.getElementById("test-spykollen-btn");
+  const spyStartBtn = document.getElementById("spy-start-btn");
 
   const pissepausOverlayEl = document.getElementById("pissepaus-overlay");
   const pissepausInstructionEl = document.getElementById("pissepaus-instruction");
@@ -392,6 +396,7 @@
   const pissResultEl = document.getElementById("piss-result");
   const pissCloseBtn = document.getElementById("piss-close-btn");
   const testPissepausBtn = document.getElementById("test-pissepaus-btn");
+  const pissKeysPressed = new Set();
 
   const rewardOverlayEl = document.getElementById("reward-overlay");
   const rewardTitleEl = document.getElementById("reward-title");
@@ -653,28 +658,35 @@
     });
     mazeCanvas.addEventListener("pointerdown", onMazePointerDown);
     mazeCanvas.addEventListener("pointerup", onMazePointerUp);
+    if (mazeStartBtn) mazeStartBtn.addEventListener("click", onMazeStart);
 
     reaktionStageEl.addEventListener("pointerdown", onReaktionTap);
     reaktionCloseBtn.addEventListener("click", () => closeDialog(reaktionOverlayEl));
     reaktionOverlayEl.addEventListener("click", (e) => {
       if (e.target === reaktionOverlayEl) closeDialog(reaktionOverlayEl);
     });
+    if (reaktionStartBtn) reaktionStartBtn.addEventListener("click", onReaktionStart);
 
     memorySubmitBtn.addEventListener("click", submitMemoryAnswer);
     memoryCloseBtn.addEventListener("click", () => closeDialog(memoryOverlayEl));
     memoryOverlayEl.addEventListener("click", (e) => {
       if (e.target === memoryOverlayEl) closeDialog(memoryOverlayEl);
     });
+    if (memoryStartBtn) memoryStartBtn.addEventListener("click", onMemoryStart);
 
     testSpykollenBtn.addEventListener("click", openSpykollen);
     spyCloseBtn.addEventListener("click", () => closeDialog(spykollenOverlayEl));
     spykollenOverlayEl.addEventListener("click", (e) => {
       if (e.target === spykollenOverlayEl) closeDialog(spykollenOverlayEl);
     });
+    if (spyStartBtn) spyStartBtn.addEventListener("click", onSpyStart);
     spyLeftBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); spyMoveDir = -1; });
     spyRightBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); spyMoveDir = 1; });
     window.addEventListener("pointerup", () => { spyMoveDir = 0; });
-    window.addEventListener("keyup", onSpyKeyUp);
+    window.addEventListener("keyup", (e) => {
+      pissKeysPressed.delete(e.key);
+      onSpyKeyUp(e);
+    });
 
     testPissepausBtn.addEventListener("click", openPissepaus);
     pissStartBtn.addEventListener("click", onPissStart);
@@ -1710,7 +1722,12 @@
         activeDialog === pissepausOverlayEl && pissPhase === "playing"
           ? arrowKeyToDir(event.key)
           : null;
-      if (mazeDir) {
+      if (activeDialog === pissepausOverlayEl && pissPhase === "playing") {
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "a", "A", "d", "D", "w", "W", "s", "S"].includes(event.key)) {
+          event.preventDefault();
+          pissKeysPressed.add(event.key);
+        }
+      } else if (mazeDir) {
         event.preventDefault();
         moveMaze(mazeDir);
       } else if (reaktionTap) {
@@ -1719,9 +1736,6 @@
       } else if (spyDir !== 0) {
         event.preventDefault();
         spyMoveDir = spyDir;
-      } else if (pissDir) {
-        event.preventDefault();
-        nudgePissAim(pissDir);
       } else if (event.key === "Escape") {
         event.preventDefault();
         closeDialog(activeDialog);
@@ -1762,15 +1776,19 @@
   function openFyllekollen() {
     openDialog(fyllekollenOverlayEl);
     fyllekollenCloseBtn.textContent = "Avbryt";
-    buildNewMaze();
-    playWinSound(false);
-  }
-
-  function buildNewMaze() {
     stopVerdictEffects();
     mazeResultEl.classList.add("hidden");
+    if (mazeStartBtn) mazeStartBtn.classList.remove("hidden");
     mazeState = createMaze(MAZE_COLS, MAZE_ROWS);
+    mazeState.ready = true;
     drawMaze();
+    mazeTimerEl.textContent = `${(Math.max(1, mazeState.stepsNeeded) * MAZE_MS_PER_STEP / 1000).toFixed(1)} s`;
+  }
+
+  function onMazeStart() {
+    if (!mazeState) return;
+    mazeState.ready = false;
+    if (mazeStartBtn) mazeStartBtn.classList.add("hidden");
     startMazeTimer();
   }
 
@@ -1955,7 +1973,7 @@
   // Steps the mouse one cell in `dir` when no wall blocks it; reaching the goal
   // ends the round.
   function moveMaze(dir) {
-    if (!mazeState || mazeState.solved) return;
+    if (!mazeState || mazeState.solved || mazeState.ready) return;
     const { cols, cells, player, goal } = mazeState;
     const data = cells[player.r * cols + player.c];
     if (data[dir]) return;
@@ -2049,31 +2067,21 @@
   function openReaktionskollen() {
     openDialog(reaktionOverlayEl);
     reaktionCloseBtn.textContent = "Stäng";
-    startReaktionRound();
-  }
-
-  function startReaktionRound() {
     clearReaktionTimers();
     stopVerdictEffects();
-    reaktionPhase = "countdown";
-    reaktionStageEl.dataset.state = "countdown";
+    reaktionPhase = "ready";
+    reaktionStageEl.dataset.state = "ready";
     reaktionTargetEl.classList.add("hidden");
     reaktionResultEl.classList.add("hidden");
-    reaktionCountdownEl.classList.remove("hidden");
-    reaktionInstructionEl.textContent = "";
+    reaktionCountdownEl.classList.add("hidden");
+    if (reaktionStartBtn) reaktionStartBtn.classList.remove("hidden");
+    reaktionInstructionEl.textContent = "Tryck på 'Starta' när du är redo!";
+  }
 
-    let n = 5;
-    reaktionCountdownEl.textContent = String(n);
-    reaktionCountdownTimer = window.setInterval(() => {
-      n -= 1;
-      if (n > 0) {
-        reaktionCountdownEl.textContent = String(n);
-      } else {
-        window.clearInterval(reaktionCountdownTimer);
-        reaktionCountdownTimer = null;
-        beginReaktionWaiting();
-      }
-    }, 1000);
+  function onReaktionStart() {
+    if (reaktionPhase !== "ready") return;
+    if (reaktionStartBtn) reaktionStartBtn.classList.add("hidden");
+    beginReaktionWaiting();
   }
 
   function beginReaktionWaiting() {
@@ -2173,34 +2181,23 @@
     populateMemoryWheel(memoryWheelMouseEl);
     openDialog(memoryOverlayEl);
     memoryCloseBtn.textContent = "Stäng";
-    startMemoryRound();
-  }
-
-  function startMemoryRound() {
     clearMemoryTimers();
     stopVerdictEffects();
-    memoryPhase = "countdown";
-    memoryStageEl.dataset.state = "countdown";
+    memoryPhase = "ready";
+    memoryStageEl.dataset.state = "ready";
     memoryFlashEl.classList.add("hidden");
     memoryAnswerEl.classList.add("hidden");
     memoryResultEl.classList.add("hidden");
-    memoryCountdownEl.classList.remove("hidden");
-    memoryInstructionEl.textContent = "";
-
+    memoryCountdownEl.classList.add("hidden");
+    if (memoryStartBtn) memoryStartBtn.classList.remove("hidden");
+    memoryInstructionEl.textContent = "Räkna hur många 🍺 och 🐭 som blinkar till!";
     memoryAnswer = { beer: randomCount(), mouse: randomCount() };
+  }
 
-    let n = 5;
-    memoryCountdownEl.textContent = String(n);
-    memoryCountdownTimer = window.setInterval(() => {
-      n -= 1;
-      if (n > 0) {
-        memoryCountdownEl.textContent = String(n);
-      } else {
-        window.clearInterval(memoryCountdownTimer);
-        memoryCountdownTimer = null;
-        flashMemory();
-      }
-    }, 1000);
+  function onMemoryStart() {
+    if (memoryPhase !== "ready") return;
+    if (memoryStartBtn) memoryStartBtn.classList.add("hidden");
+    flashMemory();
   }
 
   function randomCount() {
@@ -2319,33 +2316,22 @@
   function openSpykollen() {
     openDialog(spykollenOverlayEl);
     spyCloseBtn.textContent = "Stäng";
-    startSpyRound();
-  }
-
-  function startSpyRound() {
     stopSpyGame();
     stopVerdictEffects();
     spyResultEl.classList.add("hidden");
-    spyCountdownEl.classList.remove("hidden");
+    spyCountdownEl.classList.add("hidden");
+    if (spyStartBtn) spyStartBtn.classList.remove("hidden");
     spyScoreEl.textContent = "0";
-    spykollenInstructionEl.textContent = "";
-
+    spykollenInstructionEl.textContent = "Styr soffan och undvik spyorna!";
     setupSpyGame();
     drawSpy();
+    spyPhase = "ready";
+  }
 
-    spyPhase = "countdown";
-    let n = SPY_COUNTDOWN;
-    spyCountdownEl.textContent = String(n);
-    spyCountdownTimer = window.setInterval(() => {
-      n -= 1;
-      if (n > 0) {
-        spyCountdownEl.textContent = String(n);
-      } else {
-        window.clearInterval(spyCountdownTimer);
-        spyCountdownTimer = null;
-        beginSpyPlay();
-      }
-    }, 700);
+  function onSpyStart() {
+    if (spyPhase !== "ready") return;
+    if (spyStartBtn) spyStartBtn.classList.add("hidden");
+    beginSpyPlay();
   }
 
   // Sizes the canvas to the wrapper and lays out the couch + nausea row.
@@ -2380,6 +2366,8 @@
       nauseaX,
       vomits: [],
       avoided: 0,
+      avoidedWaves: new Set(),
+      waveCount: 0,
       startAt: 0,
       lastFrame: 0,
       lastSpawnAt: 0,
@@ -2440,8 +2428,11 @@
           onSpyHit();
           return;
         }
-        g.avoided += 1;
-        spyScoreEl.textContent = String(g.avoided);
+        if (!g.avoidedWaves.has(v.waveId)) {
+          g.avoidedWaves.add(v.waveId);
+          g.avoided += 1;
+          spyScoreEl.textContent = String(g.avoided);
+        }
       }
     }
     g.vomits = g.vomits.filter((v) => v.y < g.h + g.vomitSize);
@@ -2465,10 +2456,11 @@
     const p = Math.min(0.65, elapsed * 0.035);
     while (burst < maxBurst && Math.random() < p) burst += 1;
 
+    const waveId = ++g.waveCount;
     for (let i = 0; i < burst; i++) {
       const j = i + Math.floor(Math.random() * (available.length - i));
       [available[i], available[j]] = [available[j], available[i]];
-      g.vomits.push({ x: g.nauseaX[available[i]], y: g.nauseaY + g.nauseaSize * 0.5, resolved: false });
+      g.vomits.push({ x: g.nauseaX[available[i]], y: g.nauseaY + g.nauseaSize * 0.5, resolved: false, waveId });
     }
   }
 
@@ -2703,19 +2695,16 @@
 
   function onPissStart() {
     if (pissPhase !== "ready") return;
-    pissStartBtn.classList.add("hidden");
-    // iOS gates orientation events behind a permission prompt that must be
-    // requested from a user gesture — this click is that gesture. A denied or
-    // absent sensor just leaves the pointer/arrow-key steering.
+    if (pissStartBtn) pissStartBtn.classList.add("hidden");
     const D = window.DeviceOrientationEvent;
     const permission =
       D && typeof D.requestPermission === "function"
         ? D.requestPermission().catch(() => "denied")
         : Promise.resolve("granted");
     const proceed = () => {
-      if (pissPhase !== "ready") return; // dialog closed while the prompt was up
+      if (pissPhase !== "ready") return;
       window.addEventListener("deviceorientation", onPissOrientation);
-      startPissCountdown();
+      beginPissPlay();
     };
     permission.then(proceed, proceed);
   }
@@ -2793,9 +2782,18 @@
       return;
     }
 
-    // Glide the tip toward the steered target at the capped speed.
     const dt = Math.min(0.05, (now - g.lastFrame) / 1000);
     g.lastFrame = now;
+
+    // Smooth multi-key arrow / WASD keyboard steering
+    const kSpeed = g.w * 0.9 * dt;
+    if (pissKeysPressed.has("ArrowLeft") || pissKeysPressed.has("a") || pissKeysPressed.has("A")) g.targetX -= kSpeed;
+    if (pissKeysPressed.has("ArrowRight") || pissKeysPressed.has("d") || pissKeysPressed.has("D")) g.targetX += kSpeed;
+    if (pissKeysPressed.has("ArrowUp") || pissKeysPressed.has("w") || pissKeysPressed.has("W")) g.targetY -= kSpeed;
+    if (pissKeysPressed.has("ArrowDown") || pissKeysPressed.has("s") || pissKeysPressed.has("S")) g.targetY += kSpeed;
+    g.targetX = Math.max(0, Math.min(g.w, g.targetX));
+    g.targetY = Math.max(12, Math.min(g.originY - 60, g.targetY));
+
     const dxT = g.targetX - g.aimX;
     const dyT = g.targetY - g.aimY;
     const dist = Math.hypot(dxT, dyT);

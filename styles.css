@@ -2432,8 +2432,7 @@ button:focus-visible {
   pointer-events: none;
 }
 
-/* The explicit start button exists because iOS only grants tilt-sensor access
-   from a user gesture — see onPissStart. */
+.minigame-start-btn,
 .piss-start-btn {
   position: absolute;
   top: 50%;
@@ -2441,6 +2440,14 @@ button:focus-visible {
   transform: translate(-50%, -50%);
   min-height: 52px;
   padding: 0 1.6rem;
+  z-index: 15;
+}
+
+.minigame-start-btn:hover,
+.piss-start-btn:hover,
+.minigame-start-btn:focus-visible,
+.piss-start-btn:focus-visible {
+  transform: translate(-50%, calc(-50% - 2px)) !important;
 }
 
 .piss-hud {
