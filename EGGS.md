@@ -14,7 +14,7 @@ En komplett guide över alla dolda easter eggs, hemliga koder och interaktiva ef
 
 ### 2. 🤮 Mouse Trap Slime Explosion
 - **Aktivering:** Klicka på ditt eget spelarnamn 3 gånger i snabb följd när du spelas som `Mouse Trap Pukie 👴🏻`.
-- **Effekt:** Utlöser en skärmomfattande neongrön slem-explosion (`#slime-overlay`), ett geggigt slem-ljudeffekt och belönar Pukie med **+1 bonus-mulligan** (totalt upp till 4 vaskade rutor per bricka)!
+- **Effekt:** Utlöser en skärmomfattande neongrön slem-explosion (`#slime-overlay`), ett geggigt slem-ljudeffekt och belönar Pukie med **+1 bonus-mulligan** vid första aktiveringen (ytterligare utlösningar visar slem-effekten men ger inga fler bonus-mulligans).
 
 ---
 

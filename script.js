@@ -1591,10 +1591,15 @@
   }
 
   function triggerMouseTrapSlimeExplosion() {
+    let mulliganGranted = false;
     if (state) {
-      state.bonusMulligans = (state.bonusMulligans || 0) + 1;
-      saveState();
-      updateMenuMulliganButton();
+      if (!state.pukeMulliganGranted) {
+        state.pukeMulliganGranted = true;
+        state.bonusMulligans = (state.bonusMulligans || 0) + 1;
+        saveState();
+        updateMenuMulliganButton();
+        mulliganGranted = true;
+      }
     }
 
     playSlimeSound();
@@ -1608,13 +1613,22 @@
     }
 
     launchSlimeRain(3500);
-    speakVerdict("Mouse Trap Slime Explosion! Pukie har dränkt skärmen i slem och får plus ett bonus mulligan!");
 
-    showPartyFlash(
-      "🤮 SLIME EXPLOSION!",
-      "Mouse Trap Pukie utlöste en neongrön slem-explosion! +1 Bonus Mulligan tilldelad!",
-      "Mouse Trap Slime Explosion! Pukie får plus ett bonus mulligan!"
-    );
+    if (mulliganGranted) {
+      speakVerdict("Mouse Trap Slime Explosion! Pukie har dränkt skärmen i slem och får plus ett bonus mulligan!");
+      showPartyFlash(
+        "🤮 SLIME EXPLOSION!",
+        "Mouse Trap Pukie utlöste en neongrön slem-explosion! +1 Bonus Mulligan tilldelad!",
+        "Mouse Trap Slime Explosion! Pukie får plus ett bonus mulligan!"
+      );
+    } else {
+      speakVerdict("Mouse Trap Slime Explosion! Skärmen dränks i slem!");
+      showPartyFlash(
+        "🤮 SLIME EXPLOSION!",
+        "Mouse Trap Pukie utlöste slem-explosionen igen! (Bonus-mulligan redan uthämtad).",
+        "Mouse Trap Slime Explosion! Skärmen dränks i slem!"
+      );
+    }
   }
 
   function playSlimeSound() {
