@@ -4181,6 +4181,12 @@ ctx.restore();
       fmt: (v) => `${v} träffade 🚽`,
       speech: (v) => `${v} träffade toaletter`,
     },
+    sluddra: {
+      label: "Sluddraru?",
+      better: "lower",
+      fmt: (v) => `${(v / 1000).toFixed(2)} s`,
+      speech: (v) => `${(v / 1000).toFixed(2)} sekunder i Sluddraru`,
+    },
   };
 
   function loadStats() {
@@ -4199,12 +4205,13 @@ ctx.restore();
       minne: "minne",
       spy: "spykollen",
       piss: "piss",
+      sluddra: "sluddra",
     };
     if (activeDuel && duelGameMap[gameId] === activeDuel.gameId) {
       recordDuelScore(activeDuel.gameId, value);
     }
 
-    if (currentMode !== MODE_LIVE || !activePlayerId) return;
+    if (!activePlayerId) return;
     const meta = REKORD_META[gameId];
     if (!meta || typeof value !== "number" || !isFinite(value)) return;
     const stats = loadStats();
@@ -4213,16 +4220,20 @@ ctx.restore();
     if (!isBetterRecord(meta, value, prev)) return;
     entry[gameId] = { v: value, at: Date.now() };
     safeSet(STATS_KEY, JSON.stringify(stats));
-    if (!prev) return; // first-ever result seeds silently
-    const label = getPlayer(activePlayerId).label;
-    // Let the round's own verdict effects land before the takeover.
+
+    const playerObj = getPlayer(activePlayerId);
+    const label = playerObj ? playerObj.label : activePlayerId;
+    const prevInfo = prev ? ` (Tidigare: ${meta.fmt(prev.v)})` : " (Nytt rekord!)";
+
+    // Trigger celebration splash screen popup!
     window.setTimeout(() => {
       showPartyFlash(
         "🏆 NYTT REKORD!",
-        `${label}: ${meta.label} — ${meta.fmt(value)}`,
+        `${label}: ${meta.label} — ${meta.fmt(value)}${prevInfo}`,
         `Nytt rekord! ${spokenName(activePlayerId)}: ${meta.speech(value)}`
       );
-    }, 1400);
+    }, 1000);
+
     publishParty({ t: "rekord", p: activePlayerId, g: gameId, v: value });
   }
 
