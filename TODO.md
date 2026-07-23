@@ -25,7 +25,8 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 - **🌌 Hyper-Realistisk 3D Tilt Fysik för Bingorutor:** Gyro/touch orientation på bingorutor (`perspective(1000px) rotateX/Y`) så reflektioner och metallic light sweeps rör sig med telefonens lutning.
 - **⚡ Plasma Arc & Laser-linjer vid Bingo:** Animerade glowing plasma-lasrar som förbinder rutorna i en vinnande bingo-rad innan partikel-fyrverkerier exploderar.
 - **💥 Vatten/Partikel Shockwave Engine:** Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
-- **Uppdaterade Emojis & Namnvisning:** Spelarna (AFC Master, Prospect m.fl.) har nya emojis och visas i toppbaren med förkortad version (endast emojis) för att spara plats.
+- **🔠 Minispel: Sluddraru?:** Nytt minispel där spelaren ska stava "STYGG MUS" i rätt ordning från 8 slumpmässigt utspridda bokstäver. Dubletter (`S` och `G`) accepteras flexibelt, och felklick ger +1,0 sekunders straffpåläggning på sluttiden.
+- **🎵 DDKO.mp3 Låt vid Hela Brickan:** Spelar upp `assets/audio/DDKO.mp3` automatiskt när någon fyller sista rutan och vinner Hela Brickan Klar! (synkas även över Party-nätverket).
 
 
 ---

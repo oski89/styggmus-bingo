@@ -180,6 +180,10 @@
             <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🚽</div>
             <span class="app-tile-name">Pissepaus</span>
           </button>
+          <button id="test-sluddra-btn" class="app-tile" type="button">
+            <div class="app-tile-icon app-tile-icon--emoji" aria-hidden="true">🔠</div>
+            <span class="app-tile-name">Sluddraru?</span>
+          </button>
         </div>
 
         <button class="exit-btn" type="button">Avsluta</button>
@@ -451,6 +455,38 @@
         </div>
         <div class="confirm-actions pissepaus-footer">
           <button id="piss-close-btn" class="secondary-btn" type="button">Stäng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sluddraru? mini-game (unscramble STYGG MUS) -->
+    <div id="sluddra-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="sluddra-title">
+      <div class="overlay-card sluddra-card">
+        <h2 id="sluddra-title" class="sluddra-title">Sluddraru?</h2>
+        <p class="minigame-blurb">Klicka på bokstäverna för att stava <strong>STYGG MUS</strong>!</p>
+        <p id="sluddra-instruction" class="sluddra-instruction"></p>
+        <div class="sluddra-slots" aria-label="Målord">
+          <span class="sluddra-slot" data-idx="0">_</span>
+          <span class="sluddra-slot" data-idx="1">_</span>
+          <span class="sluddra-slot" data-idx="2">_</span>
+          <span class="sluddra-slot" data-idx="3">_</span>
+          <span class="sluddra-slot" data-idx="4">_</span>
+          <span class="sluddra-slot-space"></span>
+          <span class="sluddra-slot" data-idx="5">_</span>
+          <span class="sluddra-slot" data-idx="6">_</span>
+          <span class="sluddra-slot" data-idx="7">_</span>
+        </div>
+        <div class="sluddra-stage-wrap">
+          <canvas id="sluddra-canvas" class="sluddra-canvas" aria-label="Klicka bokstäver i rätt ordning"></canvas>
+          <button id="sluddra-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
+          <div id="sluddra-result" class="sluddra-result hidden"></div>
+        </div>
+        <div class="sluddra-hud" aria-live="off">
+          <span id="sluddra-timer" class="sluddra-timer">0.0 s</span>
+          <span id="sluddra-penalty" class="sluddra-penalty hidden">+1s straff!</span>
+        </div>
+        <div class="confirm-actions sluddra-footer">
+          <button id="sluddra-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
     </div>

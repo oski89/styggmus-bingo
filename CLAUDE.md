@@ -112,9 +112,9 @@ The ⋮ **menu button** in the top bar (`menu-btn` → opens `#menu-overlay`, `.
 
 Two passwords map to two modes (`PASSWORDS` in `script.js`): `SMB` → `live`,
 `MGT` → `test`. **Test mode** skips the player gate and shows
-`#test-screen`, a menu whose five tiles launch each mini-game
+`#test-screen`, a menu whose six tiles launch each mini-game
 (`openFyllekollen`/`openReaktionskollen`/`openMinneslucka`/`openSpykollen`/
-`openPissepaus`) directly for testing. Auth and the active mode are session-only
+`openPissepaus`/`openSluddraru`) directly for testing. Auth and the active mode are session-only
 (`sessionStorage`: `styggmus-bingo-auth-v1`, `styggmus-bingo-mode-v1`); "Avsluta"
 clears them and returns to the password gate.
 

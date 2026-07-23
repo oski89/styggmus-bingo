@@ -398,6 +398,20 @@
   const testPissepausBtn = document.getElementById("test-pissepaus-btn");
   const pissKeysPressed = new Set();
 
+  const sluddraOverlayEl = document.getElementById("sluddra-overlay");
+  const sluddraInstructionEl = document.getElementById("sluddra-instruction");
+  const sluddraCanvas = document.getElementById("sluddra-canvas");
+  const sluddraStartBtn = document.getElementById("sluddra-start-btn");
+  const sluddraTimerEl = document.getElementById("sluddra-timer");
+  const sluddraPenaltyEl = document.getElementById("sluddra-penalty");
+  const sluddraResultEl = document.getElementById("sluddra-result");
+  const sluddraCloseBtn = document.getElementById("sluddra-close-btn");
+  const testSluddraBtn = document.getElementById("test-sluddra-btn");
+  let sluddraGame = null;
+  let sluddraPhase = "idle";
+  let sluddraRaf = null;
+  let sluddraPenaltyTimeout = null;
+
   const rewardOverlayEl = document.getElementById("reward-overlay");
   const rewardTitleEl = document.getElementById("reward-title");
   const rewardBodyEl = document.getElementById("reward-body");
@@ -694,6 +708,14 @@
     pissepausOverlayEl.addEventListener("click", (e) => {
       if (e.target === pissepausOverlayEl) closeDialog(pissepausOverlayEl);
     });
+
+    testSluddraBtn.addEventListener("click", openSluddraru);
+    if (sluddraStartBtn) sluddraStartBtn.addEventListener("click", onSluddraStart);
+    sluddraCloseBtn.addEventListener("click", () => closeDialog(sluddraOverlayEl));
+    sluddraOverlayEl.addEventListener("click", (e) => {
+      if (e.target === sluddraOverlayEl) closeDialog(sluddraOverlayEl);
+    });
+    sluddraCanvas.addEventListener("pointerdown", onSluddraCanvasClick);
     // Sensor-less steering: dragging (or just moving the mouse) over the stage
     // aims the stream directly.
     pissCanvas.addEventListener("pointerdown", onPissPointer);
@@ -2843,7 +2865,7 @@
     ctx.beginPath();
     ctx.arc(g.toilet.x, g.toilet.y, ringR, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.restore();
+ctx.restore();
 
     ctx.font = `${Math.floor(g.toiletSize)}px serif`;
     ctx.fillText("🚽", g.toilet.x, g.toilet.y);
@@ -2915,25 +2937,246 @@
       return { cls: "red", label: "Nykter", message: "Kirurgisk träffsäkerhet. Du behöver öka takten.<br>Fortsätt dricka.", alarm: true };
     }
     if (hits >= PISS_SALONG_MIN) {
-      return { cls: "yellow", label: "Salongsberusad", message: "Lite stänk vid sidan om. Du är på god väg.<br>Fortsätt dricka." };
+      return { cls: "yellow", label: "Salongsberusad", message: "Stabil stråle! Du håller balansen bra.<br>Skål!" };
     }
-    return { cls: "green", label: "Full som ett ägg", message: "Du pissade mest på väggarna. Ser bra ut.<br>Fortsätt dricka.", celebrate: true };
+    return { cls: "green", label: "Full som ett ägg", message: "Skvätte överallt — badrummet ser förfärligt ut.<br>Fortsätt dricka.", celebrate: true };
   }
 
-  // rAF + countdown + the orientation listener are all torn down here; called
-  // on round teardown and from closeDialog so a closed dialog can't keep
-  // listening to the gyroscope.
-  function stopPissGame() {
-    if (pissRaf) {
-      window.cancelAnimationFrame(pissRaf);
-      pissRaf = null;
+  // ── Sluddraru? (unscramble STYGG MUS mini-game) ───────────────────────────
+  const SLUDDRA_TARGET = ["S", "T", "Y", "G", "G", "M", "U", "S"];
+  const KLUNK_SLUDDRA_MAX = 8;
+
+  function openSluddraru() {
+    openDialog(sluddraOverlayEl);
+    sluddraCloseBtn.textContent = "Stäng";
+    stopSluddraGame();
+    stopVerdictEffects();
+    sluddraResultEl.classList.add("hidden");
+    if (sluddraStartBtn) sluddraStartBtn.classList.remove("hidden");
+    sluddraPenaltyEl.classList.add("hidden");
+    sluddraInstructionEl.textContent = "Stava STYGG MUS i rätt ordning genom att klicka på bokstäverna!";
+    resetSluddraSlots();
+    setupSluddraGame();
+    drawSluddra();
+    updateSluddraTimer(0);
+    sluddraPhase = "ready";
+  }
+
+  function resetSluddraSlots() {
+    const slots = sluddraOverlayEl.querySelectorAll(".sluddra-slot");
+    slots.forEach((s) => {
+      s.textContent = "_";
+      s.classList.remove("filled");
+    });
+  }
+
+  function setupSluddraGame() {
+    const available = (sluddraCanvas.parentElement && sluddraCanvas.parentElement.clientWidth) || 300;
+    const w = available;
+    const h = Math.round(w * 1.0);
+    const ratio = window.devicePixelRatio || 1;
+    sluddraCanvas.width = Math.floor(w * ratio);
+    sluddraCanvas.height = Math.floor(h * ratio);
+    sluddraCanvas.style.height = `${h}px`;
+    const ctx = sluddraCanvas.getContext("2d");
+    if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    const charList = SLUDDRA_TARGET.slice();
+    const tileSize = Math.max(34, Math.floor(w * 0.17));
+    const pad = tileSize * 0.6;
+    const tiles = [];
+
+    for (let i = 0; i < charList.length; i++) {
+      let x = 0, y = 0, collision = true;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        x = pad + Math.random() * (w - 2 * pad);
+        y = pad + Math.random() * (h - 2 * pad);
+        collision = tiles.some((t) => Math.hypot(t.x - x, t.y - y) < tileSize * 1.15);
+        if (!collision) break;
+      }
+      const rot = (Math.random() - 0.5) * 0.4;
+      tiles.push({
+        id: i,
+        char: charList[i],
+        x,
+        y,
+        size: tileSize,
+        rot,
+        solved: false,
+        wobbleUntil: 0,
+      });
     }
-    if (pissCountdownTimer) {
-      window.clearInterval(pissCountdownTimer);
-      pissCountdownTimer = null;
+
+    sluddraGame = {
+      w,
+      h,
+      tiles,
+      currentIdx: 0,
+      penaltyMs: 0,
+      startAt: 0,
+      lastFrame: 0,
+    };
+  }
+
+  function onSluddraStart() {
+    if (sluddraPhase !== "ready" || !sluddraGame) return;
+    if (sluddraStartBtn) sluddraStartBtn.classList.add("hidden");
+    sluddraPhase = "playing";
+    sluddraInstructionEl.textContent = "Klicka på nästa bokstav i STYGG MUS!";
+    const now = performance.now();
+    sluddraGame.startAt = now;
+    sluddraGame.lastFrame = now;
+    sluddraRaf = window.requestAnimationFrame(sluddraLoop);
+  }
+
+  function stopSluddraGame() {
+    sluddraPhase = "idle";
+    if (sluddraRaf) {
+      window.cancelAnimationFrame(sluddraRaf);
+      sluddraRaf = null;
     }
-    window.removeEventListener("deviceorientation", onPissOrientation);
-    pissPhase = "idle";
+  }
+
+  function onSluddraCanvasClick(event) {
+    if (sluddraPhase !== "playing" || !sluddraGame) return;
+    event.preventDefault();
+    const rect = sluddraCanvas.getBoundingClientRect();
+    const clickX = ((event.clientX - rect.left) / rect.width) * sluddraGame.w;
+    const clickY = ((event.clientY - rect.top) / rect.height) * sluddraGame.h;
+
+    const g = sluddraGame;
+    const expectedChar = SLUDDRA_TARGET[g.currentIdx];
+    const clickedTile = g.tiles.find(
+      (t) => !t.solved && Math.hypot(t.x - clickX, t.y - clickY) <= t.size * 0.75
+    );
+
+    if (!clickedTile) return;
+
+    if (clickedTile.char === expectedChar) {
+      clickedTile.solved = true;
+      vibrate(25);
+      const slotEl = sluddraOverlayEl.querySelector(`.sluddra-slot[data-idx="${g.currentIdx}"]`);
+      if (slotEl) {
+        slotEl.textContent = clickedTile.char;
+        slotEl.classList.add("filled");
+      }
+      g.currentIdx += 1;
+      drawSluddra();
+
+      if (g.currentIdx === SLUDDRA_TARGET.length) {
+        endSluddraRound();
+      }
+    } else {
+      g.penaltyMs += 1000;
+      clickedTile.wobbleUntil = performance.now() + 400;
+      vibrate(80);
+      showSluddraPenalty();
+      drawSluddra();
+    }
+  }
+
+  function showSluddraPenalty() {
+    sluddraPenaltyEl.classList.remove("hidden");
+    if (sluddraPenaltyTimeout) window.clearTimeout(sluddraPenaltyTimeout);
+    sluddraPenaltyTimeout = window.setTimeout(() => {
+      sluddraPenaltyEl.classList.add("hidden");
+    }, 1200);
+  }
+
+  function sluddraLoop(now) {
+    if (sluddraPhase !== "playing" || !sluddraGame) return;
+    const g = sluddraGame;
+    const elapsedMs = now - g.startAt + g.penaltyMs;
+    updateSluddraTimer(elapsedMs);
+    drawSluddra(now);
+    sluddraRaf = window.requestAnimationFrame(sluddraLoop);
+  }
+
+  function updateSluddraTimer(ms) {
+    sluddraTimerEl.textContent = `${(Math.max(0, ms) / 1000).toFixed(1)} s`;
+  }
+
+  function drawSluddra(now = performance.now()) {
+    const g = sluddraGame;
+    if (!g || !(sluddraCanvas instanceof HTMLCanvasElement)) return;
+    const ctx = sluddraCanvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, g.w, g.h);
+    drawNeonFloor(ctx, g.w, g.h);
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    for (const t of g.tiles) {
+      if (t.solved) continue;
+
+      ctx.save();
+      let rot = t.rot + Math.sin(now / 400 + t.id) * 0.08;
+      if (now < t.wobbleUntil) {
+        rot += Math.sin(now / 40) * 0.25;
+      }
+      ctx.translate(t.x, t.y);
+      ctx.rotate(rot);
+
+      const sz = t.size;
+      const r = 8;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(-sz / 2, -sz / 2, sz, sz, r);
+      } else {
+        ctx.rect(-sz / 2, -sz / 2, sz, sz);
+      }
+      ctx.fillStyle = now < t.wobbleUntil ? "rgba(180, 20, 40, 0.9)" : "rgba(22, 9, 42, 0.88)";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = now < t.wobbleUntil ? "#ff3a3a" : "rgba(45, 226, 255, 0.75)";
+      ctx.shadowColor = now < t.wobbleUntil ? "rgba(255, 58, 58, 0.9)" : "rgba(45, 226, 255, 0.6)";
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+
+      ctx.font = `900 ${Math.round(sz * 0.58)}px sans-serif`;
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
+      ctx.shadowBlur = 8;
+      ctx.fillText(t.char, 0, 1);
+      ctx.restore();
+    }
+  }
+
+  function endSluddraRound() {
+    stopSluddraGame();
+    sluddraPhase = "done";
+    const totalMs = Math.round((performance.now() - sluddraGame.startAt) + sluddraGame.penaltyMs);
+    const sec = totalMs / 1000;
+    const level = sluddraLevel(sec);
+    updateSluddraTimer(totalMs);
+    sluddraInstructionEl.textContent = "";
+    drawSluddra();
+
+    sluddraResultEl.dataset.level = level.cls;
+    sluddraResultEl.innerHTML =
+      `<span class="sluddra-result-headline">${level.label}</span>` +
+      `<span class="sluddra-result-score">${sec.toFixed(2)} s</span>` +
+      `<span class="sluddra-result-msg">${level.message}</span>`;
+    sluddraResultEl.classList.remove("hidden");
+
+    if (level.alarm) signalSoberAlarm(sluddraOverlayEl);
+    else if (level.celebrate) signalDrunkCelebration(sluddraOverlayEl);
+    else playWinSound(false);
+
+    const klunkar = level.cls === "green" ? KLUNK_SLUDDRA_MAX : (level.cls === "yellow" ? 5 : 2);
+    recordRewardResult("sluddra", klunkar, level.label);
+    recordStat("sluddra", totalMs);
+  }
+
+  function sluddraLevel(sec) {
+    if (sec < 3.0) {
+      return { cls: "red", label: "Nykter", message: "Blixtsnabb stavning! Du är allt för nykter.<br>Fortsätt dricka.", alarm: true };
+    }
+    if (sec <= 5.0) {
+      return { cls: "yellow", label: "Salongsberusad", message: "Snyggt stavat! Du är perfekt salongsberusad.<br>Skål!" };
+    }
+    return { cls: "green", label: "Full som ett ägg", message: "Sluddrigt värre! Bokstäverna hoppade runt för dig.<br>Fortsätt dricka.", celebrate: true };
   }
 
   // ── Win detection ─────────────────────────────────────────────────────────
@@ -3090,6 +3333,7 @@
     minne: { open: openMinneslucka, overlay: memoryOverlayEl, closeBtn: memoryCloseBtn, label: "Minnesluckatestet", blurb: "Räkna 🍺 och 🐭" },
     spy: { open: openSpykollen, overlay: spykollenOverlayEl, closeBtn: spyCloseBtn, label: "Spykollen", blurb: "Undvik 🤮 med 🛋️ - en hommage till Per" },
     piss: { open: openPissepaus, overlay: pissepausOverlayEl, closeBtn: pissCloseBtn, label: "Pissepaus", blurb: "Luta mobilen och sikta 🍆-strålen på 🚽" },
+    sluddra: { open: openSluddraru, overlay: sluddraOverlayEl, closeBtn: sluddraCloseBtn, label: "Sluddraru?", blurb: "Stava STYGG MUS i rätt ordning" },
   };
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
@@ -3549,13 +3793,14 @@
   // ── 1v1 Duel System ───────────────────────────────────────────────────────
 
   let activeDuel = null;
-  const DUEL_GAMES = ["reaktion", "minne", "fyllekollen", "spykollen", "piss"];
+  const DUEL_GAMES = ["reaktion", "minne", "fyllekollen", "spykollen", "piss", "sluddra"];
   const DUEL_GAME_NAMES = {
     reaktion: "Reaktionskollen",
     minne: "Minnesluckatestet",
     fyllekollen: "Fyllekollen",
     spykollen: "Spykollen",
     piss: "Pissepaus",
+    sluddra: "Sluddraru?",
   };
 
   function sendDuelInvite(targetPlayerId) {
@@ -3631,6 +3876,7 @@
     else if (gameId === "fyllekollen") openFyllekollen();
     else if (gameId === "spykollen") openSpykollen();
     else if (gameId === "piss") openPissepaus();
+    else if (gameId === "sluddra") openSluddraru();
   }
 
   function recordDuelScore(gameId, scoreVal) {
@@ -3660,7 +3906,7 @@
     const s1 = activeDuel.challengerScore;
     const s2 = activeDuel.targetScore;
 
-    const lowerIsBetter = gameId === "reaktion" || gameId === "minne";
+    const lowerIsBetter = gameId === "reaktion" || gameId === "minne" || gameId === "sluddra";
     let challengerWon = lowerIsBetter ? s1 < s2 : s1 > s2;
     let isTie = s1 === s2;
 

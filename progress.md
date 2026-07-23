@@ -31,14 +31,15 @@ och Android) och vara tillgänglig via min public github.
 
 - Brickan är 4×4 (`BOARD_SIZE = 4`) med 16 rutor.
 - Förenklad bingo-vy: toppmeny (⋮), ← byt spelare, inline ölräknare (−/🍺/+).
-- Fem minigames (roterar på varje tillagd öl + testläge `MGT`):
+- Sex minigames (roterar på varje tillagd öl + testläge `MGT`):
   - **Reaktionskollen** — reaktionstid när 🍺 dyker upp
   - **Minnesluckatestet** — räkna flashade 🍺/🐭
   - **Fyllekollen** — swipe-maze, timed
   - **Spykollen** — dodge-spel (soffa vs 🤮)
   - **Pissepaus** — tilt/sikta-stream mot 🚽
+  - **Sluddraru?** — klicka bokstäver för att stava STYGG MUS i rätt ordning (+1s straff per felklick)
 - Bingo-rewards styrs av minigame-resultat i klunkar; full bricka spelar alla
-  fem i följd och summerar.
+  sex i följd och summerar (och spelar `DDKO.mp3`).
 - Delade verdict-nivåer: Nykter (alarm) / Salongsberusad / Full som ett ägg
   (firande).
 
