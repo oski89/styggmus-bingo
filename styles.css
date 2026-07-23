@@ -2086,10 +2086,19 @@ button:focus-visible {
 
 .board.gyllene-musen-active .cell.checked,
 .board.golden-egg-active .cell.checked {
-  background: linear-gradient(135deg, #ff8c00 0%, #ffd700 50%, #ff4500 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 25px rgba(255, 140, 0, 0.9), inset 0 0 20px rgba(255, 215, 0, 0.9) !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+  background: linear-gradient(135deg, #3d2200 0%, #663d00 50%, #291400 100%) !important;
+  color: #fff8dc !important;
+  border-color: #ffe66d !important;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.85), inset 0 0 18px rgba(0, 0, 0, 0.85) !important;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95) !important;
+}
+
+.board.gyllene-musen-active .cell.checked::after,
+.board.golden-egg-active .cell.checked::after {
+  content: "👑" !important;
+  border-color: #ffd700 !important;
+  background: rgba(30, 12, 0, 0.92) !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.9) !important;
 }
 
 /* ── Party-länk (live sync) ───────────────────────────────────────────────── */
