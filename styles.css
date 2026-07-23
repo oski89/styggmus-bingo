@@ -932,6 +932,9 @@ button:focus-visible {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.55rem;
   perspective: 1000px;
+  -webkit-perspective: 1000px;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
 .cell {
@@ -963,12 +966,16 @@ button:focus-visible {
   hyphens: auto;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   --rx: 0deg;
   --ry: 0deg;
   --ty: 0px;
   --s: 1;
-  transform: translateY(var(--ty)) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
+  transform: translateZ(0) translateY(var(--ty)) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
+  -webkit-transform: translateZ(0) translateY(var(--ty)) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
   transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
