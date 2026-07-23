@@ -1367,13 +1367,33 @@ button:focus-visible {
 }
 
 .confirm-actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.65rem;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: 0.8rem !important;
 }
 
-.confirm-actions button {
-  min-width: 8rem;
+.confirm-actions button,
+.confirm-actions .minigame-start-btn,
+.confirm-actions .primary-btn,
+.confirm-actions .secondary-btn {
+  flex: 1 1 0 !important;
+  width: 50% !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  padding: 0 0.8rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
 }
 
 /* The generic `.overlay-card button` rule paints every overlay button gold;
