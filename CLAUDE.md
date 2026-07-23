@@ -150,7 +150,7 @@ per real-life person × 8 prompts = 40 total. Player labels, emojis & weights:
 - `afc-master`: `💨 AFC master 🥷` (70 kg)
 - `prospect`: `🛋️ Prospect 🌱` (70 kg)
 
-The bingo top bar uses `shortLabel` (e.g., `💨🥷`) to conserve screen space.
+The bingo top bar uses `compactLabel` acronyms (e.g. `🐭 SMP 👑`, `🤮 MTP 👴🏻`, `👨🏿 PA+FK+BP 🍟`, `💨 AFC 🥷`, `🛋️ PtP+DA 🌱`) on screens < 360px to guarantee everything fits without overflow.
 
 Each player has an `excludedGroup` that is removed before the board is built.
 

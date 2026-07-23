@@ -23,7 +23,7 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 4. `💨 AFC master 🥷` (70 kg)
 5. `🛋️ Prospect 🌱` (70 kg)
 
-*Spelarna visas i toppbaren med en komprimerad emojiversion (t.ex. `💨🥷`) för att spara utrymme.*
+*Spelarna visas i toppbaren med anpassade akronymer på små skärmar (t.ex. `🐭 SMP 👑`, `🤮 MTP 👴🏻`, `👨🏿 PA+FK+BP 🍟`, `💨 AFC 🥷`, `🛋️ PtP+DA 🌱`) för att garantera att alla widgets får plats på alla enheter.*
 
 ### Visuella Uppgraderingar & Easter Eggs
 *För en komplett guide och instruktioner för alla dolda easter eggs, se [EGGS.md](file:///Users/oski/.gemini/antigravity/worktrees/styggmus-bingo/analyze-codebase-next-steps/EGGS.md).*

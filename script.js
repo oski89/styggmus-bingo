@@ -212,6 +212,7 @@
     {
       id: "stygg-mus-president",
       label: "🐭 Stygg mus president 👑",
+      compactLabel: "🐭 SMP 👑",
       shortLabel: "🐭👑",
       excludedGroup: "lagget",
       weightKg: 80,
@@ -219,6 +220,7 @@
     {
       id: "mouse-trap-pukie",
       label: "🤮 Mouse trap pukie 👴🏻",
+      compactLabel: "🤮 MTP 👴🏻",
       shortLabel: "🤮👴🏻",
       excludedGroup: "ks",
       weightKg: 80,
@@ -226,6 +228,7 @@
     {
       id: "pommesansvarig",
       label: "👨🏿 Pommesansvarig 🍟",
+      compactLabel: "👨🏿 PA+FK+BP 🍟",
       shortLabel: "👨🏿🍟",
       excludedGroup: "marcus",
       weightKg: 90,
@@ -233,6 +236,7 @@
     {
       id: "afc-master",
       label: "💨 AFC master 🥷",
+      compactLabel: "💨 AFC 🥷",
       shortLabel: "💨🥷",
       excludedGroup: "oski",
       weightKg: 70,
@@ -240,6 +244,7 @@
     {
       id: "prospect",
       label: "🛋️ Prospect 🌱",
+      compactLabel: "🛋️ PtP+DA 🌱",
       shortLabel: "🛋️🌱",
       excludedGroup: "per",
       weightKg: 70,
@@ -660,6 +665,15 @@
       if (e.target === overlayEl) hideOverlay();
     });
 
+    window.addEventListener("resize", () => {
+      if (activePlayerId) renderCurrentPlayerLabel();
+    });
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        if (activePlayerId) renderCurrentPlayerLabel();
+      }, 100);
+    });
+
     confirmAcceptBtn.addEventListener("click", onConfirmAccept);
     confirmCancelBtn.addEventListener("click", () => closeDialog(confirmOverlayEl));
     confirmOverlayEl.addEventListener("click", (e) => {
@@ -824,13 +838,25 @@
     startBingoGame();
   }
 
+  function renderCurrentPlayerLabel() {
+    if (!activePlayerId || !currentPlayerEl) return;
+    const p = getPlayer(activePlayerId);
+    if (!p) return;
+    const winW = window.innerWidth;
+    if (winW < 360) {
+      currentPlayerEl.textContent = p.compactLabel || p.shortLabel || p.label;
+    } else {
+      currentPlayerEl.textContent = p.label;
+    }
+    currentPlayerEl.title = p.label;
+  }
+
   function startBingoGame() {
     if (!activePlayerId) return;
     state = loadOrCreateState(activePlayerId);
     hideAllScreens();
     appEl.classList.remove("hidden");
-    const p = getPlayer(activePlayerId);
-    currentPlayerEl.textContent = p.shortLabel || p.label;
+    renderCurrentPlayerLabel();
     renderBeerWidget();
     renderBoard();
     updateStatsAndWinState({ triggerEffects: false });
