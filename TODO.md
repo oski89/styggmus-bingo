@@ -34,7 +34,9 @@ Aktuell backlogg och idébank för Stygg Mus Bingo.
 
 
 - [ ] **✏️ Redigerbar lista med egna bingo-frågor i UI:**
-  - Möjlighet att lägga till/redigera egna frågor direkt i appen.
+  - Möjlighet att lägga till/redigera/radera egna frågor direkt i appen (sparas i `localStorage`).
+  - Nytt modal-overlay (`custom-prompts-overlay`) tillgängligt via huvudmenyn.
+  - Frågorna läggs till i en allmän pott (`STYGG_BINGO_CUSTOM_PROMPTS`) som mixas in med standardpotten vid slumpning av ny bricka.
 - [ ] **🔗 Dela min bricka:**
   - Generera en delbar länk eller kod för att dela en specifik bingobricka.
 
