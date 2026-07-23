@@ -309,7 +309,7 @@
 
   let mulliganModeActive = false;
   let selectedMulliganIndices = new Set();
-  let gyroPermissionAsked = false;
+
 
   const partyOverlayEl = document.getElementById("party-overlay");
   const partyBackBtn = document.getElementById("party-back-btn");
@@ -551,34 +551,7 @@
     if (mulliganConfirmBtn) mulliganConfirmBtn.addEventListener("click", onMulliganConfirmPressed);
     if (mulliganCancelBtn) mulliganCancelBtn.addEventListener("click", exitMulliganMode);
     
-    const gyroToast = document.getElementById("gyro-toast");
-    const gyroYes = document.getElementById("gyro-toast-yes");
-    const gyroNo = document.getElementById("gyro-toast-no");
-    if (gyroYes) {
-      gyroYes.addEventListener("click", () => {
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-          DeviceOrientationEvent.requestPermission().then(permissionState => {
-            if (permissionState === 'granted') {
-              window.addEventListener('deviceorientation', handleGyro, { passive: true });
-              if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                DeviceMotionEvent.requestPermission().then(mState => {
-                  if (mState === 'granted') window.addEventListener('devicemotion', handleMotion, { passive: true });
-                }).catch(() => {});
-              } else {
-                window.addEventListener('devicemotion', handleMotion, { passive: true });
-              }
-            }
-          }).catch(console.error);
-        }
-        if (gyroToast) gyroToast.classList.add("hidden");
-      });
-    }
-    if (gyroNo) {
-      gyroNo.addEventListener("click", () => {
-        if (gyroToast) gyroToast.classList.add("hidden");
-        window.addEventListener('pointermove', handlePointerTilt, { passive: true });
-      });
-    }
+
 
     registerAdminUnlock();
     menuAdminBtn.addEventListener("click", onAdminResetPressed);
@@ -1339,105 +1312,7 @@
     window.setTimeout(() => boardEl.classList.remove("deal"), 1100);
   }
 
-  let shakeTiltActive = false;
-  let shakeTiltTimer = null;
-  let lastAcc = { x: 0, y: 0, z: 0 };
-  let lastShakeTime = 0;
 
-  function triggerShakeTilt() {
-    shakeTiltActive = true;
-    if (shakeTiltTimer) window.clearTimeout(shakeTiltTimer);
-    
-    document.querySelectorAll('.cell').forEach((cell, idx) => {
-      cell.classList.remove('shake-wobble');
-      void cell.offsetWidth;
-      cell.style.animationDelay = `${(idx % 4) * 0.05}s`;
-      cell.classList.add('shake-wobble');
-    });
-
-    shakeTiltTimer = window.setTimeout(() => {
-      shakeTiltActive = false;
-      shakeTiltTimer = null;
-      document.querySelectorAll('.cell').forEach(cell => {
-        cell.classList.remove('shake-wobble');
-        cell.style.setProperty('--rx', '0deg');
-        cell.style.setProperty('--ry', '0deg');
-      });
-    }, 2200);
-  }
-
-  function handleMotion(e) {
-    const acc = e.accelerationIncludingGravity || e.acceleration;
-    if (!acc) return;
-    const deltaX = Math.abs((acc.x || 0) - lastAcc.x);
-    const deltaY = Math.abs((acc.y || 0) - lastAcc.y);
-    const deltaZ = Math.abs((acc.z || 0) - lastAcc.z);
-    lastAcc = { x: acc.x || 0, y: acc.y || 0, z: acc.z || 0 };
-
-    if (deltaX + deltaY + deltaZ > 22) {
-      const now = Date.now();
-      if (now - lastShakeTime > 1200) {
-        lastShakeTime = now;
-        triggerShakeTilt();
-      }
-    }
-  }
-
-  let gyroRaf = null;
-  function handleGyro(e) {
-    if (!shakeTiltActive) return;
-    if (e.beta === null || e.gamma === null) return;
-    if (gyroRaf) return;
-    let ry = e.gamma; 
-    let rx = e.beta - 45; 
-    
-    ry = Math.max(-25, Math.min(25, ry));
-    rx = Math.max(-25, Math.min(25, rx));
-
-    gyroRaf = window.requestAnimationFrame(() => {
-      document.querySelectorAll('.cell').forEach(cell => {
-        cell.style.setProperty('--rx', `${-rx}deg`);
-        cell.style.setProperty('--ry', `${ry}deg`);
-      });
-      gyroRaf = null;
-    });
-  }
-
-  let pointerRaf = null;
-  function handlePointerTilt(e) {
-    if (!shakeTiltActive) return;
-    if (pointerRaf) return;
-    const x = (e.clientX / window.innerWidth - 0.5) * 2; 
-    const y = (e.clientY / window.innerHeight - 0.5) * 2;
-    
-    const ry = x * 15; 
-    const rx = -y * 15;
-    
-    pointerRaf = window.requestAnimationFrame(() => {
-      document.querySelectorAll('.cell').forEach(cell => {
-        cell.style.setProperty('--rx', `${rx}deg`);
-        cell.style.setProperty('--ry', `${ry}deg`);
-      });
-      pointerRaf = null;
-    });
-  }
-
-  function askGyro() {
-    if (gyroPermissionAsked) return;
-    gyroPermissionAsked = true;
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      const toast = document.getElementById("gyro-toast");
-      if (toast) toast.classList.remove("hidden");
-    } else {
-      window.addEventListener('deviceorientation', handleGyro, { passive: true });
-      window.addEventListener('devicemotion', handleMotion, { passive: true });
-      window.addEventListener('pointermove', handlePointerTilt, { passive: true });
-    }
-  }
-
-  document.body.addEventListener('click', () => {
-    if (!gyroPermissionAsked) askGyro();
-  }, { passive: true });
 
   function onBoardClick(event) {
     if (!state) return;

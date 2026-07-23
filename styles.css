@@ -932,10 +932,6 @@ button:focus-visible {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.55rem;
-  perspective: 1000px;
-  -webkit-perspective: 1000px;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
 }
 
 .cell {
@@ -969,29 +965,11 @@ button:focus-visible {
   -webkit-user-select: none;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  --rx: 0deg;
-  --ry: 0deg;
   --ty: 0px;
   --s: 1;
-  transform: translateZ(0) translateY(var(--ty)) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
-  -webkit-transform: translateZ(0) translateY(var(--ty)) scale(var(--s)) rotateX(var(--rx)) rotateY(var(--ry));
+  transform: translateY(var(--ty)) scale(var(--s));
+  -webkit-transform: translateY(var(--ty)) scale(var(--s));
   transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
-}
-
-@keyframes shakeWobble3D {
-  0% { transform: translateZ(0) rotateX(0deg) rotateY(0deg) scale(1); }
-  15% { transform: translateZ(14px) rotateX(16deg) rotateY(-18deg) scale(1.03); }
-  30% { transform: translateZ(20px) rotateX(-14deg) rotateY(16deg) scale(1.04); }
-  45% { transform: translateZ(12px) rotateX(10deg) rotateY(-12deg) scale(1.02); }
-  60% { transform: translateZ(6px) rotateX(-8deg) rotateY(8deg) scale(1.01); }
-  75% { transform: translateZ(2px) rotateX(4deg) rotateY(-4deg) scale(1.005); }
-  100% { transform: translateZ(0) rotateX(0deg) rotateY(0deg) scale(1); }
-}
-
-.cell.shake-wobble {
-  animation: shakeWobble3D 1.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .cell::before {
@@ -1000,9 +978,8 @@ button:focus-visible {
   inset: -50%;
   background: linear-gradient(120deg, rgba(255, 45, 120, 0.22), transparent 42%, rgba(45, 226, 255, 0.18));
   opacity: 0;
-  transition: opacity 160ms ease, transform 0.1s ease;
+  transition: opacity 160ms ease;
   pointer-events: none;
-  transform: translate(calc(var(--ry) * 2), calc(var(--rx) * -2));
 }
 
 .cell:hover,
