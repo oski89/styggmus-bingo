@@ -3734,6 +3734,7 @@
     safeRemove(STATS_KEY);
     safeRemove(NIGHT_KEY);
     safeRemove(BEERS_KEY);
+    safeRemove(ANALYTICS_KEY);
     players.forEach((player) => safeRemove(getBoardStorageKey(player.id)));
 
     partyPlayers = {};
@@ -3755,10 +3756,11 @@
     }
     if (activeDialog === rekordOverlayEl) renderRekordList();
     if (activeDialog === partyOverlayEl) renderPartyRoster();
+    if (activeDialog === analyticsOverlayEl) renderAnalyticsOverlay();
 
     if (announce) {
       // A phone that was reset by the spelledare gets a heads-up (no fanfare).
-      showPartyFlash("🔄 NY OMGÅNG", "Spelledaren nollställde allt — rekord, brickor och öl.", "Ny omgång!", { quiet: true });
+      showPartyFlash("🔄 NY OMGÅNG", "Spelledaren nollställde allt — rekord, brickor, öl och statistik.", "Ny omgång!", { quiet: true });
     }
   }
 

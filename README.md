@@ -26,6 +26,7 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 *Spelarna visas i toppbaren med en komprimerad emojiversion (t.ex. `💨🥷`) för att spara utrymme.*
 
 ### Visuella Uppgraderingar & Easter Eggs
+*För en komplett guide och instruktioner för alla dolda easter eggs, se [EGGS.md](file:///Users/oski/.gemini/antigravity/worktrees/styggmus-bingo/analyze-codebase-next-steps/EGGS.md).*
 - **Hyper-Realistisk 3D Tilt Fysik (Skak-aktiverad):** När man skakar mobilen aktiveras 3D-lutning och en fjädrande 3D-vobblingsanimation under 2 sekunder. Reflektioner och metallic light sweeps följer telefonens gyro.
 - **Plasma Arc:** Animerade glowing plasma-lasrar förbinder rutorna i en vinnande rad innan partikel-fyrverkerierna exploderar.
 - **Vatten/Partikel Shockwave Engine:** Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
