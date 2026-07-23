@@ -3323,12 +3323,12 @@ ctx.restore();
   // sums them. recordRewardResult is a no-op outside a session, so the beer-
   // counter rotation and the test menu keep running the games exactly as before.
   const REWARD_GAMES = {
-    fyllekollen: { open: openFyllekollen, overlay: fyllekollenOverlayEl, closeBtn: fyllekollenCloseBtn, label: "Fyllekollen", blurb: "Led 🐭 till 🍺" },
-    reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, closeBtn: reaktionCloseBtn, label: "Reaktionskollen", blurb: "Tryck när 🍺 dyker upp" },
-    minne: { open: openMinneslucka, overlay: memoryOverlayEl, closeBtn: memoryCloseBtn, label: "Minnesluckatestet", blurb: "Räkna 🍺 och 🐭" },
-    spy: { open: openSpykollen, overlay: spykollenOverlayEl, closeBtn: spyCloseBtn, label: "Spykollen", blurb: "Undvik 🤮 med 🛋️ - en hommage till Per" },
-    piss: { open: openPissepaus, overlay: pissepausOverlayEl, closeBtn: pissCloseBtn, label: "Pissepaus", blurb: "Luta mobilen och sikta 🍆-strålen på 🚽" },
-    sluddra: { open: openSluddraru, overlay: sluddraOverlayEl, closeBtn: sluddraCloseBtn, label: "Sluddraru?", blurb: "Stava STYGG MUS i rätt ordning" },
+    fyllekollen: { open: openFyllekollen, overlay: fyllekollenOverlayEl, closeBtn: fyllekollenCloseBtn, label: "Fyllekollen", blurb: "Svep eller använd piltangenter för att leda 🐭 till 🍺" },
+    reaktion: { open: openReaktionskollen, overlay: reaktionOverlayEl, closeBtn: reaktionCloseBtn, label: "Reaktionskollen", blurb: "Klicka/tryck eller Space när 🍺 dyker upp" },
+    minne: { open: openMinneslucka, overlay: memoryOverlayEl, closeBtn: memoryCloseBtn, label: "Minnesluckatestet", blurb: "Räkna antalet 🍺 och 🐭 som blinkar förbi" },
+    spy: { open: openSpykollen, overlay: spykollenOverlayEl, closeBtn: spyCloseBtn, label: "Spykollen", blurb: "Undvik 🤮 med 🛋️ (pekskärm, mus eller piltangenter)" },
+    piss: { open: openPissepaus, overlay: pissepausOverlayEl, closeBtn: pissCloseBtn, label: "Pissepaus", blurb: "Sikta 🍆-strålen på 🚽 (luta mobilen, klicka/dra eller piltangenter)" },
+    sluddra: { open: openSluddraru, overlay: sluddraOverlayEl, closeBtn: sluddraCloseBtn, label: "Sluddraru?", blurb: "Klicka eller peka på bokstäverna för att stava STYGG MUS" },
   };
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
