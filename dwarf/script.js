@@ -1032,7 +1032,7 @@
 
   function openFyllekollen() {
     openDialog(fyllekollenOverlayEl);
-    fyllekollenCloseBtn.textContent = "Avbryt";
+    fyllekollenCloseBtn.textContent = "Stäng";
     buildNewMaze();
     playWinSound(false);
   }

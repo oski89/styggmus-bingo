@@ -1818,7 +1818,7 @@
 
   function openFyllekollen() {
     openDialog(fyllekollenOverlayEl);
-    fyllekollenCloseBtn.textContent = "Avbryt";
+    fyllekollenCloseBtn.textContent = "Stäng";
     stopVerdictEffects();
     mazeResultEl.classList.add("hidden");
     if (mazeStartBtn) mazeStartBtn.classList.remove("hidden");
