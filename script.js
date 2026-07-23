@@ -878,8 +878,13 @@
     disconnectParty();
     safeRemoveSession(AUTH_KEY);
     safeRemoveSession(MODE_KEY);
+    safeRemove(PLAYER_KEY);
     currentMode = null;
     state = null;
+    activePlayerId = null;
+    activeDialog = null;
+    rewardSession = null;
+    document.body.classList.remove("blackout-mode");
     passwordInput.value = "";
     showPasswordGate();
   }
@@ -1168,7 +1173,7 @@
     if (count > 0 && count % 5 === 0) {
       sayCommentary(kommentatorBeerLine(count, spokenName(activePlayerId)));
     }
-    if (activeDialog) return;
+    if (isDialogActive()) return;
     const gameId = getNextMinigameId();
     const g = REWARD_GAMES[gameId];
     if (g && typeof g.open === "function") {
@@ -4741,7 +4746,17 @@ ctx.restore();
   // and moves focus to the first focusable control inside it. Closing restores
   // focus to wherever it was. Escape / Tab handling lives in onKeyDown, keyed
   // off `activeDialog`.
+  function isDialogActive() {
+    if (!activeDialog) return false;
+    if (activeDialog.classList.contains("hidden")) {
+      activeDialog = null;
+      return false;
+    }
+    return true;
+  }
+
   function openDialog(dialogEl) {
+    if (!dialogEl) return;
     dialogReturnFocus =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     activeDialog = dialogEl;
@@ -4775,8 +4790,11 @@ ctx.restore();
   }
 
   function closeDialog(dialogEl) {
+    if (!dialogEl) return;
     dialogEl.classList.add("hidden");
-    if (activeDialog === dialogEl) activeDialog = null;
+    if (activeDialog === dialogEl || (activeDialog && activeDialog.classList.contains("hidden"))) {
+      activeDialog = null;
+    }
     // A confirm that's dismissed any way other than its accept button (cancel,
     // Escape, backdrop) is a "no" — drop the pending action and remember its
     // onCancel (if any) to run once this dialog has fully finished closing.
@@ -4802,6 +4820,7 @@ ctx.restore();
     }
     if (dialogEl === spykollenOverlayEl) stopSpyGame();
     if (dialogEl === pissepausOverlayEl) stopPissGame();
+    if (dialogEl === sluddraOverlayEl) stopSluddraGame();
     stopVerdictEffects();
     if (dialogReturnFocus && document.contains(dialogReturnFocus)) {
       dialogReturnFocus.focus();
