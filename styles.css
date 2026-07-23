@@ -944,7 +944,7 @@ button:focus-visible {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 12px;
-  padding: 0.72rem 0.65rem;
+  padding: 0.72rem 0.65rem 1.45rem;
   /* Dimensional glass: a top highlight, a purple body, and a faint magenta
      under-glow rising from the bottom so unlit cells read as lit glass. */
   background:
@@ -1036,17 +1036,36 @@ button:focus-visible {
     0 14px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* The 🐭 paw emblem stamped in the corner of a marked cell. */
+/* Empty circular check mark for unchecked bingo cells */
+.cell::after {
+  content: "";
+  position: absolute;
+  right: 0.38rem;
+  bottom: 0.35rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1.5px dashed rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(12, 4, 25, 0.55);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  pointer-events: none;
+}
+
+.cell:hover::after,
+.cell:focus-visible::after {
+  border-color: rgba(45, 226, 255, 0.75);
+  border-style: solid;
+  background: rgba(45, 226, 255, 0.16);
+  box-shadow: 0 0 10px rgba(45, 226, 255, 0.5);
+}
+
+/* Stamped 🐭 paw emblem on checked cells */
 .cell.checked::after {
   content: "🐭";
-  position: absolute;
-  right: 0.45rem;
-  bottom: 0.4rem;
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 1px solid rgba(45, 226, 255, 0.95);
-  border-radius: 999px;
-  background: rgba(9, 3, 18, 0.75);
+  border-style: solid;
+  border-color: rgba(45, 226, 255, 0.95);
+  background: rgba(9, 3, 18, 0.85);
   display: grid;
   place-items: center;
   font-size: 0.82rem;
