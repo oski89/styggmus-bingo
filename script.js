@@ -3371,18 +3371,35 @@ ctx.restore();
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
   // Minigame deck randomizer: guarantees all 6 minigames are played in random
-  // order before any minigame can repeat.
-  let minigameDeck = [];
+  // order exactly once before a new randomized 6-game cycle begins. The same
+  // rule applies to every subsequent cycle and persists across sessions.
+  const DECK_STORAGE_KEY = "styggmus_minigame_deck";
+
+  function loadMinigameDeck() {
+    const raw = safeGet(DECK_STORAGE_KEY);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every((id) => REWARD_GAME_IDS.includes(id))) {
+        return parsed;
+      }
+    } catch {}
+    return [];
+  }
+
+  let minigameDeck = loadMinigameDeck();
 
   function getNextMinigameId() {
-    if (minigameDeck.length === 0) {
+    if (!Array.isArray(minigameDeck) || minigameDeck.length === 0) {
       minigameDeck = REWARD_GAME_IDS.slice();
       for (let i = minigameDeck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [minigameDeck[i], minigameDeck[j]] = [minigameDeck[j], minigameDeck[i]];
       }
     }
-    return minigameDeck.pop();
+    const nextGame = minigameDeck.pop();
+    safeSet(DECK_STORAGE_KEY, JSON.stringify(minigameDeck));
+    return nextGame;
   }
 
   function startBingoReward() {
