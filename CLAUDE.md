@@ -148,7 +148,7 @@ per real-life person × 8 prompts = 40 total. Player labels, emojis & weights:
 - `mouse-trap-pukie`: `🤮 Mouse trap pukie 👴🏻` (80 kg)
 - `pommesansvarig`: `👨🏿 Pommesansvarig 🍟` (90 kg)
 - `afc-master`: `💨 AFC master 🥷` (70 kg)
-- `prospect`: `🛋️ Prospect 🪴` (70 kg)
+- `prospect`: `🛋️ Prospect 🌱` (70 kg)
 
 The bingo top bar uses `shortLabel` (e.g., `💨🥷`) to conserve screen space.
 

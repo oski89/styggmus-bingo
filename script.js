@@ -239,8 +239,8 @@
     },
     {
       id: "prospect",
-      label: "🛋️ Prospect 🪴",
-      shortLabel: "🛋️🪴",
+      label: "🛋️ Prospect 🌱",
+      shortLabel: "🛋️🌱",
       excludedGroup: "per",
       weightKg: 70,
     },

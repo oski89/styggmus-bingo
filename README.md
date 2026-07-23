@@ -21,7 +21,7 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 2. `🤮 Mouse trap pukie 👴🏻` (80 kg)
 3. `👨🏿 Pommesansvarig 🍟` (90 kg)
 4. `💨 AFC master 🥷` (70 kg)
-5. `🛋️ Prospect 🪴` (70 kg)
+5. `🛋️ Prospect 🌱` (70 kg)
 
 *Spelarna visas i toppbaren med en komprimerad emojiversion (t.ex. `💨🥷`) för att spara utrymme.*
 
