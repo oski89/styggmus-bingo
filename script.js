@@ -1766,7 +1766,7 @@
           ? arrowKeyToDir(event.key)
           : null;
       if (activeDialog === pissepausOverlayEl && pissPhase === "playing") {
-        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "a", "A", "d", "D", "w", "W", "s", "S"].includes(event.key)) {
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
           event.preventDefault();
           pissKeysPressed.add(event.key);
         }
@@ -2828,12 +2828,12 @@
     const dt = Math.min(0.05, (now - g.lastFrame) / 1000);
     g.lastFrame = now;
 
-    // Smooth multi-key arrow / WASD keyboard steering
+    // Smooth multi-key arrow keyboard steering
     const kSpeed = g.w * 0.9 * dt;
-    if (pissKeysPressed.has("ArrowLeft") || pissKeysPressed.has("a") || pissKeysPressed.has("A")) g.targetX -= kSpeed;
-    if (pissKeysPressed.has("ArrowRight") || pissKeysPressed.has("d") || pissKeysPressed.has("D")) g.targetX += kSpeed;
-    if (pissKeysPressed.has("ArrowUp") || pissKeysPressed.has("w") || pissKeysPressed.has("W")) g.targetY -= kSpeed;
-    if (pissKeysPressed.has("ArrowDown") || pissKeysPressed.has("s") || pissKeysPressed.has("S")) g.targetY += kSpeed;
+    if (pissKeysPressed.has("ArrowLeft")) g.targetX -= kSpeed;
+    if (pissKeysPressed.has("ArrowRight")) g.targetX += kSpeed;
+    if (pissKeysPressed.has("ArrowUp")) g.targetY -= kSpeed;
+    if (pissKeysPressed.has("ArrowDown")) g.targetY += kSpeed;
     g.targetX = Math.max(0, Math.min(g.w, g.targetX));
     g.targetY = Math.max(12, Math.min(g.originY - 60, g.targetY));
 
