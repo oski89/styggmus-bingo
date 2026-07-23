@@ -3149,7 +3149,7 @@ ctx.restore();
 
     if (!clickedTile) return;
 
-    if (clickedTile.char === expectedChar) {
+    if (clickedTile.id === g.currentIdx) {
       clickedTile.solved = true;
       vibrate(25);
       const slotEl = sluddraOverlayEl.querySelector(`.sluddra-slot[data-idx="${g.currentIdx}"]`);
