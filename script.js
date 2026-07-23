@@ -3125,6 +3125,8 @@ ctx.restore();
     ctx.clearRect(0, 0, g.w, g.h);
     drawNeonFloor(ctx, g.w, g.h);
 
+    if (sluddraPhase !== "playing") return;
+
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 

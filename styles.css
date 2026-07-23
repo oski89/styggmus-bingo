@@ -1574,6 +1574,33 @@ button:focus-visible {
   backdrop-filter: blur(4px);
 }
 
+.sluddra-result-headline {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sluddra-result-score {
+  font-size: 2.2rem;
+  font-weight: 950;
+  color: var(--accent-strong);
+  text-shadow: 0 0 16px rgba(45, 226, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+  margin: 0.2rem 0;
+}
+
+.sluddra-result-msg {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sluddra-result[data-level="green"] .sluddra-result-headline { color: #3fd99b; }
+.sluddra-result[data-level="yellow"] .sluddra-result-headline { color: #ffcf5a; }
+.sluddra-result[data-level="red"] .sluddra-result-headline { color: #f7706d; }
+
 .minigame-blurb {
   margin: 0.7rem 0 1rem;
 }
@@ -2686,6 +2713,7 @@ button:focus-visible {
 .overlay.sober-alarm .memory-result-headline,
 .overlay.sober-alarm .spy-result-headline,
 .overlay.sober-alarm .piss-result-headline,
+.overlay.sober-alarm .sluddra-result-headline,
 .overlay.sober-alarm .maze-result-headline {
   animation: sober-alarm-banner 0.6s steps(1, end) infinite;
 }
@@ -2740,6 +2768,7 @@ button:focus-visible {
 .overlay.drunk-celebrate .memory-result-headline,
 .overlay.drunk-celebrate .spy-result-headline,
 .overlay.drunk-celebrate .piss-result-headline,
+.overlay.drunk-celebrate .sluddra-result-headline,
 .overlay.drunk-celebrate .maze-result-headline {
   animation: drunk-celebrate-pop 0.5s ease-in-out infinite;
 }
