@@ -2670,6 +2670,21 @@
   // hits map to the shared three-tier verdict (steady aim = too sober).
   // The round starts from an explicit "Starta" button because iOS only grants
   // tilt-sensor access from inside a user gesture.
+  function stopPissGame() {
+    pissPhase = "idle";
+    if (pissRaf) {
+      window.cancelAnimationFrame(pissRaf);
+      pissRaf = null;
+    }
+    if (pissCountdownTimer) {
+      window.clearInterval(pissCountdownTimer);
+      pissCountdownTimer = null;
+    }
+    try {
+      window.removeEventListener("deviceorientation", onPissOrientation);
+    } catch (e) {}
+  }
+
   function openPissepaus() {
     openDialog(pissepausOverlayEl);
     pissCloseBtn.textContent = "Stäng";
