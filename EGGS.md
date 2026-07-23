@@ -31,8 +31,12 @@ En komplett guide över alla dolda easter eggs, hemliga koder och interaktiva ef
 
 ---
 
-### 5. 💥 Interaktiv Partikel-Shockwave Engine
-- **Aktivering:** Klicka på valfri bingoruta eller tryck var som helst på bakgrundskanvasen.
+---
+
+### 6. 🌑 Pommesansvarig Blackout Mode
+- **Aktivering:** Klicka/tappa på spelarnamnet i toppbaren 5 gånger i snabb följd när du är inloggad som `👨🏿 Pommesansvarig 🍟`.
+- **Effekt:** Skärmen tonas ned till ett extremt mörkt "blackout-läge" (`.blackout-mode`) där gränssnittet och rutorna är svagt synliga och kräver god syn.
+- **Återställning:** Klicka/tappa 5 gånger igen på samma ställe för att återställa ljus och färger.
 - **Effekt:** Genererar en färgstark, expanderande neon-chockvåg som fysiskt knuffar bort alla svävande bakgrundspartiklar och skapar en interaktiv vattenrippel-effekt.
 
 ---

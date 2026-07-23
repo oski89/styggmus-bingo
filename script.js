@@ -856,6 +856,11 @@
     state = loadOrCreateState(activePlayerId);
     hideAllScreens();
     appEl.classList.remove("hidden");
+    if (state && state.blackoutActive && activePlayerId === "pommesansvarig") {
+      document.body.classList.add("blackout-mode");
+    } else {
+      document.body.classList.remove("blackout-mode");
+    }
     renderCurrentPlayerLabel();
     renderBeerWidget();
     renderBoard();
@@ -1572,22 +1577,54 @@
   let playerNameClickTimer = null;
 
   function onPlayerNameClick(e) {
-    if (activePlayerId !== "mouse-trap-pukie") return;
+    if (!activePlayerId) return;
     if (e && typeof e.stopPropagation === "function") e.stopPropagation();
 
     playerNameClickCount += 1;
     vibrate(20);
     if (playerNameClickTimer) window.clearTimeout(playerNameClickTimer);
 
-    if (playerNameClickCount >= 3) {
+    if (activePlayerId === "mouse-trap-pukie" && playerNameClickCount >= 3) {
       playerNameClickCount = 0;
       triggerMouseTrapSlimeExplosion();
       return;
     }
 
+    if (activePlayerId === "pommesansvarig" && playerNameClickCount >= 5) {
+      playerNameClickCount = 0;
+      triggerBlackoutMode();
+      return;
+    }
+
     playerNameClickTimer = window.setTimeout(() => {
       playerNameClickCount = 0;
-    }, 1800);
+    }, 2500);
+  }
+
+  function triggerBlackoutMode() {
+    const isBlackout = document.body.classList.toggle("blackout-mode");
+    if (state) {
+      state.blackoutActive = isBlackout;
+      saveState();
+    }
+
+    vibrate([100, 50, 100]);
+
+    if (isBlackout) {
+      speakVerdict("Blackout Mode aktiverad! Pommesansvarig släpper mörkret över skärmen.");
+      showPartyFlash(
+        "🌑 BLACKOUT MODE!",
+        "Pommesansvarig släppte mörkret över skärmen! (5 klick till återställer ljuset).",
+        "Blackout mode aktiverad!"
+      );
+    } else {
+      speakVerdict("Blackout Mode avaktiverad! Ljuset återvänder.");
+      showPartyFlash(
+        "💡 BLACKOUT OFF!",
+        "Pommesansvarig återställde skärmljuset!",
+        "Blackout mode avaktiverad!"
+      );
+    }
   }
 
   function triggerMouseTrapSlimeExplosion() {

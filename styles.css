@@ -2253,6 +2253,20 @@ button:focus-visible {
   box-shadow: 0 0 12px rgba(255, 215, 0, 0.9) !important;
 }
 
+/* 🌑 Blackout Mode (Pommesansvarig Easter Egg) */
+body.blackout-mode {
+  background: #010003 !important;
+  filter: brightness(0.07) contrast(1.7) grayscale(0.5);
+  transition: filter 0.5s ease, background 0.5s ease;
+}
+
+body.blackout-mode .overlay-card,
+body.blackout-mode .board-wrap,
+body.blackout-mode .stat {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 /* ── Party-länk (live sync) ───────────────────────────────────────────────── */
 
 .party-card {
