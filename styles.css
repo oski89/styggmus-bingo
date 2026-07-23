@@ -1036,41 +1036,23 @@ button:focus-visible {
     0 14px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Empty circular check mark for unchecked bingo cells */
-.cell::after {
-  content: "";
+/* Stamped 🐭 paw emblem on checked cells */
+.cell.checked::after {
+  content: "🐭";
   position: absolute;
   right: 0.38rem;
   bottom: 0.35rem;
   width: 1.15rem;
   height: 1.15rem;
-  border: 1.5px dashed rgba(255, 255, 255, 0.28);
+  border: 1.5px solid rgba(45, 226, 255, 0.95);
   border-radius: 999px;
-  background: rgba(12, 4, 25, 0.55);
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  pointer-events: none;
-}
-
-.cell:hover::after,
-.cell:focus-visible::after {
-  border-color: rgba(45, 226, 255, 0.75);
-  border-style: solid;
-  background: rgba(45, 226, 255, 0.16);
-  box-shadow: 0 0 10px rgba(45, 226, 255, 0.5);
-}
-
-/* Stamped 🐭 paw emblem on checked cells */
-.cell.checked::after {
-  content: "🐭";
-  border-style: solid;
-  border-color: rgba(45, 226, 255, 0.95);
   background: rgba(9, 3, 18, 0.85);
   display: grid;
   place-items: center;
   font-size: 0.82rem;
   line-height: 1;
   box-shadow: 0 0 14px rgba(45, 226, 255, 0.9), inset 0 0 6px rgba(255, 45, 120, 0.5);
+  pointer-events: none;
 }
 
 .plasma-line {
@@ -3066,20 +3048,39 @@ body.blackout-mode .stat {
     grid-column: 1 / -1;
   }
 
-  /* Keep the three stats as columns of one row (compact) even on phones. */
+  /* 2-row layout for top bar stats on smartphones */
   .stats {
-    gap: 0.35rem;
-    padding: 0.35rem 0.45rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "player drunk"
+      "beer   beer";
+    gap: 0.4rem 0.6rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 18px;
+    min-height: auto;
   }
 
   .stat {
-    min-height: auto;
-    padding: 0;
+    grid-area: player;
+    align-self: center;
     min-width: 0;
   }
 
   .stat-value {
-    font-size: clamp(0.7rem, 2.8vw, 0.9rem);
+    font-size: clamp(0.78rem, 3.2vw, 0.95rem);
+  }
+
+  .drunk-meter-widget {
+    grid-area: drunk;
+    align-self: center;
+    justify-self: end;
+  }
+
+  .beer-widget {
+    grid-area: beer;
+    width: 100%;
+    justify-content: center;
   }
 
   .board-wrap {
