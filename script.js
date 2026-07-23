@@ -3225,18 +3225,28 @@ ctx.restore();
       } else {
         ctx.rect(-sz / 2, -sz / 2, sz, sz);
       }
-      ctx.fillStyle = now < t.wobbleUntil ? "rgba(180, 20, 40, 0.9)" : "rgba(22, 9, 42, 0.88)";
+      const isOrange = t.id >= 5; // M U S
+      if (now < t.wobbleUntil) {
+        ctx.fillStyle = "rgba(200, 20, 40, 0.95)";
+        ctx.strokeStyle = "#ff3a3a";
+        ctx.shadowColor = "rgba(255, 58, 58, 0.9)";
+      } else if (isOrange) {
+        ctx.fillStyle = "#ff8800";
+        ctx.strokeStyle = "#ffaa33";
+        ctx.shadowColor = "rgba(255, 136, 0, 0.85)";
+      } else {
+        ctx.fillStyle = "#000000";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
+      }
       ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = now < t.wobbleUntil ? "#ff3a3a" : "rgba(45, 226, 255, 0.75)";
-      ctx.shadowColor = now < t.wobbleUntil ? "rgba(255, 58, 58, 0.9)" : "rgba(45, 226, 255, 0.6)";
-      ctx.shadowBlur = 12;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
       ctx.font = `900 ${Math.round(sz * 0.58)}px sans-serif`;
-      ctx.fillStyle = "#ffffff";
-      ctx.shadowColor = "rgba(255, 255, 255, 0.9)";
-      ctx.shadowBlur = 8;
+      ctx.fillStyle = isOrange ? "#000000" : "#ffffff";
+      ctx.shadowColor = isOrange ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.9)";
+      ctx.shadowBlur = 6;
       ctx.fillText(t.char, 0, 1);
       ctx.restore();
     }

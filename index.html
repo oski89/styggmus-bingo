@@ -350,10 +350,10 @@
         <div id="maze-timer" class="maze-timer" aria-live="off">0.0 s</div>
         <div class="maze-wrap">
           <canvas id="maze-canvas" class="maze-canvas" aria-label="Labyrint, svep eller använd piltangenterna för att flytta"></canvas>
-          <button id="maze-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <div id="maze-result" class="maze-result hidden"></div>
         </div>
         <div class="confirm-actions maze-controls">
+          <button id="maze-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <button id="fyllekollen-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
@@ -363,15 +363,14 @@
     <div id="reaktion-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="reaktion-title">
       <div class="overlay-card reaktion-card">
         <h2 id="reaktion-title" class="reaktion-title">Reaktionskollen</h2>
-        <p class="minigame-blurb">Klicka, peka på skärmen eller tryck Space när 🍺 dyker upp!</p>
-        <p id="reaktion-instruction" class="reaktion-instruction"></p>
+        <p id="reaktion-instruction" class="minigame-blurb">Klicka, peka på skärmen eller tryck Space när 🍺 dyker upp!</p>
         <div id="reaktion-stage" class="reaktion-stage" role="button" tabindex="0" aria-label="Reaktionsyta — klicka eller tryck när ölen dyker upp">
           <span id="reaktion-countdown" class="reaktion-countdown hidden">5</span>
-          <button id="reaktion-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <span id="reaktion-target" class="reaktion-target hidden" aria-hidden="true">🍺</span>
           <div id="reaktion-result" class="reaktion-result hidden"></div>
         </div>
         <div class="confirm-actions reaktion-controls">
+          <button id="reaktion-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <button id="reaktion-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
@@ -381,11 +380,9 @@
     <div id="memory-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="memory-title">
       <div class="overlay-card memory-card">
         <h2 id="memory-title" class="memory-title">Minnesluckatestet</h2>
-        <p class="minigame-blurb">Kom ihåg antalet 🍺 och 🐭 som blinkar förbi, ange sedan dina svar!</p>
-        <p id="memory-instruction" class="memory-instruction"></p>
+        <p id="memory-instruction" class="minigame-blurb">Kom ihåg antalet 🍺 och 🐭 som blinkar förbi, ange sedan dina svar!</p>
         <div id="memory-stage" class="memory-stage">
           <span id="memory-countdown" class="memory-countdown hidden">5</span>
-          <button id="memory-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <div id="memory-flash" class="memory-flash hidden" aria-hidden="true"></div>
           <div id="memory-answer" class="memory-answer hidden">
             <div class="memory-pickers">
@@ -409,6 +406,7 @@
           <div id="memory-result" class="memory-result hidden"></div>
         </div>
         <div class="confirm-actions memory-controls">
+          <button id="memory-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <button id="memory-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
@@ -418,12 +416,10 @@
     <div id="spykollen-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="spykollen-title">
       <div class="overlay-card spykollen-card">
         <h2 id="spykollen-title" class="spykollen-title">Spykollen</h2>
-        <p class="minigame-blurb">Undvik 🤮 med 🛋️! Styr med pekskärmen, musen, knapparna eller piltangenterna.</p>
-        <p id="spykollen-instruction" class="spykollen-instruction"></p>
+        <p id="spykollen-instruction" class="minigame-blurb">Undvik 🤮 med 🛋️! Styr med pekskärmen, musen, knapparna eller piltangenterna.</p>
         <div class="spy-stage-wrap">
           <canvas id="spy-canvas" class="spy-canvas" aria-label="Undvik spyorna med soffan"></canvas>
           <span id="spy-countdown" class="spy-countdown hidden" aria-hidden="true">3</span>
-          <button id="spy-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <div id="spy-result" class="spy-result hidden"></div>
         </div>
         <div class="spy-controls" aria-label="Styrning">
@@ -432,6 +428,7 @@
           <button id="spy-right-btn" class="spy-dir-btn" type="button" aria-label="Flytta höger">▶</button>
         </div>
         <div class="confirm-actions spykollen-footer">
+          <button id="spy-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <button id="spy-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
@@ -441,12 +438,10 @@
     <div id="pissepaus-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pissepaus-title">
       <div class="overlay-card pissepaus-card">
         <h2 id="pissepaus-title" class="pissepaus-title">Pissepaus</h2>
-        <p class="minigame-blurb">Sikta 🍆-strålen på 🚽! Luta mobilen, klicka/dra på skärmen eller använd piltangenterna.</p>
-        <p id="pissepaus-instruction" class="pissepaus-instruction"></p>
+        <p id="pissepaus-instruction" class="minigame-blurb">Sikta 🍆-strålen på 🚽! Luta mobilen, klicka/dra på skärmen eller använd piltangenterna.</p>
         <div class="piss-stage-wrap">
           <canvas id="piss-canvas" class="piss-canvas" aria-label="Luta enheten för att sikta strålen på toaletten"></canvas>
           <span id="piss-countdown" class="piss-countdown hidden" aria-hidden="true">3</span>
-          <button id="piss-start-btn" class="primary-btn piss-start-btn" type="button">Starta</button>
           <div id="piss-result" class="piss-result hidden"></div>
         </div>
         <div class="piss-hud" aria-live="off">
@@ -454,6 +449,7 @@
           <span class="piss-score-wrap">🚽 <span id="piss-score" class="piss-score">0</span></span>
         </div>
         <div class="confirm-actions pissepaus-footer">
+          <button id="piss-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <button id="piss-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
@@ -463,8 +459,7 @@
     <div id="sluddra-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="sluddra-title">
       <div class="overlay-card sluddra-card">
         <h2 id="sluddra-title" class="sluddra-title">Sluddraru?</h2>
-        <p class="minigame-blurb">Klicka på bokstäverna för att stava <strong>STYGG MUS</strong>!</p>
-        <p id="sluddra-instruction" class="sluddra-instruction"></p>
+        <p id="sluddra-instruction" class="minigame-blurb">Klicka på bokstäverna för att stava <strong>STYGG MUS</strong>!</p>
         <div class="sluddra-slots" aria-label="Målord">
           <span class="sluddra-slot" data-idx="0">_</span>
           <span class="sluddra-slot" data-idx="1">_</span>
@@ -478,7 +473,6 @@
         </div>
         <div class="sluddra-stage-wrap">
           <canvas id="sluddra-canvas" class="sluddra-canvas" aria-label="Klicka bokstäver i rätt ordning"></canvas>
-          <button id="sluddra-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <div id="sluddra-result" class="sluddra-result hidden"></div>
         </div>
         <div class="sluddra-hud" aria-live="off">
@@ -486,6 +480,7 @@
           <span id="sluddra-penalty" class="sluddra-penalty hidden">+1s straff!</span>
         </div>
         <div class="confirm-actions sluddra-footer">
+          <button id="sluddra-start-btn" class="primary-btn minigame-start-btn" type="button">Starta</button>
           <button id="sluddra-close-btn" class="secondary-btn" type="button">Stäng</button>
         </div>
       </div>
