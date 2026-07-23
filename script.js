@@ -2737,19 +2737,29 @@
   }
 
   function onPissStart() {
-    if (pissPhase !== "ready") return;
+    if (pissPhase !== "ready" && pissPhase !== "idle") return;
     if (pissStartBtn) pissStartBtn.classList.add("hidden");
-    const D = window.DeviceOrientationEvent;
-    const permission =
-      D && typeof D.requestPermission === "function"
-        ? D.requestPermission().catch(() => "denied")
-        : Promise.resolve("granted");
-    const proceed = () => {
-      if (pissPhase !== "ready") return;
-      window.addEventListener("deviceorientation", onPissOrientation);
+
+    const startPlay = () => {
+      if (!pissGame) setupPissGame();
+      try {
+        window.addEventListener("deviceorientation", onPissOrientation);
+      } catch (e) {}
       beginPissPlay();
     };
-    permission.then(proceed, proceed);
+
+    try {
+      const D = window.DeviceOrientationEvent;
+      if (D && typeof D.requestPermission === "function") {
+        D.requestPermission()
+          .then(startPlay)
+          .catch(startPlay);
+      } else {
+        startPlay();
+      }
+    } catch (e) {
+      startPlay();
+    }
   }
 
   function startPissCountdown() {
@@ -2771,7 +2781,7 @@
   }
 
   function beginPissPlay() {
-    if (!pissGame) return;
+    if (!pissGame) setupPissGame();
     pissPhase = "playing";
     pissCanvas.dataset.state = "playing";
     pissCountdownEl.classList.add("hidden");
