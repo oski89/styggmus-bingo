@@ -3499,20 +3499,10 @@ ctx.restore();
   function showRewardIntro() {
     const grand = rewardSession.mode === "grand";
     rewardTitleEl.textContent = grand ? "HELA BRICKAN KLAR!" : "BINGO!";
-    const preview = grand
-      ? `<ul class="reward-game-list">${rewardSession.queue
-          .map((id) => {
-            const g = REWARD_GAMES[id];
-            return `<li><strong>${g.label}</strong> — ${g.blurb}</li>`;
-          })
-          .join("")}</ul>`
-      : "";
-    rewardBodyEl.innerHTML =
-      (grand
-        ? `<p class="reward-lead">Spela alla fem spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
-        : `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`) +
-      preview;
-    rewardActionBtn.textContent = grand ? "Kör alla fem" : "Spela";
+    rewardBodyEl.innerHTML = grand
+      ? `<p class="reward-lead">Spela alla spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
+      : `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`;
+    rewardActionBtn.textContent = grand ? "Kör alla spel" : "Spela";
     rewardActionHandler = () => {
       rewardTransitioning = true;
       closeDialog(rewardOverlayEl);
