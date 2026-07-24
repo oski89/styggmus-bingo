@@ -851,6 +851,7 @@ button:focus-visible {
   border: 1px solid rgba(255, 156, 69, 0.5);
 }
 
+.drunk-meter-level[data-level="kalas"],
 .drunk-meter-level[data-level="kalasfull"] {
   background: rgba(255, 45, 120, 0.3);
   color: #ff2d78;
@@ -858,6 +859,7 @@ button:focus-visible {
   box-shadow: 0 0 10px rgba(255, 45, 120, 0.4);
 }
 
+.drunk-meter-level[data-level="plakat"],
 .drunk-meter-level[data-level="overfull"] {
   background: linear-gradient(135deg, rgba(181, 45, 255, 0.4), rgba(255, 45, 120, 0.4));
   color: #e280ff;

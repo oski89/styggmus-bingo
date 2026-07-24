@@ -1023,8 +1023,8 @@
     const hours = Math.max(0.01, elapsedMs / (1000 * 60 * 60));
     const weightKg = player.weightKg || 80;
 
-    // Widmark Formula (20g pure alcohol per 50cl 5% beer, r=0.68 male, 0.015%/hr metabolic elimination)
-    const gramsAlcohol = count * 20;
+    // Widmark Formula (13.2g pure alcohol per 33cl 5% beer, r=0.68 male, 0.015%/hr metabolic elimination)
+    const gramsAlcohol = count * 13.2;
     const r = 0.68;
     const metabolicRate = 0.015;
     const rawBac = (gramsAlcohol / (weightKg * 1000 * r)) * 100 - (metabolicRate * hours);
@@ -1097,16 +1097,16 @@
     let levelKey = "nykter";
     let levelLabel = "Nykter";
 
-    if (safePromille >= 1.8) {
-      levelKey = "overfull";
-      levelLabel = "Överfull";
-    } else if (safePromille >= 1.2) {
-      levelKey = "kalasfull";
-      levelLabel = "Kalasfull";
-    } else if (safePromille >= 0.6) {
+    if (safePromille >= 2.0) {
+      levelKey = "plakat";
+      levelLabel = "Plakat";
+    } else if (safePromille >= 1.5) {
+      levelKey = "kalas";
+      levelLabel = "Kalas";
+    } else if (safePromille >= 1.0) {
       levelKey = "slirig";
       levelLabel = "Slirig";
-    } else if (safePromille >= 0.2) {
+    } else if (safePromille >= 0.5) {
       levelKey = "salongs";
       levelLabel = "Salongs";
     }
