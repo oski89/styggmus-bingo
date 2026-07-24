@@ -2317,8 +2317,7 @@
     const amount = Math.max(0, Math.round(klunkar));
     rewardSession.total += amount;
     rewardSession.breakdown.push({ label: g.label, verdict, klunkar: amount });
-    const last = rewardSession.idx >= rewardSession.queue.length - 1;
-    g.closeBtn.textContent = last ? "Klar" : "Nästa spel";
+    g.closeBtn.textContent = "Stäng";
   }
 
   // Closing the current game (button, Escape, or backdrop) moves the flow on;
