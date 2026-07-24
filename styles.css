@@ -834,15 +834,18 @@ button:focus-visible {
 }
 
 .drunk-meter-level[data-level="nykter"] {
-  background: rgba(63, 217, 155, 0.25);
-  color: #3fd99b;
-  border: 1px solid rgba(63, 217, 155, 0.5);
+  background: linear-gradient(135deg, rgba(181, 45, 255, 0.4), rgba(255, 45, 120, 0.4));
+  color: #e280ff;
+  border: 1px solid rgba(226, 128, 255, 0.7);
+  box-shadow: 0 0 14px rgba(181, 45, 255, 0.6);
+  animation: drunk-rainbow-pulse 1.8s ease-in-out infinite alternate;
 }
 
 .drunk-meter-level[data-level="salongs"] {
-  background: rgba(255, 207, 90, 0.25);
-  color: #ffcf5a;
-  border: 1px solid rgba(255, 207, 90, 0.5);
+  background: rgba(255, 45, 120, 0.3);
+  color: #ff2d78;
+  border: 1px solid rgba(255, 45, 120, 0.6);
+  box-shadow: 0 0 10px rgba(255, 45, 120, 0.4);
 }
 
 .drunk-meter-level[data-level="slirig"] {
@@ -853,19 +856,17 @@ button:focus-visible {
 
 .drunk-meter-level[data-level="kalas"],
 .drunk-meter-level[data-level="kalasfull"] {
-  background: rgba(255, 45, 120, 0.3);
-  color: #ff2d78;
-  border: 1px solid rgba(255, 45, 120, 0.6);
-  box-shadow: 0 0 10px rgba(255, 45, 120, 0.4);
+  background: rgba(255, 207, 90, 0.25);
+  color: #ffcf5a;
+  border: 1px solid rgba(255, 207, 90, 0.5);
 }
 
 .drunk-meter-level[data-level="plakat"],
 .drunk-meter-level[data-level="overfull"] {
-  background: linear-gradient(135deg, rgba(181, 45, 255, 0.4), rgba(255, 45, 120, 0.4));
-  color: #e280ff;
-  border: 1px solid rgba(226, 128, 255, 0.7);
-  box-shadow: 0 0 14px rgba(181, 45, 255, 0.6);
-  animation: drunk-rainbow-pulse 1.8s ease-in-out infinite alternate;
+  background: rgba(63, 217, 155, 0.25);
+  color: #3fd99b;
+  border: 1px solid rgba(63, 217, 155, 0.5);
+  box-shadow: 0 0 10px rgba(63, 217, 155, 0.4);
 }
 
 @keyframes drunk-rainbow-pulse {
