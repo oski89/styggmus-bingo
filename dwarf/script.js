@@ -1240,6 +1240,7 @@
   // Shows the verdict panel over the maze and fires the matching effect (alarm /
   // celebration / neutral chime), mirroring the other mini-games' result screens.
   function showMazeResult(detailText, level) {
+    if (mazeStartBtn) mazeStartBtn.classList.add("hidden");
     mazeResultEl.dataset.level = level.cls;
     mazeResultEl.innerHTML =
       `<span class="maze-result-headline">${level.label}</span>` +

@@ -1985,6 +1985,7 @@
   // Shows the verdict panel over the maze and fires the matching effect (alarm /
   // celebration / neutral chime), mirroring the other mini-games' result screens.
   function showMazeResult(detailText, level) {
+    if (mazeStartBtn) mazeStartBtn.classList.add("hidden");
     mazeResultEl.dataset.level = level.cls;
     mazeResultEl.innerHTML =
       `<span class="maze-result-headline">${level.label}</span>` +
@@ -2112,6 +2113,7 @@
   }
 
   function showReaktionResult(msText, message, cls, label, alarm, celebrate) {
+    if (reaktionStartBtn) reaktionStartBtn.classList.add("hidden");
     reaktionPhase = "done";
     reaktionStageEl.dataset.state = "done";
     reaktionTargetEl.classList.add("hidden");
@@ -2222,6 +2224,7 @@
     const level = memoryLevel(correct);
 
     memoryPhase = "done";
+    if (memoryStartBtn) memoryStartBtn.classList.add("hidden");
     memoryStageEl.dataset.state = "done";
     memoryAnswerEl.classList.add("hidden");
     memoryInstructionEl.textContent = "";
@@ -2536,6 +2539,7 @@
 
   function onSpyHit() {
     spyPhase = "done";
+    if (spyStartBtn) spyStartBtn.classList.add("hidden");
     if (spyRaf) {
       window.cancelAnimationFrame(spyRaf);
       spyRaf = null;
@@ -2886,6 +2890,7 @@ ctx.restore();
 
   function endPissRound() {
     pissPhase = "done";
+    if (pissStartBtn) pissStartBtn.classList.add("hidden");
     pissCanvas.dataset.state = "done";
     if (pissRaf) {
       window.cancelAnimationFrame(pissRaf);
@@ -3135,6 +3140,7 @@ ctx.restore();
   function endSluddraRound() {
     stopSluddraGame();
     sluddraPhase = "done";
+    if (sluddraStartBtn) sluddraStartBtn.classList.add("hidden");
     const totalMs = Math.round((performance.now() - sluddraGame.startAt) + sluddraGame.penaltyMs);
     const sec = totalMs / 1000;
     const level = sluddraLevel(sec);

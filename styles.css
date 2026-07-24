@@ -1350,6 +1350,11 @@ button:focus-visible {
   margin-top: 0.8rem !important;
 }
 
+.confirm-actions button.hidden,
+.confirm-actions .minigame-start-btn.hidden {
+  display: none !important;
+}
+
 .confirm-actions button,
 .confirm-actions .minigame-start-btn,
 .confirm-actions .primary-btn,
