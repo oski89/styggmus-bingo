@@ -1194,8 +1194,8 @@
       }
     }
 
-    const glyph = Math.floor(cell * 0.64);
-    ctx.font = `${glyph}px serif`;
+    const glyph = Math.floor(cell * 0.75);
+    ctx.font = `${glyph}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("🍺", goal.c * cell + cell / 2, goal.r * cell + cell / 2);
