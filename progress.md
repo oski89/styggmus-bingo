@@ -75,3 +75,15 @@ och Android) och vara tillgänglig via min public github.
 - **Real-tids BAC Promillekalkylator:** Exakt promillekalkylator baserad på Widmark-formeln, spelarvikt i kg (President 85kg, Pukie 78kg, Pommesansvarig 90kg, AFC Master 70kg, Prospect 75kg), antal öl och realtidstimmar. Integration mot MiniWebtool API.
 - **Gyllene Musen (Secret Konami Code):** 5 snabba taps på `🍆` i titeln eller Konami-koden (`↑ ↑ ↓ ↓ ← → ← → B A`) togglar 3D guld-spegelkort (`.gyllene-musen-active`), guldglitterregn och 8-bit retro-fanfar. Toggle igen återställer med nollställningsgrafik & ljud.
 - **Mouse Trap Slime Explosion:** 3 snabba taps på spelarnamnet som `Mouse Trap Pukie 👴🏻` utlöser en fullskärms neon-slemexplosion (`#slime-overlay`), slem-ljud och belönar Pukie med +1 bonus-mulligan.
+
+## 2026-07-28 — iOS Prestanda, Minispelsförbättringar & Blackout Ficklampa
+
+- **iOS Prestanda i Spykollen & Pissepaus:** Tog bort tung CPU-baserad canvas `shadowBlur` från 60 FPS requestAnimationFrame-slingor och ersatte med snabba dubbla vektorströk. Drosslade DOM-uppdateringar i HUD så DOM-mutationer endast sker när tid/poäng faktiskt förändras.
+- **Reaktionskollen Precision:** Synkade tidtagningen mot webbläsarens `requestAnimationFrame` render-frame så klockan startar i exakt samma millisekund som ölen målas på skärmen. Lade till direkt `touchstart`-lyssnare och tog hårdvarustämpel via `event.timeStamp`.
+- **Dynamisk Tid i Minnesluckatestet:** Tidtagningen för flash-skärmen anpassas nu dynamiskt proportionalt mot antalet föremål (`600ms base + items.length * 140ms`).
+- **Skarp Emojirendering i Fyllekollen på iOS:** Tog bort canvas `shadowBlur` före `ctx.fillText` i Fyllekollen så WebKit renderar skarpa, högupplösta Apple Color Emoji-vektorglyfer utan oskärpa.
+- **Sluddraru Förhandsvisning & Utbytbara G-brickor:** Målordet `S T Y G G M U S` med rätt färger visas på instruktionsskärmen. Båda svarta/vita G-brickorna kan användas omlott för båda G-platserna i STYGG utan straff.
+- **Flerraders Bingo-belöningar:** Om man kryssar en ruta som ger fler än 1 bingo-rad samtidigt köas motsvarande antal minispel i följd.
+- **Admin Reset Tömmer Alla Påskägg:** Spelledarens admin-reset nollställer nu även aktiva påskägg som Gyllene Musen, Blackout Mode och teman.
+- **Blackout Mode med Interaktiv Ficklampa:** Pommesansvarigs Blackout Mode innehåller nu en interaktiv ficklampa (`radial-gradient` torch beam) som lyser upp bingobrickan och UI under muspekaren/fingret. Kan avslutas via 5 klick, `Esc`-tangenten, 10s stadigt finger-tryck eller admin-reset.
+- **Knappstandardisering i Minispel:** Alla minispel har standardiserats till endast "Starta" och "Stäng". "Starta"-knappen döljs automatiskt så fort spelet slutförs.

@@ -33,11 +33,14 @@ En komplett guide över alla dolda easter eggs, hemliga koder och interaktiva ef
 
 ---
 
-### 6. 🌑 Pommesansvarig Blackout Mode
+### 5. 🌑 Pommesansvarig Blackout Mode & Ficklampa
 - **Aktivering:** Klicka/tappa på spelarnamnet i toppbaren 5 gånger i snabb följd när du är inloggad som `👨🏿 Pommesansvarig 🍟`.
-- **Effekt:** Skärmen tonas ned till ett extremt mörkt "blackout-läge" (`.blackout-mode`) där gränssnittet och rutorna är svagt synliga och kräver god syn.
-- **Återställning:** Klicka/tappa 5 gånger igen på samma ställe för att återställa ljus och färger.
-- **Effekt:** Genererar en färgstark, expanderande neon-chockvåg som fysiskt knuffar bort alla svävande bakgrundspartiklar och skapar en interaktiv vattenrippel-effekt.
+- **Effekt:** Skärmen tonas ned till ett mörkt "blackout-läge" (`.blackout-mode`). Fingret eller muspekaren fungerar som en **interaktiv ficklampa** (`radial-gradient` torch beam) som lyser upp bingobrickan och UI-elementen under fingeravtrycket/muspekaren.
+- **Avslutningsvägar:**
+  - Tryck `Esc`-tangenten.
+  - Håll fingret stadigt tryckt i **10 sekunder** på pekskärmen.
+  - Klicka/tappa 5 gånger igen på `Pommesansvarig`.
+  - Spelledarens admin-reset ("Ny omgång").
 
 ---
 
