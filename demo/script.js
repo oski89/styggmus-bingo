@@ -504,7 +504,10 @@
     mazeCanvas.addEventListener("pointerdown", onMazePointerDown);
     mazeCanvas.addEventListener("pointerup", onMazePointerUp);
 
-    reaktionStageEl.addEventListener("pointerdown", onReaktionTap);
+    reaktionStageEl.addEventListener("touchstart", onReaktionTap, { passive: false });
+    reaktionStageEl.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") onReaktionTap(e);
+    });
     reaktionCloseBtn.addEventListener("click", () => closeDialog(reaktionOverlayEl));
     reaktionOverlayEl.addEventListener("click", (e) => {
       if (e.target === reaktionOverlayEl) closeDialog(reaktionOverlayEl);
@@ -1354,25 +1357,32 @@
   function showReaktionTarget() {
     reaktionAppearTimer = null;
     reaktionPhase = "active";
-    reaktionShownAt = performance.now();
     reaktionStageEl.dataset.state = "active";
     reaktionInstructionEl.textContent = "TRYCK!";
     reaktionTargetEl.style.left = `${15 + Math.random() * 70}%`;
     reaktionTargetEl.style.top = `${20 + Math.random() * 60}%`;
     reaktionTargetEl.classList.remove("hidden");
     vibrate(35);
+    reaktionShownAt = performance.now();
+    // Sync with actual browser paint frame
+    window.requestAnimationFrame(() => {
+      reaktionShownAt = performance.now();
+    });
   }
 
   // Handles a tap/Space on the stage. A false start during "waiting", a timed
   // hit during "active", ignored otherwise (countdown / showing a result).
-  function registerReaktion() {
+  function registerReaktion(event) {
     if (reaktionPhase === "waiting") {
       clearReaktionTimers();
       showReaktionResult("För tidigt!", "Du tryckte innan ölen dök upp. Försök igen.", "early", "");
       recordRewardResult("reaktion", 0, "Falskstart"); // false start → 0
       sayCommentary(randomItem(KOMMENTATOR.falskstart));
     } else if (reaktionPhase === "active") {
-      const ms = Math.round(performance.now() - reaktionShownAt);
+      const inputTime = (event && typeof event.timeStamp === "number" && event.timeStamp > 0 && event.timeStamp <= performance.now())
+        ? event.timeStamp
+        : performance.now();
+      const ms = Math.max(0, Math.round(inputTime - reaktionShownAt));
       const level = reaktionLevel(ms);
       showReaktionResult(`${ms} ms`, level.message, level.cls, level.label, level.alarm, level.celebrate);
       recordRewardResult("reaktion", Math.min(KLUNK_REAKTION_MAX, (KLUNK_REAKTION_BASE_MS - ms) / KLUNK_REAKTION_DIV), level.label);
@@ -1381,8 +1391,11 @@
   }
 
   function onReaktionTap(event) {
-    event.preventDefault();
-    registerReaktion();
+    if (event) {
+      if (typeof event.preventDefault === "function") event.preventDefault();
+      if (typeof event.stopPropagation === "function") event.stopPropagation();
+    }
+    registerReaktion(event);
   }
 
   function reaktionLevel(ms) {
