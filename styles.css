@@ -2269,11 +2269,29 @@ button:focus-visible {
   box-shadow: 0 0 12px rgba(255, 215, 0, 0.9) !important;
 }
 
-/* 🌑 Blackout Mode (Pommesansvarig Easter Egg) */
+/* 🌑 Blackout Mode (Pommesansvarig Easter Egg with Flashlight / Torch) */
 body.blackout-mode {
-  background: #010003 !important;
-  filter: brightness(0.07) contrast(1.7) grayscale(0.5);
-  transition: filter 0.5s ease, background 0.5s ease;
+  position: relative;
+}
+
+body.blackout-mode::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  pointer-events: none;
+  z-index: 99999;
+  background: radial-gradient(
+    circle 80px at var(--torch-x, 50%) var(--torch-y, 50%),
+    rgba(255, 245, 210, 0.06) 0%,
+    rgba(0, 0, 0, 0) 65px,
+    rgba(45, 226, 255, 0.22) 76px,
+    rgba(2, 1, 6, 0.95) 86px,
+    rgba(2, 1, 6, 0.98) 100%
+  );
+  transition: opacity 0.3s ease;
 }
 
 body.blackout-mode .overlay-card,

@@ -1484,6 +1484,30 @@
     }, 2500);
   }
 
+  function updateBlackoutTorch(e) {
+    if (!document.body.classList.contains("blackout-mode")) return;
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
+
+    if (e) {
+      if (typeof e.clientX === "number" && typeof e.clientY === "number" && (e.clientX !== 0 || e.clientY !== 0)) {
+        x = e.clientX;
+        y = e.clientY;
+      } else if (e.touches && e.touches.length > 0) {
+        x = e.touches[0].clientX;
+        y = e.touches[0].clientY;
+      }
+    }
+
+    document.body.style.setProperty("--torch-x", `${Math.round(x)}px`);
+    document.body.style.setProperty("--torch-y", `${Math.round(y)}px`);
+  }
+
+  window.addEventListener("pointermove", updateBlackoutTorch, { passive: true });
+  window.addEventListener("pointerdown", updateBlackoutTorch, { passive: true });
+  window.addEventListener("touchmove", updateBlackoutTorch, { passive: true });
+  window.addEventListener("touchstart", updateBlackoutTorch, { passive: true });
+
   function triggerBlackoutMode() {
     const isBlackout = document.body.classList.toggle("blackout-mode");
     if (state) {
@@ -1494,13 +1518,16 @@
     vibrate([100, 50, 100]);
 
     if (isBlackout) {
+      updateBlackoutTorch();
       speakVerdict("Blackout Mode aktiverad! Pommesansvarig släpper mörkret över skärmen.");
       showPartyFlash(
         "🌑 BLACKOUT MODE!",
-        "Pommesansvarig släppte mörkret över skärmen! (5 klick till återställer ljuset).",
+        "Pommesansvarig släppte mörkret över skärmen! Använd fingret/musen som ficklampa.",
         "Blackout mode aktiverad!"
       );
     } else {
+      document.body.style.removeProperty("--torch-x");
+      document.body.style.removeProperty("--torch-y");
       speakVerdict("Blackout Mode avaktiverad! Ljuset återvänder.");
       showPartyFlash(
         "💡 BLACKOUT OFF!",
@@ -1603,6 +1630,8 @@
     gylleneMusenCount = 0;
     playerNameClickCount = 0;
     document.body.classList.remove("champion", "night-shift", "blackout-mode");
+    document.body.style.removeProperty("--torch-x");
+    document.body.style.removeProperty("--torch-y");
     const boardEl = document.getElementById("board") || document.querySelector(".board");
     if (boardEl) {
       boardEl.classList.remove("gyllene-musen-active", "golden-egg-active");
