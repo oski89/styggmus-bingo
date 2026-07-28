@@ -2960,11 +2960,19 @@ ctx.restore();
     if (sluddraStartBtn) sluddraStartBtn.classList.remove("hidden");
     sluddraPenaltyEl.classList.add("hidden");
     sluddraInstructionEl.textContent = "Stava STYGG MUS i rätt ordning genom att klicka på bokstäverna!";
-    resetSluddraSlots();
+    showSluddraPreviewSlots();
     setupSluddraGame();
     drawSluddra();
     updateSluddraTimer(0);
     sluddraPhase = "ready";
+  }
+
+  function showSluddraPreviewSlots() {
+    const slots = sluddraOverlayEl.querySelectorAll(".sluddra-slot");
+    slots.forEach((s, i) => {
+      s.textContent = SLUDDRA_TARGET[i] || "_";
+      s.classList.add("filled");
+    });
   }
 
   function resetSluddraSlots() {
@@ -3026,6 +3034,7 @@ ctx.restore();
   function onSluddraStart() {
     if (sluddraPhase !== "ready" || !sluddraGame) return;
     if (sluddraStartBtn) sluddraStartBtn.classList.add("hidden");
+    resetSluddraSlots();
     sluddraPhase = "playing";
     sluddraInstructionEl.textContent = "Klicka på nästa bokstav i STYGG MUS!";
     const now = performance.now();
