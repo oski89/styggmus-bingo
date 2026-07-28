@@ -860,7 +860,7 @@
     activePlayerId = null;
     activeDialog = null;
     rewardSession = null;
-    document.body.classList.remove("blackout-mode");
+    resetAllEasterEggs();
     passwordInput.value = "";
     showPasswordGate();
   }
@@ -1597,6 +1597,22 @@
     gylleneMusenTimer = window.setTimeout(() => {
       gylleneMusenCount = 0;
     }, 2400);
+  }
+
+  function resetAllEasterEggs() {
+    gylleneMusenCount = 0;
+    playerNameClickCount = 0;
+    document.body.classList.remove("champion", "night-shift", "blackout-mode");
+    const boardEl = document.getElementById("board") || document.querySelector(".board");
+    if (boardEl) {
+      boardEl.classList.remove("gyllene-musen-active", "golden-egg-active");
+    }
+    if (slimeOverlayEl) {
+      slimeOverlayEl.classList.add("hidden");
+    }
+    if (state) {
+      state.blackoutActive = false;
+    }
   }
 
   function triggerGylleneMusen() {
@@ -4053,6 +4069,8 @@ ctx.restore();
 
     partyPlayers = {};
     beerAddedTotal = 0;
+
+    resetAllEasterEggs();
 
     if (broadcast) {
       const id = generateSeed();
