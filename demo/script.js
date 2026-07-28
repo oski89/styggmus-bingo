@@ -1502,10 +1502,13 @@
     memoryFlashEl.innerHTML = items.map((emoji) => `<span>${emoji}</span>`).join("");
     memoryFlashEl.classList.remove("hidden");
 
+    // Dynamic duration proportional to item count: 600ms base + 140ms per item
+    const flashDuration = 600 + items.length * 140;
+
     memoryFlashTimer = window.setTimeout(() => {
       memoryFlashTimer = null;
       showMemoryAnswer();
-    }, MINNE_FLASH_MS);
+    }, flashDuration);
   }
 
   function showMemoryAnswer() {
