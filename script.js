@@ -3286,7 +3286,7 @@ ctx.restore();
         drawPlasmaLines(lines, () => startGrandReward());
       } else if (newLines.length > 0) {
         const linesToDraw = newLines.map(k => k.split('-').map(Number));
-        drawPlasmaLines(linesToDraw, () => startBingoReward());
+        drawPlasmaLines(linesToDraw, () => startBingoReward(newLines.length));
       } else if (marked === CELL_COUNT - 1) {
         // Kommentatorn: tension calls when no reward fired this check.
         sayCommentary(randomItem(KOMMENTATOR.almostGrand));
@@ -3396,11 +3396,16 @@ ctx.restore();
     return nextGame;
   }
 
-  function startBingoReward() {
+  function startBingoReward(lineCount = 1) {
     playWinSound(false);
-    runConfetti(1800);
+    runConfetti(1800 + lineCount * 400);
     vibrate([60, 50, 60]);
-    rewardSession = newRewardSession("single", [getNextMinigameId()]);
+    const queue = [];
+    for (let i = 0; i < lineCount; i++) {
+      queue.push(getNextMinigameId());
+    }
+    const mode = lineCount > 1 ? "multi" : "single";
+    rewardSession = newRewardSession(mode, queue);
     showRewardIntro();
   }
 
@@ -3426,11 +3431,23 @@ ctx.restore();
 
   function showRewardIntro() {
     const grand = rewardSession.mode === "grand";
-    rewardTitleEl.textContent = grand ? "HELA BRICKAN KLAR!" : "BINGO!";
-    rewardBodyEl.innerHTML = grand
-      ? `<p class="reward-lead">Spela alla spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`
-      : `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`;
-    rewardActionBtn.textContent = grand ? "Kör alla spel" : "Spela";
+    const multi = rewardSession.mode === "multi";
+    const count = rewardSession.queue.length;
+
+    if (grand) {
+      rewardTitleEl.textContent = "HELA BRICKAN KLAR!";
+      rewardBodyEl.innerHTML = `<p class="reward-lead">Spela alla spelen — summan av klunkarna delar du sedan ut till alla i sällskapet.</p>`;
+      rewardActionBtn.textContent = "Kör alla spel";
+    } else if (multi) {
+      rewardTitleEl.textContent = `${count} BINGO-RADER!`;
+      rewardBodyEl.innerHTML = `<p class="reward-lead">Du fick ${count} bingo-rader samtidigt! Spela ${count} spel efter varandra — summan av alla klunkar delar du sedan ut till alla i sällskapet.</p>`;
+      rewardActionBtn.textContent = `Spela (${count} spel)`;
+    } else {
+      rewardTitleEl.textContent = "BINGO!";
+      rewardBodyEl.innerHTML = `<p class="reward-lead">Spela ett spel. Resultatet avgör hur många klunkar du får dela ut till alla i sällskapet.</p>`;
+      rewardActionBtn.textContent = "Spela";
+    }
+
     rewardActionHandler = () => {
       rewardTransitioning = true;
       closeDialog(rewardOverlayEl);
@@ -3474,7 +3491,8 @@ ctx.restore();
 
   function showRewardPayout() {
     const grand = rewardSession.mode === "grand";
-    rewardTitleEl.textContent = grand ? "HELA BRICKAN KLAR!" : "BINGO!";
+    const multi = rewardSession.mode === "multi";
+    rewardTitleEl.textContent = grand ? "HELA BRICKAN KLAR!" : (multi ? `${rewardSession.breakdown.length} BINGO-RADER!` : "BINGO!");
     const rows = rewardSession.breakdown
       .map(
         (b) =>

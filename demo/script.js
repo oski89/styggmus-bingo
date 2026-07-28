@@ -2204,7 +2204,7 @@
       // A grand win supersedes the single-line reward for the same check: filling
       // the last cell also completes lines, but we only run one reward flow.
       if (justGrandWin) startGrandReward();
-      else if (newLines.length > 0) startBingoReward();
+      else if (newLines.length > 0) startBingoReward(newLines.length);
       else if (marked === CELL_COUNT - 1) {
         // Kommentatorn: tension calls when no reward fired this check.
         sayCommentary(randomItem(KOMMENTATOR.almostGrand));
@@ -2281,11 +2281,16 @@
   };
   const REWARD_GAME_IDS = Object.keys(REWARD_GAMES);
 
-  function startBingoReward() {
+  function startBingoReward(lineCount = 1) {
     playWinSound(false);
-    runConfetti(1800);
+    runConfetti(1800 + lineCount * 400);
     vibrate([60, 50, 60]);
-    rewardSession = newRewardSession("single", [randomItem(REWARD_GAME_IDS)]);
+    const queue = [];
+    for (let i = 0; i < lineCount; i++) {
+      queue.push(randomItem(REWARD_GAME_IDS));
+    }
+    const mode = lineCount > 1 ? "multi" : "single";
+    rewardSession = newRewardSession(mode, queue);
     showRewardIntro();
   }
 
