@@ -3064,9 +3064,9 @@ ctx.restore();
       (t) => !t.solved && Math.hypot(t.x - clickX, t.y - clickY) <= t.size * 0.75
     );
 
-    if (!clickedTile) return;
+    const isMatch = clickedTile.char === expectedChar && (clickedTile.id >= 5) === (g.currentIdx >= 5);
 
-    if (clickedTile.id === g.currentIdx) {
+    if (isMatch) {
       clickedTile.solved = true;
       vibrate(25);
       const slotEl = sluddraOverlayEl.querySelector(`.sluddra-slot[data-idx="${g.currentIdx}"]`);
