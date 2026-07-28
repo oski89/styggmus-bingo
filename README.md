@@ -1,6 +1,6 @@
 # Stygg Mus Bingo
 
-Mobilvänlig 4×4-bingoapp med inline ölräknare, mulligan-läge, fem minigames och live party-sync för Stygg Mus-helgen. Ren statisk vanilla JS — inga beroenden, ingen build.
+Mobilvänlig 4×4-bingoapp med inline ölräknare, mulligan-läge, sex minigames och live party-sync för Stygg Mus-helgen. Ren statisk vanilla JS — inga beroenden, ingen build.
 
 Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow, 3D glassmorphism, constellation particles). UI på svenska.
 
@@ -12,9 +12,9 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 - **Enhetlig Statsbar:** Spelarnamn och kompakt ölräknare i samma pill-formade glass capsule bar.
 - **Markera & Spara:** Markeringar och brickstater sparas i `localStorage`.
 - **Bingo-detektering:** Rader, kolumner och diagonaler utlöser vinstljud + confetti + minigame-reward.
-- **Bingo-reward:** Ett slumpat minigame avgör hur många klunkar vinnaren får dela ut till sällskapet.
-- **Grand Win (16/16):** Alla fem minigames i följd med summerade klunkar.
-- **Meny:** Mulligan, ny bricka, nollställ markeringar, rekord, kvällens recap, byt spelare och avsluta.
+- **Bingo-reward:** Ett slumpat minigame avgör hur många klunkar vinnaren får dela ut till sällskapet. Om man kryssar en ruta som ger flera bingo-rader samtidigt köas motsvarande antal minispel i följd ($N$ rader = $N$ spel).
+- **Grand Win (16/16):** Alla sex minigames i följd med summerade klunkar och vinstlåt (`DDKO.mp3`).
+- **Meny:** Mulligan, ny bricka, nollställ markeringar, rekord, kvällens recap, kvällens statistik, byt spelare och avsluta.
 
 ### Spelare
 1. `🐭 Stygg mus president 👑` (80 kg)
@@ -32,24 +32,26 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 - **Vatten/Partikel Shockwave Engine:** Interaktiv ring-chockvåg på bakgrundskanvasen vid touch på bingorutor som fysiskt knuffar bort partiklar.
 - **Gyllene Musen (Konami Code):** 5 taps på `🍆` eller `↑ ↑ ↓ ↓ ← → ← → B A` för 3D-guldbricka & 8-bit glitterfanfar.
 - **Mouse Trap Slime Explosion:** 3 taps på Pukies spelarnamn för slem-explosion & +1 bonus-mulligan.
+- **Pommesansvarig Blackout Mode & Ficklampa:** 5 taps på Pommesansvarigs spelarnamn täcker hela skärmen i mörker där muspekaren/fingret fungerar som en **interaktiv ficklampa** (`radial-gradient` torch beam). Kan avslutas med 5 klick, `Esc`-tangenten, 10 sekunders stadigt fingertryck eller admin-reset.
 - **Efterfest / Night Shift Mode:** Automatisk natt-transformeringsläge efter midnatt (kl 00:00) med lila nebula-partiklar och busiga natt-citat under bingobrickan.
 
 ### Ölräknare, Promille & Minigames
 - Inline ölräknare (−/🍺/+) per spelare.
 - **Promillekalkylator (Realistic BAC):** Beräknar reell promille (`0.00 ‰`) via MiniWebtool BAC Calculator API baserat på antal öl, spelarens vikt (kg) och tid sedan första ölen. Rate-limited vid öl-taps och heltimmar med lokal Widmark-formel som fallback.
-- Varje tillagd öl eller enkelbingo drar ett minispel från en slumpmässigt blandad kortlek med alla sex spel: inget minispel upprepas förrän alla 6 spel har spelats en gång:
-  1. **Reaktionskollen** — tryck när 🍺 dyker upp
-  2. **Minnesluckatestet** — räkna 🍺 och 🐭
-  3. **Fyllekollen** — led 🐭 till 🍺 i en timed maze
-  4. **Spykollen** — undvik 🤮 med 🛋️
-  5. **Pissepaus** — luta/sikta 🍆-strålen på 🚽
-  6. **Sluddraru?** — klicka på bokstäverna för att stava STYGG MUS i rätt ordning (varje felklick ger +1s straff)
+- Varje tillagd öl eller bingo drar minispel från en slumpmässigt blandad kortlek med alla sex spel: inget minispel upprepas förrän alla sex spel har spelats en gång:
+  1. **Reaktionskollen** — tryck när 🍺 dyker upp (frame-exakt `requestAnimationFrame` timing & hårdvaru-`touchstart`)
+  2. **Minnesluckatestet** — räkna 🍺 och 🐭 (dynamisk flash-tid baserad på antal föremål)
+  3. **Fyllekollen** — led 🐭 till 🍺 i en timed maze (med skarpa Apple Color Emoji glyfer)
+  4. **Spykollen** — undvik 🤮 med 🛋️ (60 FPS hårdvaruaccelererad rendering utan lag)
+  5. **Pissepaus** — luta/sikta 🍆-strålen på 🚽 (60 FPS drosslad HUD-rendering)
+  6. **Sluddraru?** — klicka på bokstäverna för att stava STYGG MUS i rätt ordning (visar ordet på instruktionsskärmen och tillåter båda G-tecknen omlott)
+- Alla minispel har standardiserade "Starta" och "Stäng"-knappar där "Starta" automatiskt döljs vid avslutat spel.
 - Tre-nivåers verdict (Nykter / Salongsberusad / Full som ett ägg) med alarm eller firande.
 - Testläge (`MGT`) startar varje minigame direkt utan bricka.
 
 ### Party-länk & Rekord
 - **Toppbar Party-kontroll:** Snabbåtkomst direkt på bingoskärmens toppbar via nätverksglob (`🌐`) + Apple iOS-toggle switch.
-- **Offlie som standard:** Party-länk är avstängt vid start tills du aktivt slår på det.
+- **Offline som standard:** Party-länk är avstängt vid start tills du aktivt slår på det.
 - **Ölligans Roster:** Visar vem som är online med LED-statusindikatorer, promillehalt (`‰`), neon-cyan markering för din spelare (`(du)`), och strikt filtrering för färska anslutningar.
 - **Utmaning & Duel-läge (1v1 Duels):** Utmana en polare i Ölligan-rostern på ett live minispel. Båda spelarna battlar på sina egna skärmar, poäng synkas i realtid, och förloraren tvingas dricka 5 straffklunkar med skärm-takeover!
 - **Automatisk synk:** Lokalt satta rekord och ölräknare sänds automatiskt till alla anslutna telefoner när Party-länk aktiveras.
@@ -58,7 +60,7 @@ Neonklubben-tema (`Orbitron` typography, hot pink / electric cyan / acid yellow,
 - **Kvällens recap:** Delbar neon-poster (1080×1350) med ölligans öllinjediagram, promillehalter (`‰`), bingo/klunkar och Kvällens Fyllo.
 - **Kvällens statistik (Night Analytics):** Interaktiv statistik-sida i menyn med öl-övertids-diagram per spelare, ledande promille, totalt utdelade klunkar och mest checkade rutor.
 - **Kommentatorn:** Sporadisk sportkommentar vid nästan-bingo, ölmilstolpar m.m.
-- **Dold Admin Reset:** Nollställ hela omgången genom 3 sekunders långtryck på "Meny"-titeln (låst till endast `💨 AFC master TBD`).
+- **Dold Admin Reset:** Nollställ hela omgången och alla aktiva påskägg genom 3 sekunders långtryck på "Meny"-titeln (låst till endast `💨 AFC master`).
 
 ### PWA & Enhetsstöd
 - Installerbar PWA (manifest + service worker, network-first med offline-fallback).
