@@ -2490,12 +2490,7 @@
     ctx.font = `${g.vomitSize}px serif`;
     for (const v of g.vomits) ctx.fillText("🤮", v.x, v.y);
 
-    // A cool blue rim glow so the couch pops off the dark floor.
-    ctx.save();
-    ctx.shadowColor = "rgba(91, 149, 223, 0.9)";
-    ctx.shadowBlur = 14;
     drawCouch(ctx, g.couchX, g.couchCenterY, g.couchW, g.couchH);
-    ctx.restore();
   }
 
   // Draws a simple couch whose footprint is exactly couchW × couchH (so it lines
@@ -2504,6 +2499,11 @@
     const left = cx - cw / 2;
     const top = cy - ch / 2;
     const r = ch * 0.22;
+    // outer glow outline
+    ctx.strokeStyle = "rgba(91, 149, 223, 0.6)";
+    ctx.lineWidth = 2;
+    roundRectPath(ctx, left - 1, top - 1, cw + 2, ch + 2, r);
+    ctx.stroke();
     // backrest
     ctx.fillStyle = "#3f78c2";
     roundRectPath(ctx, left, top, cw, ch * 0.62, r);
@@ -2821,9 +2821,20 @@
     pissRaf = window.requestAnimationFrame(pissLoop);
   }
 
+  let lastPissTenth = -1;
+  let lastPissHits = -1;
+
   function updatePissHud(remainingMs) {
-    pissTimerEl.textContent = `${(Math.max(0, remainingMs) / 1000).toFixed(1)} s`;
-    pissScoreEl.textContent = String(pissGame ? pissGame.hits : 0);
+    const tenth = Math.floor(Math.max(0, remainingMs) / 100);
+    const hits = pissGame ? pissGame.hits : 0;
+    if (tenth !== lastPissTenth) {
+      lastPissTenth = tenth;
+      pissTimerEl.textContent = `${(tenth / 10).toFixed(1)} s`;
+    }
+    if (hits !== lastPissHits) {
+      lastPissHits = hits;
+      pissScoreEl.textContent = String(hits);
+    }
   }
 
   function drawPiss(now = performance.now()) {
@@ -2838,11 +2849,8 @@
 
     // Pulsing cyan target ring so the current toilet reads as THE objective.
     const ringR = g.toiletSize * 0.68 + Math.sin(now / 220) * 3;
-    ctx.save();
-    ctx.strokeStyle = "rgba(45, 226, 255, 0.75)";
+    ctx.strokeStyle = "rgba(45, 226, 255, 0.85)";
     ctx.lineWidth = 2.5;
-    ctx.shadowColor = "rgba(45, 226, 255, 0.9)";
-    ctx.shadowBlur = 10;
     ctx.beginPath();
     ctx.arc(g.toilet.x, g.toilet.y, ringR, 0, Math.PI * 2);
     ctx.stroke();
@@ -2869,16 +2877,22 @@ ctx.restore();
     const sy = g.originY - g.w * 0.08;
     const cx = (sx + g.aimX) / 2 + Math.sin(t * 9) * 5;
     const cy = Math.min(sy, g.aimY) - Math.abs(sx - g.aimX) * 0.18 - 24;
-    ctx.strokeStyle = "rgba(250, 224, 45, 0.9)";
-    ctx.lineWidth = 5;
+    // Outer glow pass
+    ctx.strokeStyle = "rgba(250, 224, 45, 0.28)";
+    ctx.lineWidth = 9;
     ctx.lineCap = "round";
-    ctx.shadowColor = "rgba(250, 224, 45, 0.8)";
-    ctx.shadowBlur = 8;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
     ctx.quadraticCurveTo(cx, cy, g.aimX, g.aimY);
     ctx.stroke();
-    ctx.shadowBlur = 0;
+
+    // Core stream pass
+    ctx.strokeStyle = "#ffeb3b";
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(cx, cy, g.aimX, g.aimY);
+    ctx.stroke();
     ctx.fillStyle = "rgba(250, 224, 45, 0.85)";
     for (let i = 0; i < 3; i++) {
       const a = t * 10 + i * 2.1;

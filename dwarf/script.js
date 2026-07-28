@@ -2064,16 +2064,22 @@
     const sy = g.originY - g.w * 0.08;
     const cx = (sx + g.aimX) / 2 + Math.sin(t * 9) * 5;
     const cy = Math.min(sy, g.aimY) - Math.abs(sx - g.aimX) * 0.18 - 24;
-    ctx.strokeStyle = "rgba(250, 224, 45, 0.9)";
-    ctx.lineWidth = 5;
+    // Outer glow pass
+    ctx.strokeStyle = "rgba(250, 224, 45, 0.28)";
+    ctx.lineWidth = 9;
     ctx.lineCap = "round";
-    ctx.shadowColor = "rgba(250, 224, 45, 0.8)";
-    ctx.shadowBlur = 8;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
     ctx.quadraticCurveTo(cx, cy, g.aimX, g.aimY);
     ctx.stroke();
-    ctx.shadowBlur = 0;
+
+    // Core stream pass
+    ctx.strokeStyle = "#ffeb3b";
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(cx, cy, g.aimX, g.aimY);
+    ctx.stroke();
     ctx.fillStyle = "rgba(250, 224, 45, 0.85)";
     for (let i = 0; i < 3; i++) {
       const a = t * 10 + i * 2.1;
