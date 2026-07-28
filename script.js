@@ -1508,7 +1508,47 @@
   window.addEventListener("touchmove", updateBlackoutTorch, { passive: true });
   window.addEventListener("touchstart", updateBlackoutTorch, { passive: true });
 
+  let blackoutLongPressTimer = null;
+  let blackoutTouchStartPos = { x: 0, y: 0 };
+
+  function onBlackoutTouchStart(e) {
+    if (!document.body.classList.contains("blackout-mode")) return;
+    if (!e.touches || e.touches.length === 0) return;
+
+    blackoutTouchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    cancelBlackoutLongPress();
+
+    blackoutLongPressTimer = window.setTimeout(() => {
+      blackoutLongPressTimer = null;
+      if (document.body.classList.contains("blackout-mode")) {
+        triggerBlackoutMode();
+      }
+    }, 10000);
+  }
+
+  function onBlackoutTouchMove(e) {
+    if (!blackoutLongPressTimer || !e.touches || e.touches.length === 0) return;
+    const dx = e.touches[0].clientX - blackoutTouchStartPos.x;
+    const dy = e.touches[0].clientY - blackoutTouchStartPos.y;
+    if (Math.hypot(dx, dy) > 25) {
+      cancelBlackoutLongPress();
+    }
+  }
+
+  function cancelBlackoutLongPress() {
+    if (blackoutLongPressTimer) {
+      window.clearTimeout(blackoutLongPressTimer);
+      blackoutLongPressTimer = null;
+    }
+  }
+
+  window.addEventListener("touchstart", onBlackoutTouchStart, { passive: true });
+  window.addEventListener("touchmove", onBlackoutTouchMove, { passive: true });
+  window.addEventListener("touchend", cancelBlackoutLongPress, { passive: true });
+  window.addEventListener("touchcancel", cancelBlackoutLongPress, { passive: true });
+
   function triggerBlackoutMode() {
+    cancelBlackoutLongPress();
     const isBlackout = document.body.classList.toggle("blackout-mode");
     if (state) {
       state.blackoutActive = isBlackout;
@@ -1522,7 +1562,7 @@
       speakVerdict("Blackout Mode aktiverad! Pommesansvarig släpper mörkret över skärmen.");
       showPartyFlash(
         "🌑 BLACKOUT MODE!",
-        "Pommesansvarig släppte mörkret över skärmen! Använd fingret/musen som ficklampa.",
+        "Pommesansvarig släppte mörkret över skärmen! Använd fingret/musen som ficklampa. (Tryck Esc eller håll fingret 10s för att avsluta).",
         "Blackout mode aktiverad!"
       );
     } else {
@@ -1760,10 +1800,20 @@
         spyMoveDir = spyDir;
       } else if (event.key === "Escape") {
         event.preventDefault();
-        closeDialog(activeDialog);
+        if (document.body.classList.contains("blackout-mode")) {
+          triggerBlackoutMode();
+        } else {
+          closeDialog(activeDialog);
+        }
       } else if (event.key === "Tab") {
         trapTabKey(event, activeDialog);
       }
+      return;
+    }
+
+    if (event.key === "Escape" && document.body.classList.contains("blackout-mode")) {
+      event.preventDefault();
+      triggerBlackoutMode();
       return;
     }
 
